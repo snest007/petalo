@@ -25,19 +25,29 @@ export type FixtureSet<P = any> = {
   /** Opt out of comparing specific case ids against UI5 (keep them in the docs grid). Explain why. */
   skipCompare?: string[]
   /** Narrow absolute comparison paths; only documented UI5 bugs or inert DOM wrappers may differ. */
-  a11yDiff?: Record<string, {
-    ignore: string[]
-    reason: string
-    /** S0's TableTemplate.js loading-grid defect only. Move the complete native
-     * overlay after its grid; preserve and compare every channel and descendant.
-     * Paths are exact after strictly inert wrappers are removed.
-     */
-    tableLoadingOverlay?: { gridName: string; progressbarName: string; ax: string; snapshot: string }
-    /** Exact CalendarHeaderTemplate.js native bugs only: invalid Shift + F4
-     * syntax and S0's missing visible year-range name. Runtime guards validate
-     * the complete expected channels before making either correction. */
-    calendarHeaderBug?: { shortcutAX: string; yearRange?: { ax: string; snapshot: string; from: number; to: number } }
-  }>
+  a11yDiff?: Record<string, FixtureA11yDiff>
+  /** One path declaration shared by explicitly listed cases with identical wrapper structure. */
+  a11yDiffGroups?: { cases: string[]; diff: FixtureA11yDiff }[]
+}
+
+type FixtureA11yDiff = {
+  ignore: string[]
+  reason: string
+  /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
+  ui5FormHosts?: string[]
+  /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
+  splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
+  /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */
+  numericInputMessage?: { state: string; message: string }
+  /** S0's TableTemplate.js loading-grid defect only. Move the complete native
+   * overlay after its grid; preserve and compare every channel and descendant.
+   * Paths are exact after strictly inert wrappers are removed.
+   */
+  tableLoadingOverlay?: { gridName: string; progressbarName: string; ax: string; snapshot: string }
+  /** Exact CalendarHeaderTemplate.js native bugs only: invalid Shift + F4
+   * syntax and S0's missing visible year-range name. Runtime guards validate
+   * the complete expected channels before making either correction. */
+  calendarHeaderBug?: { shortcutAX: string; yearRange?: { ax: string; snapshot: string; from: number; to: number } }
 }
 
 export const defineFixtures = <P,>(set: FixtureSet<P>) => set

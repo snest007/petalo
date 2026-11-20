@@ -13,6 +13,7 @@
 | [label](#label) | Give a form field a persistent, accessible name. |
 | [multi-combobox](#multi-combobox) | Select several predefined options from a filterable list and display selections as tokens. |
 | [multi-input](#multi-input) | Collect several values as caller-managed tokens, with suggestions and optional value help. |
+| [numeric-input](#numeric-input) | Edit a localized number in a plain textbox with keyboard stepping. |
 | [radio-group](#radio-group) | Choose one mutually exclusive answer while keeping every option visible. |
 | [rating-indicator](#rating-indicator) | Collect an icon-based rating or display an aggregate rating. |
 | [select](#select) | Choose one value from a short predefined list without entering free text. |
@@ -194,7 +195,7 @@ Enter one line of text, a number or a formatted string.
 - Enter prose across multiple lines. → [textarea](forms.md#textarea)
 - Enter a date, range or time, or provide a custom picker with caller-owned parsing. → [date-picker](dates.md#date-picker), [date-range-picker](dates.md#date-range-picker), [date-time-picker](dates.md#date-time-picker), [time-picker](dates.md#time-picker), [picker-field](dates.md#picker-field)
 - Choose one predefined value: use Select for 2–12 options, ComboBox for type-ahead across 20–200 options, or ValueHelpDialog above 200 entries or for several searchable attributes. → [select](forms.md#select), [combobox](forms.md#combobox), [value-help-dialog](overlays.md#value-help-dialog)
-- Adjust a numeric value with increment and decrement buttons or a visual scale. → [step-input](forms.md#step-input), [slider](forms.md#slider)
+- Edit a locale-aware number with NumericInput, use StepInput for increment and decrement buttons, or use Slider for a visual scale. → [numeric-input](forms.md#numeric-input), [step-input](forms.md#step-input), [slider](forms.md#slider)
 - Collect several values: use MultiComboBox for fewer than 200 predefined options, or MultiInput for caller-validated entries and datasets above 200. → [multi-combobox](forms.md#multi-combobox), [multi-input](forms.md#multi-input)
 
 Main exports: `Input`, `InputIcon`.
@@ -270,6 +271,26 @@ Main exports: `MultiInput`, `SuggestionItem`.
 
 ```bash
 npx shadcn add @petalo/multi-input
+```
+
+## numeric-input
+
+Edit a localized number in a plain textbox with keyboard stepping.
+
+### Use when
+
+- Enter quantities, rates or other numbers with locale-aware grouping, decimal places and bounds.
+- Allow direct editing with keyboard stepping and retain invalid entries for correction.
+
+### Don't use when
+
+- Show increment and decrement buttons alongside the editable value. → [step-input](forms.md#step-input)
+- Enter identifiers, postal codes or phone numbers, where leading zeros and exact characters matter. → [input](forms.md#input)
+
+Main exports: `NumericInput`.
+
+```bash
+npx shadcn add @petalo/numeric-input
 ```
 
 ## radio-group
@@ -377,8 +398,9 @@ Enter an exact number or adjust it by a predefined step.
 
 ### Don't use when
 
+- Enter a localized number with keyboard stepping and no visible step buttons. → [numeric-input](forms.md#numeric-input)
 - Adjust a value approximately along a visual range, such as volume or brightness. → [slider](forms.md#slider)
-- Enter a number without increment and decrement controls. → [input](forms.md#input)
+- Enter a static identifier such as a postal code or phone number. → [input](forms.md#input)
 
 Main exports: `StepInput`.
 

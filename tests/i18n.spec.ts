@@ -56,6 +56,12 @@ test("i18n audit ratchet guards owning gap counts and every implemented key", ()
     expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:10|[0-9])$/ : /^P(?:2a|[1-6])$/)
     expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
   }
+  for (const key of ["BUTTON_BADGE_ONE_ITEM", "BUTTON_BADGE_MANY_ITEMS"]) {
+    expect(audit.find(group => group.component === "button")?.rows.find(row => row.key === key)?.status).toBe("fixed in E5")
+    expect(audit.find(group => group.component === "split-button")?.rows.find(row => row.key === key)?.status).toBe("not rendered")
+    expect(de[key]).toBeTruthy()
+  }
+  expect(audit.find(group => group.component === "numeric-input")?.rows.find(row => row.key === "NUMBERINPUT_DEC_ICON_TITLE")?.status).toBe("not rendered")
   // Exercise regressions against the real source inventory: a gap reduction needs
   // a baseline reduction, and swapping one fixed/gap row cannot hide a lost key.
   const component = audit.find(group => group.rows.some(row => row.status === "gap") && group.rows.some(row => row.status === "fixed in E5"))!

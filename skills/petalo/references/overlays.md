@@ -71,6 +71,7 @@ Let users choose commands from an opened hierarchy of menu items.
 
 ### Don't use when
 
+- Make the common command available immediately beside the menu arrow. → [split-button](actions.md#split-button)
 - Show mixed contextual information or editable content beside an opener on every device. → [popover](overlays.md#popover)
 - Show mixed contextual content anchored on desktop and in a full-screen phone dialog. → [responsive-popover](overlays.md#responsive-popover)
 - Require a form or explicit confirmation before users resume the page. → [dialog](overlays.md#dialog)

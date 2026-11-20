@@ -8,6 +8,55 @@ type Props = { design: ButtonBadgeDesign; text?: string; icon?: boolean; disable
 
 export default defineFixtures<Props>({
   name: "button-badge",
+  a11yDiffGroups: [
+    {
+      "cases": [
+        "button-badge-customise",
+        "button-badge-dot",
+        "button-badge-inline",
+        "button-badge-overlay",
+        "button-badge-rtl"
+      ],
+      "diff": {
+        "ignore": [
+          "/ui5/ax/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0"
+        ],
+        "reason": "UI5 Button and ButtonBadge shadow and slot hosts add unnamed generic nodes. The form-associated Button host repeats implicit validity. Compare the actual native button, its name, state, and every text descendant."
+      }
+    },
+    {
+      "cases": [
+        "button-badge-disabled"
+      ],
+      "diff": {
+        "ignore": [
+          "/ui5/ax/0/children/0",
+          "/ui5/ax/0/children/1"
+        ],
+        "ui5FormHosts": [],
+        "reason": "UI5 Button and ButtonBadge shadow and slot hosts add unnamed generic nodes. The form-associated Button host repeats implicit validity. Compare the actual native button, its name, state, and every text descendant."
+      }
+    },
+    {
+      "cases": [
+        "button-badge-empty",
+        "button-badge-icon"
+      ],
+      "diff": {
+        "ignore": [
+          "/ui5/ax/0/children/0/children/0"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0"
+        ],
+        "reason": "UI5 Button and ButtonBadge shadow and slot hosts add unnamed generic nodes. The form-associated Button host repeats implicit validity. Compare the actual native button, its name, state, and every text descendant."
+      }
+    }
+  ],
   cases: [
     { id: "button-badge-inline", props: { design: "InlineText", text: "1" } },
     { id: "button-badge-overlay", props: { design: "OverlayText", text: "99+" } },

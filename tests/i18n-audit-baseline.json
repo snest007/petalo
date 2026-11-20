@@ -106,12 +106,14 @@
   },
   "button": {
     "owner": "P1",
-    "gapCount": 8,
+    "gapCount": 6,
     "okKeys": [
       "BUTTON_ARIA_TYPE_ACCEPT",
       "BUTTON_ARIA_TYPE_ATTENTION",
       "BUTTON_ARIA_TYPE_EMPHASIZED",
-      "BUTTON_ARIA_TYPE_REJECT"
+      "BUTTON_ARIA_TYPE_REJECT",
+      "BUTTON_BADGE_MANY_ITEMS",
+      "BUTTON_BADGE_ONE_ITEM"
     ]
   },
   "calendar": {

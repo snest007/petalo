@@ -7,6 +7,108 @@ type Props = Pick<NumericInputProps, "value" | "min" | "max" | "step" | "precisi
 
 export default defineFixtures<Props>({
   name: "numeric-input",
+  a11yDiffGroups: [
+    {
+      "cases": [
+        "numeric-input-critical",
+        "numeric-input-negative",
+        "numeric-input-positive"
+      ],
+      "diff": {
+        "ignore": [
+          "/ours/ax/0",
+          "/ours/ax/0/children/0",
+          "/ours/ax/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0/children/1",
+          "/ui5/ax/0",
+          "/ui5/ax/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0"
+        ],
+        "reason": "NumericInputTemplate nests a form-associated Input with anonymous shadow and popup layout wrappers. The hosts repeat default validity and any disabled state. Compare the actual textbox, description relationship and all text."
+      }
+    },
+    {
+      "cases": [
+        "numeric-input-customise",
+        "numeric-input-decimal",
+        "numeric-input-default",
+        "numeric-input-required",
+        "numeric-input-rtl"
+      ],
+      "diff": {
+        "ignore": [
+          "/ours/ax/0",
+          "/ours/ax/0/children/0",
+          "/ours/ax/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0",
+          "/ui5/ax/0",
+          "/ui5/ax/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0"
+        ],
+        "reason": "NumericInputTemplate nests a form-associated Input with anonymous shadow and popup layout wrappers. The hosts repeat default validity and any disabled state. Compare the actual textbox, description relationship and all text."
+      }
+    },
+    {
+      "cases": [
+        "numeric-input-disabled",
+        "numeric-input-readonly"
+      ],
+      "diff": {
+        "ignore": [
+          "/ours/ax/0",
+          "/ours/ax/0/children/0",
+          "/ours/ax/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0",
+          "/ui5/ax/0",
+          "/ui5/ax/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0"
+        ],
+        "reason": "NumericInputTemplate nests a form-associated Input with anonymous shadow and popup layout wrappers. The hosts repeat default validity and any disabled state. Compare the actual textbox, description relationship and all text."
+      }
+    },
+    {
+      "cases": [
+        "numeric-input-information"
+      ],
+      "diff": {
+        "ignore": [
+          "/ours/ax/0",
+          "/ours/ax/0/children/0",
+          "/ours/ax/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0",
+          "/ours/ax/0/children/0/children/0/children/0/children/1",
+          "/ui5/ax/0",
+          "/ui5/ax/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1"
+        ],
+        "ui5FormHosts": [
+          "/ui5/ax/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0"
+        ],
+        "numericInputMessage": { "state": "Value State Information", "message": "Estimated quantity" },
+        "reason": "NumericInputTemplate nests a form-associated Input with anonymous shadow and popup layout wrappers. The hosts repeat default validity and any disabled state. Compare the actual textbox, description relationship and all text. NumericInputTemplate forwards a slot to Input; Input.ariaValueStateHiddenText reads that slot’s empty textContent instead of its assigned message. The React textbox keeps the consumer’s description."
+      }
+    }
+  ],
   cases: [
     { id: "numeric-input-default", props: { value: 1234 } },
     { id: "numeric-input-decimal", props: { value: -1234.5, precision: 2 } },

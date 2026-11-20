@@ -8,6 +8,14 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "ToolbarButton.badge": "h8-badge-custom",
+  "ToggleButton.badge": "h8-badge-custom",
+  "SplitButton.menu": "split-button",
+  "SplitButton.className": "split-button",
+  "SplitButton.children": "split-button",
+  "NumericInput.className": "numeric-input",
+  "ButtonBadge.className": "button-badge",
+  "Button.badge": "button-badge",
   "AdaptFiltersDialog.className": "adapt-filter-custom",
   "Avatar.badge": "shell-bar",
   "Avatar.className": "shell-bar",
@@ -578,7 +586,7 @@ for (const file of program.getSourceFiles().filter((source) => /registry\/ui\/[^
 }
 let code: string, css: string
 const names = fixtureFiles.map((file) => file.slice(0, -4))
-const supplementalNames = ["data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom"]
+const supplementalNames = ["data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels"]
 test.beforeAll(async () => {
   const imports = Object.keys(metadata).map((file, index) => `import * as M${index} from ${JSON.stringify(resolve(`registry/ui/${file}`))};`).join("\n")
   const fixtures = fixtureFiles.map((file, index) => `import F${index} from ${JSON.stringify(resolve(`docs/src/fixtures/${file}`))};`).join("\n")
@@ -616,7 +624,20 @@ test.beforeAll(async () => {
     for(const name of ['Input','TextArea','SelectTrigger','ComboBox','MultiComboBox','MultiInput','StepInput','DatePicker','DateRangePicker','DateTimePicker','TimePicker','FileUploader'])optional[name+'.valueStateMessage']=text('Custom validation detail');
     function PickerConsumer(){const [open,setOpen]=React.useState(true);return C('PickerField',{value:'2024-03-13',open,onOpenChange:setOpen,icon:appointment2,'aria-label':'Custom picker field',pickerLabel:'Custom picker dialog',valueState:'negative',valueStateMessage:text('Custom picker validation'),footer:button('Desktop footer'),phoneFooter:button('Phone footer'),popoverClassName:'custom-popup',wrapperClassName:'custom-wrapper',className:'custom-input'},C('Button',{tabIndex:0},'Custom picker content'))}
     const tableColumns=[{accessorKey:'name',id:'name',header:()=>text('Custom name'),cell:info=>text(info.getValue())}];
+    const badge=()=>C('ButtonBadge',{design:'InlineText',text:'2'});
     const supplemental={
+      'h8-badge-custom':()=>h(React.Fragment,{},
+        C('Button',{badge:C('ButtonBadge',{design:'InlineText',text:'1',texts:{oneItem:count=>count+' update'}})},'Inbox'),
+        C('ToggleButton',{badge:badge(),defaultPressed:true},'Pinned'),
+        C('Toolbar',{'aria-label':'Badge actions'},C('ToolbarButton',{badge:badge()},'Notifications'))),
+      'h8-native-channels':()=>h(React.Fragment,{},
+        h('span',{id:'quantity-label'},'Stock quantity'),
+        C('NumericInput',{'aria-label':'Order quantity',defaultValue:12,max:10,texts:{aboveMaximum:count=>'Maximum '+count}}),
+        C('NumericInput',{'aria-labelledby':'quantity-label',defaultValue:1,min:2,texts:{belowMinimum:count=>'Minimum '+count}}),
+        C('NumericInput',{'aria-label':'Decimals',defaultValue:5,precision:1,texts:{invalidFormat:places=>'Places '+places}}),
+        C('SplitButton',{'aria-label':'export files','aria-haspopup':'dialog','aria-keyshortcuts':'F4', arrowHasPopup:'listbox',
+          arrowExpanded:true, texts:{description:'Two actions',keyboardHint:'Press F4',arrowLabel:'More formats'}},'Export')),
+
       'data-table-custom':()=>C('DataTable',{data:[{name:'Ada'},{name:'Lin'}],columns:tableColumns,'aria-label':'Custom data table',selectionMode:'multi',defaultSelectedRows:['0'],sortTrigger:'click',rowActionCount:1,rowActions:row=>C('TableRowAction',{icon:appointment2,text:'Action '+row.name})}),
       'data-table-empty':()=>C('DataTable',{data:[],columns:tableColumns,'aria-label':'Custom empty data table',noData:text('Custom no rows')}),
       'picker-field-custom':()=>h(PickerConsumer),
@@ -658,7 +679,9 @@ test.beforeAll(async () => {
           }else if(props[key]!=null&&props[key]!==false){props[key]=content(props[key],name+'.'+key,fill);record(key)}
 
         }
-        if(descriptor.asChild && !['SelectTrigger','SelectContent'].includes(name)){
+        // Button.badge is a native-button slot. Exercise it on the real host;
+        // the separate asChild proofs still exercise the single-child Slot path.
+        if(descriptor.asChild && !props.badge && !['SelectTrigger','SelectContent'].includes(name)){
           // The card excludes only Select's four inherited multi-child Slot API
           // errors; dedicated existing tests cover its supported single host.
           const children=props.children;
@@ -845,4 +868,27 @@ test("DataTable custom header cell and row-action callbacks keep sorting selecti
   await expect(header).toHaveAttribute("aria-sort", "ascending")
   await page.keyboard.press("ArrowDown")
   await expect(row.getByRole("gridcell", { name: "Ada", exact: true })).toBeFocused()
+})
+
+test("H8 native names, relationships and text overrides reach their owning controls", async ({ page }) => {
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("h8-native-channels", "h8-native-channels", false))
+  const group = page.getByRole("group", { name: "Export export files Two actions Press F4" })
+  await expect(group).toHaveAttribute("aria-haspopup", "dialog")
+  await expect(group).toHaveAttribute("aria-keyshortcuts", "F4")
+  const arrow = group.getByRole("button", { name: "More formats" })
+  await expect(arrow).toHaveAttribute("aria-haspopup", "listbox")
+  await expect(arrow).toHaveAttribute("aria-expanded", "true")
+  for (const [name, message] of [["Order quantity", "Maximum 10"], ["Stock quantity", "Minimum 2"]]) {
+    await expect.poll(() => page.getByRole("textbox", { name }).evaluate((node: HTMLInputElement) => node.validationMessage)).toBe(message)
+  }
+  const decimals = page.getByRole("textbox", { name: "Decimals" })
+  await decimals.fill("5.00")
+  await decimals.press("Enter")
+  await expect.poll(() => decimals.evaluate((node: HTMLInputElement) => node.validationMessage)).toBe("Places 1")
+
+  await page.evaluate(() => (window as any).e4Customization.mount("h8-badge-custom", "h8-badge-custom", true))
+  await expect(page.getByRole("button", { name: "Inbox 1 update" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "Pinned 2 items" })).toHaveAttribute("aria-pressed", "true")
+  await expect(page.getByRole("toolbar", { name: "Badge actions" }).getByRole("button", { name: "Notifications 2 items" })).toBeVisible()
 })

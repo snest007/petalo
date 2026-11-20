@@ -1,7 +1,7 @@
 // Optional SAP translations. No timestamps; sorted language IDs, keys and deterministic source fallbacks.
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs'
 import { audit, defaults, properties } from './i18n-audit.mjs'
-const keys = [...new Set(audit.flatMap(group => group.rows.filter(row => row.source === 'wcr' || row.status !== 'gap').map(row => row.key)))].sort()
+const keys = [...new Set(audit.flatMap(group => group.rows.filter(row => row.source === 'wcr' || row.status === 'ok' || row.status === 'fixed in E5').map(row => row.key)))].sort()
 const source = 'node_modules/@ui5/webcomponents/dist/generated/assets/i18n'
 const wcrSource = 'node_modules/@ui5/webcomponents-react/dist/assets/i18n'
 const languageMap = { iw: 'he', sh: 'sr-Latn', cnr: 'sr-ME', no: 'nb', zh_CN: 'zh-CN', zh_TW: 'zh-TW', pt: 'pt-BR' }

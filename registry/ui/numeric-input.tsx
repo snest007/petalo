@@ -212,7 +212,11 @@ function NumericInput({
     event.preventDefault()
   }
 
-  const message = hasState ? valueStateMessage === undefined ? messages[effectiveState] : valueStateMessage : undefined
+  // Input.js/hasValueStateMessage excludes Positive. Its default
+  // announcement is the state type alone; explicit text still describes it.
+  const message = hasState
+    ? valueStateMessage === undefined && effectiveState !== "positive" ? messages[effectiveState] : valueStateMessage
+    : undefined
   const stateDescription = hasState ? [resolved[stateKey[effectiveState]], message].filter(Boolean).join(" ") : undefined
   const direction = dir ?? (localized ? resolvedDir : undefined)
   return (
@@ -240,7 +244,7 @@ function NumericInput({
         </div>
       </div>
       {name && <input type="hidden" name={name} form={form} disabled={disabled} value={String(value)} />}
-      {hasState && interactive && message && (
+      {hasState && effectiveState !== "positive" && interactive && message && (
         <div data-slot="numeric-input-message" data-value-state={effectiveState} data-popover=""
           data-sap-ui-fastnavgroup-container="true" role="status"
           className={cn("fiori-value-state-message fiori-numeric-input__message", classNames?.message)}>

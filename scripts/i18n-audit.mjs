@@ -215,6 +215,9 @@ for (const name of shipped) {
 function resolveKey(name, key, seen = new Set()) {
   if (seen.has(name)) return undefined
   seen.add(name)
+  // Button's badge keys are consumed only when an action supplies the badge slot.
+  // A dependency on Button alone does not prove the equivalent native slot is ported.
+  if (seen.size > 1 && name === 'button' && /^BUTTON_BADGE_(?:ONE_ITEM|MANY_ITEMS)$/.test(key)) return undefined
   const owner = resolutions[name]
   if (!owner) return undefined
   if (owner.rows[key]) return owner.rows[key]
@@ -290,10 +293,37 @@ function wcrRows(component, name) {
   })
 }
 
+// Keep scanned keys visible when the pinned component's template cannot reach them.
+const unreachable = {}
+function unrendered(component, keys, reason) {
+  for (const key of keys) unreachable[`${component}/${key}`] = reason
+}
+for (const [component, reason] of [
+  ['button-badge', 'ButtonBadgeTemplate hides the Tag state icon.'],
+  ['split-button', 'SplitButtonTemplate only renders decorative Button icons.'],
+  ['numeric-input', 'NumericInputTemplate hides private step icons; InputPopoverTemplate uses a decorative state icon.'],
+]) unrendered(component, ['ICON_ARIA_TYPE_IMAGE', 'ICON_ARIA_TYPE_INTERACTIVE'], reason)
+unrendered('button-badge', ['TAG_ERROR', 'TAG_INFORMATION', 'TAG_ROLE_DESCRIPTION', 'TAG_SUCCESS'], 'ButtonBadgeTemplate only renders a noninteractive Critical Tag.')
+unrendered('split-button', ['BUSY_INDICATOR_TITLE', 'BUTTON_ROLE_DESCRIPTION', 'LINK_ROLE_DESCRIPTION', 'LABEL_COLON', 'BUTTON_BADGE_ONE_ITEM', 'BUTTON_BADGE_MANY_ITEMS'],
+  'SplitButtonTemplate renders plain inner buttons without loading, badge, associated label or CustomAnnouncement metadata.')
+unrendered('numeric-input', ['VALUE_STATE_SUCCESS'], 'Input.hasValueStateMessage excludes Positive from the default message; the VALUE_STATE_TYPE_SUCCESS description remains.')
+unrendered('numeric-input', ['NUMBERINPUT_DEC_ICON_TITLE', 'NUMBERINPUT_INC_ICON_TITLE'], 'NumericInputTemplate guards these titles with private _showStepButtons; StepInput enables that flag and owns the visible controls.')
+unrendered('numeric-input', [
+  'INPUT_AVALIABLE_VALUES', 'INPUT_CLEAR_ICON_ACC_NAME', 'INPUT_SUGGESTIONS', 'INPUT_SUGGESTIONS_CANCEL_BUTTON',
+  'INPUT_SUGGESTIONS_COLLAPSED', 'INPUT_SUGGESTIONS_EXPANDED', 'INPUT_SUGGESTIONS_MORE_HITS', 'INPUT_SUGGESTIONS_NO_HIT',
+  'INPUT_SUGGESTIONS_OK_BUTTON', 'INPUT_SUGGESTIONS_ONE_HIT', 'INPUT_SUGGESTIONS_TITLE',
+], 'NumericInputTemplate does not enable clear or suggestion features on its inner Input.')
+unrendered('numeric-input', ['POPOVER_ARIA_DESCRIBEDBY_RESIZABLE', 'POPOVER_HANDLE_ARIA_ROLEDESCRIPTION', 'POPOVER_RESIZE_HANDLE_ARIA_LABEL', 'POPOVER_RESIZE_HANDLE_TOOLTIP'],
+  'InputPopoverTemplate does not make the NumericInput value-state popover resizable.')
+unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STATE_LINKS_MAC', 'VALUE_STATE_LINK_MAC'],
+  'NumericInputTemplate forwards a slot element to the inner Input; Input.valueStateLinks inspects element children, not assigned nodes of that slot.')
+
 for (const component of shipped) if (!ownerByComponent[component] && !wcrComponents[component]) throw new Error(`Missing owning card for ${component}`)
 const audit = shipped.filter(component => !wcrComponents[component]).map(component => ({ component, owner: ownerByComponent[component], rows: [...new Set([...nativeByComponent[component], ...Object.keys(resolutions[component].rows).filter(key => key in defaults)])].sort().map(key => {
-  const property = resolveKey(component, key) ?? 'No implemented provider/override text owner'
-  const status = resolveKey(component, key) ? 'fixed in E5' : 'gap'
+  const inactive = unreachable[`${component}/${key}`]
+  const implementation = !inactive && resolveKey(component, key)
+  const property = inactive || implementation || 'No implemented provider/override text owner'
+  const status = inactive ? 'not rendered' : implementation ? 'fixed in E5' : 'gap'
   const nativeReferences = [...new Set(componentSources[component].flatMap(file => [...(referenceCache.get(file)?.[key] ?? [])]))].sort()
   const definition = englishDefinition(component, key, nativeReferences, property)
   if (!nativeReferences.length && definition.englishSource) nativeReferences.push(definition.englishSource)
@@ -311,7 +341,7 @@ mkdirSync(dirname(auditEvidencePath), { recursive: true })
 writeFileSync(auditEvidencePath, JSON.stringify({ audit, keys, sourceHashes }, null, 2) + '\n')
 if (process.argv.includes('--write-baseline')) {
   if (audit.some(group => !group.owner)) throw new Error('Every baseline component needs its owning P card')
-  writeFileSync('tests/i18n-audit-baseline.json', JSON.stringify(Object.fromEntries(audit.filter(group => group.reference !== 'wcr' || shipped.includes(group.component)).map(group => [group.component, { owner: group.owner, gapCount: group.rows.filter(row => row.status === 'gap').length, okKeys: group.rows.filter(row => row.status !== 'gap').map(row => row.key) }])), null, 2) + '\n')
+  writeFileSync('tests/i18n-audit-baseline.json', JSON.stringify(Object.fromEntries(audit.filter(group => group.reference !== 'wcr' || shipped.includes(group.component)).map(group => [group.component, { owner: group.owner, gapCount: group.rows.filter(row => row.status === 'gap').length, okKeys: group.rows.filter(row => row.status === 'ok' || row.status === 'fixed in E5').map(row => row.key) }])), null, 2) + '\n')
 }
 console.log(process.argv.includes('--json') ? JSON.stringify({ audit, keys, sourceHashes }) : `i18n audit: ${audit.length} components, ${keys.length} unique keys, ${all.length} rows, ${all.filter(row => row.status === 'gap').length} gaps`)
 export { audit, keys, defaults }

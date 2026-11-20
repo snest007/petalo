@@ -3,7 +3,9 @@
 | Item | Summary |
 | --- | --- |
 | [button](#button) | Trigger an explicit action with priority and semantic intent. |
+| [button-badge](#button-badge) | Show a count or attract attention on an existing action. |
 | [segmented-button](#segmented-button) | Switch related view or setting options in a connected group. |
+| [split-button](#split-button) | Run a common action directly and keep alternatives available from the adjacent arrow. |
 | [toggle-button](#toggle-button) | Keep a secondary toolbar action visibly on or off. |
 
 ## button
@@ -20,16 +22,36 @@ Trigger an explicit action with priority and semantic intent.
 
 ### Don't use when
 
-- Navigate to a page, object or external URL. → [link](display.md#link)
-- Keep an action visibly active until the user turns it off. → [toggle-button](actions.md#toggle-button)
-- Choose related view options, one form option or independent form options. → [segmented-button](actions.md#segmented-button), [radio-group](forms.md#radio-group), [checkbox](forms.md#checkbox)
+- Run a primary action and expose related alternatives. → [split-button](actions.md#split-button)
+- Put an item count or attention dot on the action. → [button-badge](actions.md#button-badge)
+- Navigate to a page, object or external URL, or guide users through a sequence of task steps. → [link](display.md#link), [wizard](navigation.md#wizard)
+- Keep a choice visibly active or let users choose related view or form options. → [toggle-button](actions.md#toggle-button), [segmented-button](actions.md#segmented-button), [radio-group](forms.md#radio-group), [checkbox](forms.md#checkbox)
 - Select local files for upload. → [file-uploader](forms.md#file-uploader)
-- Navigate through a guided sequence of task steps. → [wizard](navigation.md#wizard)
 
 Main exports: `Button`.
 
 ```bash
 npx shadcn add @petalo/button
+```
+
+## button-badge
+
+Show a count or attract attention on an existing action.
+
+### Use when
+
+- Show a count inline in compact density, overlay a count in cozy density, or draw attention with a dot in either density.
+- Use a count for the number of relevant items or an attention dot to indicate activity without a count.
+
+### Don't use when
+
+- Trigger an action that needs no count or attention indicator. → [button](actions.md#button)
+- Label a standalone category or status outside an action. → [tag](display.md#tag)
+
+Main exports: `ButtonBadge`.
+
+```bash
+npx shadcn add @petalo/button-badge
 ```
 
 ## segmented-button
@@ -55,6 +77,26 @@ Main exports: `SegmentedButton`, `SegmentedButtonItem`.
 
 ```bash
 npx shadcn add @petalo/segmented-button
+```
+
+## split-button
+
+Run a common action directly and keep alternatives available from the adjacent arrow.
+
+### Use when
+
+- Give users a shortcut to the most common action, such as exporting to PDF, while offering other formats in a menu.
+- Use the same design for both action parts and give the primary action a clear label.
+
+### Don't use when
+
+- Only one action is available. → [button](actions.md#button)
+- All commands require opening the menu first. → [menu](overlays.md#menu)
+
+Main exports: `SplitButton`.
+
+```bash
+npx shadcn add @petalo/split-button
 ```
 
 ## toggle-button
