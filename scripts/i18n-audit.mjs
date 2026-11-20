@@ -21,6 +21,18 @@ for (const pkg of packages) {
   sourceHashes[bundleFile] = createHash('sha256').update(bundleText).digest('hex')
   for (const [key, value] of Object.entries(bundle)) { table[key] ??= value; defaults[key] ??= value; definitions[key] ??= `${bundleFile}:${bundleText.slice(0, bundleText.indexOf(JSON.stringify(key) + ':')).split('\n').length} (English definition)`; definitionSources[key] ??= definitions[key] }
 }
+const wcr = 'node_modules/@ui5/webcomponents-react/dist'
+const wcrDefinitions = `${wcr}/i18n/i18n-defaults.js`
+const wcrDefaultsSource = readFileSync(wcrDefinitions, 'utf8')
+sourceHashes[wcrDefinitions] = createHash('sha256').update(wcrDefaultsSource).digest('hex')
+const wcrEnglish = {}
+for (const match of wcrDefaultsSource.matchAll(/const (\w+) = \{\s*key: "([^"]+)",\s*defaultText: ("(?:[^"\\]|\\.)*")\s*\}/g)) {
+  const key = `wcr:${match[2]}`
+  const english = defaults[key] = JSON.parse(match[3])
+  const englishSource = `${wcrDefinitions}:${wcrDefaultsSource.slice(0, match.index).split('\n').length} (English definition)`
+  wcrEnglish[match[1]] = { key, english, englishSource }
+}
+
 export function properties(text) {
   const table = {}
   // Java resource properties: continuation lines, Unicode, newline and escaped separators.
@@ -136,7 +148,8 @@ function englishDefinition(component, key, references, property) {
   const owner = property.match(/(?:^|delegated )([^ :]+):/)?.[1]
   const domains = [...references.map(sourceDomain), ...(componentDomains[component] ?? []), ...(componentDomains[owner] ?? []), ...Object.keys(defaultTables)]
   const domain = domains.find(domain => domain && Object.hasOwn(defaultTables[domain], key))
-  return { english: defaultTables[domain]?.[key] ?? '', englishSource: definitionTables[domain]?.[key] }
+  const source = domain?.startsWith('@openui5/') ? 'openui5' : domain === '@ui5/webcomponents-fiori' ? 'ui5-fiori' : 'ui5'
+  return { source, english: defaultTables[domain]?.[key] ?? '', englishSource: definitionTables[domain]?.[key] }
 }
 const shipped = readdirSync('registry/ui').filter(file => file.endsWith('.tsx')).map(file => file.slice(0, -4)).sort()
 const resolutions = {}
@@ -235,8 +248,50 @@ const ownerByComponent = Object.fromEntries([...readFileSync('docs/plan/README.m
 // Icon has no i18n rows and is omitted from the wave-P table; keep the shared
 // display primitive's zero-count inventory under P5 rather than inventing gaps.
 ownerByComponent.icon = 'P5'
-for (const component of shipped) if (!ownerByComponent[component]) throw new Error(`Missing owning P card for ${component}`)
-const audit = shipped.map(component => ({ component, owner: ownerByComponent[component], rows: [...new Set([...nativeByComponent[component], ...Object.keys(resolutions[component].rows).filter(key => key in defaults)])].sort().map(key => {
+
+// Audit WCR's package-owned text imports from each component and its internal
+// hooks/renderers. Shared Web Component keys continue to use their own domain.
+const wcrComponents = {
+  'action-sheet': ['ActionSheet', 'H10'],
+  'analytical-card-header': ['AnalyticalCardHeader', 'H10'],
+  'analytical-table': ['AnalyticalTable', 'H1'],
+  'message-box': ['MessageBox', 'H7'],
+  'message-view': ['MessageView', 'H0'],
+  'select-dialog': ['SelectDialog', 'H9'],
+  'splitter-layout': ['SplitterLayout', 'H9'],
+}
+
+function wcrRows(component, name) {
+  const directory = `${wcr}/components/${name}`
+  const imports = new Map()
+  for (const file of readdirSync(directory, { recursive: true }).filter(file => file.endsWith('.js')).sort()) {
+    const path = `${directory}/${file}`
+    const text = readFileSync(path, 'utf8')
+    const declaration = /import\s*\{([^}]+)\}\s*from\s*['"](\.[^'"]*\/i18n\/i18n-defaults\.js)['"]/g
+    for (const match of text.matchAll(declaration)) {
+      if (resolve(dirname(path), match[2]) !== resolve(wcrDefinitions)) continue
+      sourceHashes[path] = createHash('sha256').update(text).digest('hex')
+      const line = text.slice(0, match.index).split('\n').length
+      for (const symbol of match[1].split(',').map(entry => entry.trim().split(/\s+as\s+/)[0])) {
+        if (!wcrEnglish[symbol]) throw new Error(`Missing WCR English definition for ${symbol} in ${path}`)
+        if (!imports.has(symbol)) imports.set(symbol, [])
+        imports.get(symbol).push(`${path}:${line} (WCR key import)`)
+      }
+    }
+  }
+  return [...imports].sort(([a], [b]) => a.localeCompare(b)).map(([symbol, nativeReferences]) => {
+    const definition = wcrEnglish[symbol]
+    const property = resolveKey(component, definition.key)
+    const status = property ? 'ok' : shipped.includes(component) ? 'gap' : 'reference only'
+    return {
+      ...definition, source: 'wcr', nativeReferences, status,
+      property: property ?? (status === 'gap' ? 'No implemented provider/override text owner' : 'Port pending'),
+    }
+  })
+}
+
+for (const component of shipped) if (!ownerByComponent[component] && !wcrComponents[component]) throw new Error(`Missing owning card for ${component}`)
+const audit = shipped.filter(component => !wcrComponents[component]).map(component => ({ component, owner: ownerByComponent[component], rows: [...new Set([...nativeByComponent[component], ...Object.keys(resolutions[component].rows).filter(key => key in defaults)])].sort().map(key => {
   const property = resolveKey(component, key) ?? 'No implemented provider/override text owner'
   const status = resolveKey(component, key) ? 'fixed in E5' : 'gap'
   const nativeReferences = [...new Set(componentSources[component].flatMap(file => [...(referenceCache.get(file)?.[key] ?? [])]))].sort()
@@ -244,15 +299,19 @@ const audit = shipped.map(component => ({ component, owner: ownerByComponent[com
   if (!nativeReferences.length && definition.englishSource) nativeReferences.push(definition.englishSource)
   return { key, ...definition, property, status, ...(status === 'gap' ? triage.get(`${component}/${key}`) ?? { triage: 'owner-review', triageNote: 'Newly inventoried native channel requires owning P-card review.' } : {}), nativeReferences }
 }) }))
+for (const [component, [native, owner]] of Object.entries(wcrComponents)) {
+  audit.push({ component, owner, reference: 'wcr', rows: wcrRows(component, native) })
+}
+audit.sort((a, b) => a.component.localeCompare(b.component))
 const escape = s => String(s).replaceAll('|', '\\|').replaceAll('\n', '<br>')
 const all = audit.flatMap(group => group.rows), keys = [...new Set(all.map(row => row.key))].sort()
-const markdown = '# UI5 localization audit\n\nGenerated by `node scripts/i18n-audit.mjs` from installed UI5 Web Components 2.28.1 and OpenUI5 1.154.0. Every native imported key is retained, including rendered subcomponents, function-only announcement helpers and the OpenUI5 library key families required by E5. `gap` means no actual translated render/announcement owner exists; it is never counted as fixed by an unused prop.\n\nThe 2026-11-17 E5 scope creates the ratchet in `tests/i18n-audit-baseline.json`; remaining gaps belong to P1, P2, P2a and P3–P6. P2a owns Calendar and the three date pickers; TimePicker and PickerField remain P2. Native source references identify key expressions, not automatic proof of render reachability. Library-definition-only rows still need owning-channel review. `accessibilityInfo.type` is metadata at its direct owner but CustomAnnouncement consumes it in custom List/Table content, so there is no global metadata exclusion. Retained triage categories and notes are carried forward below; they never waive a gap. Full source references, owning English definitions and hashes are preserved in `' + auditEvidencePath + '`. English defaults resolve from the native consuming counterpart, including identically named WC and OpenUI5 keys.\n\nPinned-source drift: StepInput delegates to NumericInput in 2.28.1 and uses `NUMBERINPUT_*`, rather than the card example’s earlier `STEPINPUT_*`. Icon has no i18n rows; its zero-count shared display inventory is assigned to P5.\n\n' + audit.map(group => `## ${group.component}\n\nOwner: ${group.owner}\n\n| UI5 key | English text | React property / owner | Status | Triage | Triage note | Native source / channel |\n| --- | --- | --- | --- | --- | --- | --- |\n` + group.rows.map(row => `| ${escape(row.key)} | ${escape(row.english)} | ${escape(row.property)} | ${row.status} | ${row.triage ?? ''} | ${escape(row.triageNote ?? '')} | ${escape(row.nativeReferences.slice(0, 3).join('; '))}${row.nativeReferences.length > 3 ? `; +${row.nativeReferences.length - 3} more in audit.json` : ''} |`).join('\n') + '\n').join('\n')
+const markdown = '# UI5 localization audit\n\nGenerated by `node scripts/i18n-audit.mjs` from installed UI5 Web Components 2.28.1, UI5 Web Components for React 2.28.2 and OpenUI5 1.154.0. Every native imported key is retained, including rendered subcomponents, function-only announcement helpers and the OpenUI5 library key families required by E5. `gap` means no actual translated render/announcement owner exists; it is never counted as fixed by an unused prop.\n\nThe 2026-11-17 E5 scope creates the ratchet in `tests/i18n-audit-baseline.json`; remaining gaps belong to P1, P2, P2a and P3–P6. P2a owns Calendar and the three date pickers; TimePicker and PickerField remain P2. Native source references identify key expressions, not automatic proof of render reachability. Library-definition-only rows still need owning-channel review. `accessibilityInfo.type` is metadata at its direct owner but CustomAnnouncement consumes it in custom List/Table content, so there is no global metadata exclusion. Retained triage categories and notes are carried forward below; they never waive a gap. Full source references, owning English definitions and hashes are preserved in `' + auditEvidencePath + '`. English defaults resolve from the native consuming counterpart, including identically named WC and OpenUI5 keys. WCR keys are namespaced as `wcr:<KEY>`. H cards own the WCR inventory, where `reference only` means the translation is available in the pack and the component port is pending.\n\nPinned-source drift: StepInput delegates to NumericInput in 2.28.1 and uses `NUMBERINPUT_*`, rather than the card example’s earlier `STEPINPUT_*`. Icon has no i18n rows; its zero-count shared display inventory is assigned to P5.\n\n' + audit.map(group => `## ${group.component}\n\nOwner: ${group.owner}\n\n| SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |\n| --- | --- | --- | --- | --- | --- | --- | --- |\n` + group.rows.map(row => `| ${escape(row.key)} | ${escape(row.english)} | ${escape(row.property)} | ${row.status} | ${row.triage ?? ''} | ${escape(row.triageNote ?? '')} | ${escape(row.nativeReferences.slice(0, 3).join('; '))}${row.nativeReferences.length > 3 ? `; +${row.nativeReferences.length - 3} more in audit.json` : ''} | ${row.source} |`).join('\n') + '\n').join('\n')
 writeFileSync('docs/plan/i18n-audit.md', markdown)
 mkdirSync(dirname(auditEvidencePath), { recursive: true })
 writeFileSync(auditEvidencePath, JSON.stringify({ audit, keys, sourceHashes }, null, 2) + '\n')
 if (process.argv.includes('--write-baseline')) {
   if (audit.some(group => !group.owner)) throw new Error('Every baseline component needs its owning P card')
-  writeFileSync('tests/i18n-audit-baseline.json', JSON.stringify(Object.fromEntries(audit.map(group => [group.component, { owner: group.owner, gapCount: group.rows.filter(row => row.status === 'gap').length, okKeys: group.rows.filter(row => row.status !== 'gap').map(row => row.key) }])), null, 2) + '\n')
+  writeFileSync('tests/i18n-audit-baseline.json', JSON.stringify(Object.fromEntries(audit.filter(group => group.reference !== 'wcr' || shipped.includes(group.component)).map(group => [group.component, { owner: group.owner, gapCount: group.rows.filter(row => row.status === 'gap').length, okKeys: group.rows.filter(row => row.status !== 'gap').map(row => row.key) }])), null, 2) + '\n')
 }
-console.log(process.argv.includes('--json') ? JSON.stringify({ audit, keys, sourceHashes }) : `i18n audit: ${shipped.length} components, ${keys.length} unique keys, ${all.length} rows, ${all.filter(row => row.status === 'gap').length} gaps`)
+console.log(process.argv.includes('--json') ? JSON.stringify({ audit, keys, sourceHashes }) : `i18n audit: ${audit.length} components, ${keys.length} unique keys, ${all.length} rows, ${all.filter(row => row.status === 'gap').length} gaps`)
 export { audit, keys, defaults }

@@ -9,7 +9,7 @@ import AxeBuilder from "@axe-core/playwright"
 import { formatPickerDate } from "../registry/ui/date-picker"
 import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
-import { FioriLocaleProvider, useFioriTexts } from "../registry/lib/fiori-locale"
+import { FioriLocaleProvider, useFioriLocale, useFioriTexts } from "../registry/lib/fiori-locale"
 import { Card, CardContent } from "../registry/ui/card"
 
 const de = JSON.parse(readFileSync("registry/i18n/de.json", "utf8"))
@@ -17,7 +17,7 @@ const locales = ["de-DE", "zh-CN", "ar-EG"]
 const components = ["calendar", "date-picker", "date-time-picker", "time-picker", "step-input", "slider"]
 const e5Evidence = process.env.E5_EVIDENCE ?? "test-results/i18n"
 
-interface AuditGroup { component: string; owner: string; rows: { key: string; status: string; english: string; englishSource: string; triage?: string }[] }
+interface AuditGroup { component: string; owner: string; reference?: "wcr"; rows: { key: string; source: string; status: string; english: string; englishSource: string; triage?: string }[] }
 type AuditBaseline = Record<string, { owner: string; gapCount: number; okKeys: string[] }>
 function readSourceAudit(): AuditGroup[] {
   // The complete source/reference inventory exceeds execFileSync's default 1 MiB.
@@ -43,7 +43,7 @@ function auditRatchetProblems(audit: AuditGroup[], baseline: AuditBaseline) {
 
 test("i18n audit assigns the Calendar pilot to P2a and leaves time controls in P2", () => {
   const audit = readSourceAudit()
-  for (const group of audit) expect(group.owner, group.component).toMatch(/^P(?:2a|[1-6])$/)
+  for (const group of audit.filter((group) => group.reference !== "wcr")) expect(group.owner, group.component).toMatch(/^P(?:2a|[1-6])$/)
   expect(audit.filter(group => group.owner === "P2a").map(group => group.component).sort()).toEqual(["calendar", "date-picker", "date-range-picker", "date-time-picker"])
   for (const name of ["time-picker", "picker-field"]) expect(audit.find(group => group.component === name)?.owner, name).toBe("P2")
 })
@@ -53,7 +53,7 @@ test("i18n audit ratchet guards owning gap counts and every implemented key", ()
   const baseline = JSON.parse(readFileSync("tests/i18n-audit-baseline.json", "utf8")) as AuditBaseline
   expect(auditRatchetProblems(audit, baseline)).toEqual([])
   for (const group of audit) {
-    expect(group.owner, group.component).toMatch(/^P(?:2a|[1-6])$/)
+    expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:10|[0-9])$/ : /^P(?:2a|[1-6])$/)
     expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
   }
   // Exercise regressions against the real source inventory: a gap reduction needs
@@ -641,17 +641,28 @@ test("RTL slider keys follow the inherited DOM direction", async ({ page }) => {
   await expect(handle).toHaveAttribute("aria-valuenow", "0.5")
 })
 
-test("packs regenerate deterministically and contain only audited rendered keys", () => {
+test("packs regenerate deterministically and contain audited registry and WCR keys", () => {
   test.setTimeout(30_000)
   const files = () => readdirSync("registry/i18n").sort().map(name => [name, readFileSync(`registry/i18n/${name}`, "utf8")])
   execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
   const before = files()
   execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
   expect(files()).toEqual(before)
-  const rendered = new Set(readSourceAudit().flatMap(group => group.rows.filter(row => row.status !== "gap").map(row => row.key)))
+  const audit = readSourceAudit()
+  const rendered = new Set(audit.flatMap(group => group.rows.filter(row => row.source === "wcr" || row.status !== "gap").map(row => row.key)))
+  const analyticalTable = audit.find(group => group.component === "analytical-table")!
+  const wcrKeys = analyticalTable.rows.map(row => row.key)
+  expect(wcrKeys).toHaveLength(43)
+  expect(wcrKeys).toContain("wcr:LIST_NO_DATA")
+  expect(analyticalTable.rows.every(row => row.source === "wcr" && row.key.startsWith("wcr:"))).toBe(true)
   const packs = readdirSync("registry/i18n").filter(name => name.endsWith(".json") && name !== "registry-items.json")
   expect(packs).toHaveLength(48)
-  for (const name of packs) for (const key of Object.keys(JSON.parse(readFileSync(`registry/i18n/${name}`, "utf8")))) expect(rendered.has(key), `${name}/${key}`).toBe(true)
+  for (const name of packs) {
+    const pack = JSON.parse(readFileSync(`registry/i18n/${name}`, "utf8"))
+    for (const key of Object.keys(pack)) expect(rendered.has(key), `${name}/${key}`).toBe(true)
+    for (const key of wcrKeys) expect(typeof pack[key], `${name}/${key}`).toBe("string")
+  }
+  expect(de["wcr:LIST_NO_DATA"]).toBe("Keine Daten")
 })
 
 test("collation follows German and Swedish accent ordering", async ({ page }) => {
@@ -911,4 +922,27 @@ test("editable RangeSlider swaps endpoints and input focus like native UI5, and 
   expect(results.react).toEqual(results.ui5)
   mkdirSync(`${e5Evidence}/oracles`, { recursive: true })
   writeFileSync(`${e5Evidence}/oracles/range-tooltip.json`, JSON.stringify(results, null, 2))
+})
+
+test("WCR smoke table uses SAP's localized empty text", async ({ page }) => {
+  const translations = { "de-DE": ["Keine Daten", "ltr"], "zh-CN": ["无数据", "ltr"], "ar-EG": ["لا توجد بيانات", "rtl"] }
+  for (const [locale, [message, dir]] of Object.entries(translations)) {
+    await page.goto(`/wcr.html?locale=${locale}&dir=${dir}&only=wcr-smoke-empty`)
+    await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
+    const cell = page.locator("[data-fixture=wcr-smoke-empty]")
+    await expect(cell).toHaveAttribute("dir", dir)
+    await expect(cell.getByRole("gridcell", { name: message, exact: true })).toBeVisible()
+  }
+})
+
+test("WCR provider keys coexist with Web Component keys", () => {
+  function Texts() {
+    const { t } = useFioriLocale()
+    return React.createElement("span", null, t("wcr:LIST_NO_DATA", ""), " / ", t("LIST_NO_DATA", ""))
+  }
+  const view = React.createElement(FioriLocaleProvider, {
+    locale: "de-DE",
+    texts: { ...de, "wcr:LIST_NO_DATA": "Keine Tabellendaten" },
+  }, React.createElement(Texts))
+  expect(renderToStaticMarkup(view)).toBe("<span>Keine Tabellendaten / Keine Daten</span>")
 })

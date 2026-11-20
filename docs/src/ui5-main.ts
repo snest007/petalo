@@ -33,8 +33,9 @@ const root = document.getElementById("root")!
 root.dir = "ltr"
 root.style.cssText = "display:flex;flex-wrap:wrap;gap:1rem;align-items:flex-start"
 const fixtureReadiness: Promise<void>[] = []
-;(window as any).__fixtures = (phoneMode ? phoneFixtureSets : fixtureSets).flatMap((set) => set.cases.map((c) => ({ id: c.id, tolerance: set.tolerance ?? 0.02 })))
-for (const set of phoneMode ? phoneFixtureSets : fixtureSets) {
+const activeSets = phoneMode ? phoneFixtureSets : fixtureSets.filter((set) => set.reference !== "wcr")
+;(window as any).__fixtures = activeSets.flatMap((set) => set.cases.map((c) => ({ id: c.id, tolerance: set.tolerance ?? 0.02 })))
+for (const set of activeSets) {
   const render = rendererFor(set.name)
   if (!render) continue
   for (const c of set.cases) {

@@ -140,9 +140,11 @@ without a provider. Set `dir` on your application's root for RTL; the provider e
 the document. The Localization docs page demonstrates text overrides, decimal input, date/time formatting,
 collation and plural categories. The Storybook Locale toolbar loads the matching optional pack.
 
-The 48 optional packs are generated deterministically from SAP's UI5 Web Components **2.28.1** and
-OpenUI5 **1.154.0** translations (© SAP SE, Apache-2.0). They contain only keys with an implemented text owner;
-[the source audit](docs/plan/i18n-audit.md) records remaining localization gaps. E5 acceptance is still pending.
+The 48 optional packs are generated deterministically from SAP's UI5 Web Components **2.28.1**,
+UI5 Web Components for React **2.28.2** (WCR), and OpenUI5 **1.154.0** translations (© SAP SE, Apache-2.0).
+They include the text keys used by the registry and the audited keys for upcoming WCR ports.
+WCR text entries use the `wcr:<KEY>` namespace. For example, a WCR port looks up `t("wcr:LIST_NO_DATA", "No data")`.
+The source audit records which components own each text. [Localization audit](docs/plan/i18n-audit.md)
 Numeric and Gregorian date displays use Latin digits where the pinned UI5 formatters do; Arabic typed digits
 and separators are accepted as an input extension. Calendars remain Gregorian.
 
@@ -156,7 +158,7 @@ metadata as the docs and registry; run `pnpm skill:build` after editing usage gu
 
 ```bash
 pnpm install
-pnpm dev               # docs at http://localhost:5173; fixtures at /?fixtures, UI5 reference at /ui5.html
+pnpm dev               # docs at http://localhost:5173; fixtures at /?fixtures, UI5 at /ui5.html; WCR at /wcr.html
 pnpm check             # regenerate, typecheck, build registry + site, run all tests
 ```
 

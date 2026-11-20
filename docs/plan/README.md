@@ -301,7 +301,7 @@ Order (2026-11-20): E4 and E5 are done. H0 first. H1–H5 (AnalyticalTable) edit
 H7–H10 run in parallel with them and with each other, except cards that touch the same existing file (noted in each card).
 H6/H6b/H6c wait for P2a.
 
-- [ ] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
+- [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
 - [ ] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
 - [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2)
@@ -312,7 +312,7 @@ H6/H6b/H6c wait for P2a.
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
 - [ ] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
 - [ ] [H8 SplitButton, ButtonBadge, NumericInput](tasks/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
-- [ ] [H8b Finish H8 parity and audit registration](tasks/H8b-finish-h8-parity.md) — S (after the H8 component commits)
+- [ ] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
 - [ ] [H9 SelectDialog, SplitterLayout, DynamicDateRange, CalendarLegend check](tasks/H9-select-dialog-splitter-dynamic-date-range.md) — L (after H0)
 - [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
 
