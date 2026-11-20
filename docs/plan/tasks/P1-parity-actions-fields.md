@@ -57,3 +57,9 @@ stop, and report which components remain — the owner splits the rest into `P1b
 on the full `/ui5.html` reference to read one fixture; on a loaded or slower machine they time out. While touching
 SegmentedButton, load only the fixture each test reads (the `&only=<id>` page option the phone tests use) instead of
 the whole page. Don't raise timeouts.
+
+## Note added 2026-11-20 (moved out of H8b)
+
+NumericInput (added by H8, owner P1) has no paired fixture for its **focused value-state popup** yet. Add one that uses
+the UI5 input's actual validation popover kept in place (`docs/src/fixtures/ui5-popup-in-place.ts`). Behaviour tests
+already cover the visible status and the textbox description.
