@@ -1,0 +1,192 @@
+/* SplitButton.css.js: the host paints the continuous background and border; the
+   two button surfaces paint their hover/active states over it. */
+.fiori-split-button {
+  --split-background: var(--sapButton_Background);
+  --split-shadow: var(--fiori-split-button-host-default-box-shadow);
+  --split-hover: var(--sapButton_Hover_Background);
+  --split-primary-hover-border: var(--fiori-split-text-button-hover-border);
+  --split-primary-hover-end: var(--fiori-split-text-button-hover-border-right);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-hover-border);
+  --split-separator: var(--sapButton_TextColor);
+  --split-active-separator: var(--sapButton_TextColor);
+  --split-active-background: var(--sapButton_Active_Background);
+  --split-active-color: var(--sapButton_Active_TextColor);
+  --split-active-border: var(--sapButton_Lite_Active_BorderColor);
+  display: inline-flex;
+  position: relative;
+  min-width: 0;
+  max-width: 100%;
+  height: var(--fiori-button-base-height);
+  vertical-align: middle;
+  background: var(--split-background);
+  box-shadow: var(--split-shadow);
+  border-radius: var(--fiori-button-border-radius);
+  outline: none;
+}
+.fiori-split-button[data-design="emphasized"] {
+  --split-background: var(--sapButton_Emphasized_Background);
+  --split-shadow: var(--fiori-split-button-host-emphasized-box-shadow);
+  --split-hover: var(--sapButton_Emphasized_Hover_Background);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-emphasized-hover-border);
+  --split-separator: var(--sapButton_Emphasized_TextColor);
+  --split-active-separator: var(--fiori-split-button-emphasized-separator-color);
+  --split-active-background: var(--sapButton_Emphasized_Active_Background);
+  --split-active-color: var(--sapButton_Emphasized_Active_TextColor);
+  --split-active-border: var(--sapButton_Emphasized_Active_BorderColor);
+}
+.fiori-split-button[data-design="positive"] {
+  --split-background: var(--sapButton_Accept_Background);
+  --split-shadow: var(--fiori-split-button-host-positive-box-shadow);
+  --split-hover: var(--sapButton_Accept_Hover_Background);
+  --split-primary-hover-border: var(--fiori-split-text-button-positive-hover-border);
+  --split-primary-hover-end: var(--fiori-split-text-button-positive-hover-border-right);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-positive-hover-border);
+  --split-separator: var(--sapButton_Accept_TextColor);
+  --split-active-separator: var(--fiori-split-button-positive-separator-color);
+  --split-active-background: var(--sapButton_Accept_Selected_Background);
+  --split-active-color: var(--sapButton_Accept_Active_TextColor);
+  --split-active-border: var(--sapButton_Accept_Active_BorderColor);
+}
+.fiori-split-button[data-design="negative"] {
+  --split-background: var(--sapButton_Reject_Background);
+  --split-shadow: var(--fiori-split-button-host-negative-box-shadow);
+  --split-hover: var(--sapButton_Reject_Hover_Background);
+  --split-primary-hover-border: var(--fiori-split-text-button-negative-hover-border);
+  --split-primary-hover-end: var(--fiori-split-text-button-negative-hover-border-right);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-negative-hover-border);
+  --split-separator: var(--sapButton_Reject_TextColor);
+  --split-active-separator: var(--fiori-split-button-negative-separator-color);
+  --split-active-background: var(--sapButton_Reject_Selected_Background);
+  --split-active-color: var(--sapButton_Reject_Active_TextColor);
+  --split-active-border: var(--sapButton_Reject_Active_BorderColor);
+}
+.fiori-split-button[data-design="attention"] {
+  --split-background: var(--sapButton_Attention_Background);
+  --split-shadow: var(--fiori-split-button-host-attention-box-shadow);
+  --split-hover: var(--sapButton_Attention_Hover_Background);
+  --split-primary-hover-border: var(--fiori-split-text-button-attention-hover-border);
+  --split-primary-hover-end: var(--fiori-split-text-button-attention-hover-border-right);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-attention-hover-border);
+  --split-separator: var(--fiori-split-button-attention-separator-color-default);
+  --split-active-separator: var(--fiori-split-button-attention-separator-color);
+  --split-active-background: var(--sapButton_Attention_Selected_Background);
+  --split-active-color: var(--sapButton_Attention_Active_TextColor);
+  --split-active-border: var(--sapButton_Attention_Active_BorderColor);
+}
+.fiori-split-button[data-design="transparent"] {
+  --split-background: var(--sapButton_Lite_Background);
+  --split-shadow: var(--fiori-split-button-host-transparent-box-shadow);
+  --split-hover: var(--fiori-split-button-transparent-hover-background);
+  --split-primary-hover-border: var(--fiori-split-text-button-transparent-hover-border);
+  --split-primary-hover-end: var(--fiori-split-text-button-transparent-hover-border-right);
+  --split-arrow-hover-border: var(--fiori-split-arrow-button-transparent-hover-border);
+  --split-separator: var(--sapButton_Lite_TextColor);
+}
+.fiori-split-button[data-disabled] {
+  opacity: var(--sapContent_DisabledOpacity);
+  pointer-events: none;
+}
+.fiori-split-button[data-design="transparent"][data-disabled] {
+  background: var(--fiori-split-button-transparent-disabled-background);
+}
+.fiori-split-button[data-design="transparent"]:not([data-disabled]):hover {
+  background: var(--split-hover);
+  box-shadow: var(--fiori-split-button-host-transparent-hover-box-shadow);
+}
+.fiori-split-button[data-design="transparent"]:hover > button:not(:hover):not([data-active]) {
+  color: var(--fiori-split-button-transparent-hover-color);
+}
+.fiori-split-button > button {
+  /* SplitButton.css.js overrides the Button host's border and background. */
+  border-width: .0625rem !important;
+  border-color: var(--fiori-split-text-button-border-color) !important;
+  background-color: var(--fiori-split-text-button-background-color) !important;
+  text-shadow: var(--fiori-button-text-shadow);
+}
+.fiori-split-button > .fiori-split-button__primary {
+  flex: 1 1 auto;
+  justify-content: flex-start;
+  border-start-end-radius: var(--sapButton_Segment_BorderCornerRadius) !important;
+  border-end-end-radius: var(--sapButton_Segment_BorderCornerRadius) !important;
+  border-inline-end-width: var(--fiori-split-button-text-button-right-border-width) !important;
+}
+.fiori-split-button__label { overflow: hidden; text-overflow: ellipsis; }
+.fiori-split-button__label:empty { display: none; }
+.fiori-split-button__arrow {
+  border-start-start-radius: var(--sapButton_Segment_BorderCornerRadius) !important;
+  border-end-start-radius: var(--sapButton_Segment_BorderCornerRadius) !important;
+}
+.fiori-split-button[data-design="emphasized"] .fiori-split-button__primary {
+  border: var(--fiori-split-text-button-emphasized-border) !important;
+  border-width: var(--fiori-split-text-button-emphasized-border-width) !important;
+}
+.fiori-split-button > button:hover { background-color: var(--split-hover) !important; box-shadow: none; }
+.fiori-split-button:not([data-design="emphasized"]) .fiori-split-button__primary:hover {
+  border: var(--split-primary-hover-border) !important;
+  border-inline-end: var(--split-primary-hover-end) !important;
+}
+.fiori-split-button__arrow:hover { border: var(--split-arrow-hover-border) !important; }
+.fiori-split-button[data-design="emphasized"] .fiori-split-button__arrow:hover {
+  box-shadow: var(--fiori-split-arrow-button-emphasized-hover-box-shadow, none);
+}
+.fiori-split-button[data-design="emphasized"] .fiori-split-button__arrow:dir(rtl):hover {
+  box-shadow: var(--fiori-split-arrow-button-emphasized-hover-box-shadow-rtl, none);
+}
+.fiori-split-button > button:is(:active, [data-active]) {
+  /* SplitButton's shadow styles override the child Button's own active colors. */
+  background-color: var(--split-active-background) !important;
+  color: var(--split-active-color) !important;
+  border-color: var(--split-active-border) !important;
+}
+.fiori-split-button:is([data-design="default"], [data-design="transparent"]) .fiori-split-button__primary:is(:active, [data-active]) {
+  border-color: var(--sapButton_Active_BorderColor) !important;
+}
+.fiori-split-button[data-design="emphasized"] .fiori-split-button__arrow:is(:active, [data-active]) {
+  background-color: var(--sapButton_Selected_Background) !important;
+  border: var(--split-arrow-hover-border) !important;
+}
+.fiori-split-button > button:focus-visible::after { content: none; }
+.fiori-split-button > .fiori-split-button__primary::before { content: none; }
+.fiori-split-button > .fiori-split-button__arrow::before {
+  content: "";
+  position: absolute;
+  box-sizing: border-box;
+  pointer-events: none;
+  width: .0625rem;
+  height: var(--fiori-split-button-middle-separator-height);
+  inset-inline-start: var(--fiori-split-button-middle-separator-left);
+  inset-block-start: var(--fiori-split-button-middle-separator-top);
+  background: var(--split-separator);
+  border: 0;
+  border-radius: 0;
+}
+.fiori-split-button :is(.fiori-split-button__primary:hover + .fiori-split-button__arrow, .fiori-split-button__arrow:hover)::before {
+  display: var(--fiori-split-button-middle-separator-hover-display);
+}
+.fiori-split-button[data-design="emphasized"] .fiori-split-button__arrow:hover::before {
+  display: var(--fiori-split-button-middle-separator-hover-display-emphasized);
+}
+.fiori-split-button :is(.fiori-split-button__primary[data-active] + .fiori-split-button__arrow, .fiori-split-button__arrow[data-active])::before {
+  background: var(--split-active-separator);
+}
+.fiori-split-button:is(:focus-visible, :has(> button:focus-visible))::after {
+  content: "";
+  position: absolute;
+  inset: .125rem;
+  border: var(--fiori-split-button-focused-border);
+  border-radius: var(--fiori-split-button-focused-border-radius);
+  pointer-events: none;
+}
+.fiori-split-button[data-design="emphasized"]::after {
+  border-color: var(--sapContent_ContrastFocusColor);
+}
+
+/* Match the template's clipped description nodes without adding AX wrappers. */
+.fiori-split-button__hidden {
+  position: absolute;
+  clip: rect(1px, 1px, 1px, 1px);
+  inset-inline-start: -1000px;
+  top: -1000px;
+  pointer-events: none;
+  font-size: 0;
+}
