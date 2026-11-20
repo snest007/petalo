@@ -50,3 +50,10 @@ AGENTS.md definition of done; `owner: "P1"` entries in the tree baseline: **0**;
 components: 0 except rows recorded as `absent-feature` (listed in the final message with their UI5 property) and
 justified `a11yDiff`s; Storybook suite green twice. If the card turns out bigger than L, finish whole components,
 stop, and report which components remain — the owner splits the rest into `P1b`.
+
+## Note added 2026-11-20 (from the cancelled E9)
+
+`tests/segmented-button.spec.ts` › `<root|item> <channel> reaches the UI5 owning element` (8 tests) opens a second page
+on the full `/ui5.html` reference to read one fixture; on a loaded or slower machine they time out. While touching
+SegmentedButton, load only the fixture each test reads (the `&only=<id>` page option the phone tests use) instead of
+the whole page. Don't raise timeouts.

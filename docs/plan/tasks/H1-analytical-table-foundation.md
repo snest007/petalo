@@ -7,7 +7,7 @@
 **Goal:** start `AnalyticalTable` — the React port of WCR 2.28.2's `AnalyticalTable` — with the architecture every later
 card (H2–H5) builds on, and the column features: sizing, resizing, reordering, hiding, freezing (sticky). Ported from
 `node_modules/@ui5/webcomponents-react/dist/components/AnalyticalTable/**` (H0 makes it the source of truth).
-Depends on H0, E4 and E5 (merged).
+Depends on H0 (E4 and E5 are merged). It no longer waits for P3 (owner's decision 2026-11-20: build out components first).
 
 Scope principle (owner + issue #1 reporter): **feature parity with WCR 2.28.2, plus extension points.** No features
 WCR doesn't have. Everything a consumer might want to change must be changeable without editing our source — and
@@ -72,8 +72,9 @@ where Calendar exposes date/item/paging actions; its F2 editing mode permits foc
 cells remain a single roving stop. Existing WCR-named `NoDataComponent`/`LoadingComponent` remain **content** slots in
 owned hosts despite their names. Per-column meta classes supplement the uniform class map; WCR reference/i18n keys
 supplement UI5 keys. None weakens ARIA/text/locale ownership. Generic structural replacement is new to H1's starting
-contract; approve the common facade before coding, not a second incompatible table-only replacement API. H1's
-component files also wait for P3 to merge to avoid data-table/shared data ownership collisions.
+contract; approve the common facade before coding, not a second incompatible table-only replacement API. H1 no
+longer waits for P3 (2026-11-20); to avoid collisions, H1 creates its own `analytical-table` files and doesn't edit
+`data-table.tsx` or shared data files that P3 owns. If it needs a change there, it notes it for P3 instead.
 
 ## Column features (this card)
 

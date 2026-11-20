@@ -152,6 +152,17 @@ Always pass a `PORT` other than 4173/5173 to Playwright so it builds and serves 
 
 These hard limits apply to every card and every agent (Codex and Claude).
 
+**Current phase (owner's decision, 2026-11-20): build out components first.** The library is young; progress on
+components comes before polish. Users run Windows and macOS (no Linux users); the owner and agents develop on macOS.
+- **CI is a reminder, not a gate.** Push CI (Linux) runs behaviour tests, live pixel comparisons and Storybook. Its
+  value is a second platform with non-macOS keyboard behaviour (closer to Windows). Fix a CI failure only when it
+  reproduces on macOS or in a behaviour test; a failure that appears only on Linux is noted in the milestone report,
+  not turned into a card. Stored-baseline comparisons (`tests/a11y-tree*.spec.ts`) run only on macOS at milestones.
+- **No fifth or later attempt.** When a card hits its budget, what's left becomes a small follow-up card (`<id>b`),
+  scoped to the remaining items.
+- **Stay in scope.** A problem found outside the card's components is written into the owning P card (or the return
+  note), not fixed in this card.
+
 1. **CI rounds: at most 2 pushes per task.** If CI is still red after the second push, stop. Commit the work in
    progress and write `docs/plan/returns/<card>.md` with the failing test names, what each round changed and why,
    your hypotheses for what is left, and what you would try next. Then end the run. The owner decides whether a
@@ -168,8 +179,9 @@ These hard limits apply to every card and every agent (Codex and Claude).
      Storybook suites once at card done instead. This includes `.storybook/**`, Storybook helpers, shared styles/libs,
      Playwright configs, docs entry points and CI. The second full verification is the milestone/CI. Choose affected
      tooling checks during implementation; don't run full suites in the inner loop.
-   - **Tier 3 — milestone:** the reviewer's job at the end of a wave, every 3–5 merged cards, or a release:
-     `pnpm test:milestone` once (fresh builds, full main + Storybook, report), then push + CI when authorized.
+   - **Tier 3 — milestone:** the reviewer's job at the end of a wave (or when the owner asks to publish):
+     `pnpm test:milestone` once on macOS (fresh builds, full main + Storybook, incl. the stored-baseline tree
+     comparisons), then push. Pushing main publishes (GitHub Pages redeploys the registry and docs).
      `--runs=2` is available for a release. Targets: about 20 minutes local / 12 minutes CI.
    `test:changed` ignores only bookkeeping: `docs/plan/README.md`, `docs/plan/tasks/**`, `docs/plan/returns/**`,
    and `docs/plan/handoff/**`. Bookkeeping-only branches print "bookkeeping only: no tests needed" and exit 0.
@@ -200,7 +212,8 @@ These hard limits apply to every card and every agent (Codex and Claude).
   instead; use `pnpm test:summary` for each. The second full run belongs to the reviewer's tier 3 milestone/CI,
   not the card. Old card text saying "main ×2, Storybook ×2" means tier 2 under these rules.
 - A new visual state or prop also gets a story in `docs/stories/<category-lowercase>/<name>.stories.tsx`.
-- The card's own acceptance checks all hold.
+- The card's own acceptance checks all hold. Manual page-by-page reviews (Morning/HCB "How" walkthroughs, Evening
+  screenshots) are no longer required unless the card asks for them; automated tests and Storybook checks cover it.
 - Accessibility (rule 9): new or changed states have fixtures on both sides so `tests/a11y-tree.spec.ts` compares them;
   axe stays clean; new keyboard paths and announcements have behaviour tests; the accessibility baseline doesn't grow
   (and shrinks by exactly the entries your card fixed).

@@ -9,25 +9,32 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b | E9 (milestone CI red on Linux) | **E9** first |
-| S (Storybook) | S0–S4, S4b, SX | S5 | S5 (any time) |
-| P (a11y/l10n parity) | — | P1–P6, P2a | **P2a first** (unblocks H6), then P1–P6 (at most two at a time) |
-| X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | after each group's P card |
-| H (issue #1) | — | H0–H10 | H0 (any time now); H6 after P2a |
+| E (quality infrastructure) | all (E1–E8, E4b, E5b) | — | E9 cancelled 2026-11-20 (Linux-only CI noise; see Phase) |
+| S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
+| P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
+| X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
+| H (issue #1: new components) | — | H0–H10 | **now: H0**, then H7/H8/H9 in parallel and H1→H5 in order; H6 after P2a |
+
+**Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
+components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
+order → **H10**; **P2a** only right before **H6/H6b/H6c**. The remaining P cards, X cards and S5 follow once the new
+components are in. CI is a reminder, not a gate; see AGENTS.md "Verification budget" → "Current phase".
+Cancelled cards are kept in `tasks/cancelled/` with the reason.
 
 Returned cards keep their branch and worktree; their notes are in [`returns/`](returns/). Component defects found
 while writing stories are handed to E4 / the P cards as unapplied patches in [`handoff/`](handoff/).
 Run [`node scripts/plan-check.mjs`](../../scripts/plan-check.mjs) after editing this file.
 
-## Milestone checklist (reviewer, at the end of a wave or every 3–5 merged cards)
+## Milestone checklist (reviewer, at the end of a wave or when the owner asks to publish)
 
 1. Merge the reviewed card branches into main; `node scripts/plan-check.mjs --fix` moves ticked cards (and their
    return notes) to `done/` and fixes links. `plan-check` must report 0 errors.
 2. Update the **Status** table above and the README "Not done yet" list if a wave changed.
 3. Check that rules agreed with the owner since the last milestone are in AGENTS.md (and RUN.md / INTEGRATION.md if
    they describe the same step), and that open cards still match them (dependencies, file names, test counts).
-4. Run tier 3: `pnpm test:milestone` once (full main + Storybook, fresh builds and timing report), then push + CI
-   when authorized. Record the summary lines in the commit message. `--runs=2` is available for a release.
+4. Run tier 3 on macOS: `pnpm test:milestone` once (full main + Storybook incl. the stored-baseline tree comparisons),
+   then push (= publish; Pages redeploys). Record the summary lines in the commit message. Note the CI result: a
+   failure that reproduces on macOS or in a behaviour test gets fixed; a Linux-only one is only noted.
 5. Delete merged `codex/*` branches and worktrees that `plan-check` lists, once the owner agrees.
 
 ## How to run a card (for Codex)
@@ -122,7 +129,6 @@ F1 and F2 can run in parallel after F0.
 - [x] [E6 Fast, bounded verification: CI shards, inner test loop, compact output, round budget](tasks/done/E6-verification-budget.md) — M (done 2026-11-18: CI ≈10 min, verification budget in AGENTS.md — [E6 note](returns/done/E6.md))
 - [x] [E7 CI back under 12 minutes: Playwright container or cached system packages, time-based shards, timing warning](tasks/done/E7-ci-speed.md) — S (done 2026-11-19: Playwright container, time-based shards, timing warning; CI ≈11 min)
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
-- [ ] [E9 Linux-only failures in the accessibility tests (milestone CI after wave E)](tasks/E9-linux-a11y-failures.md) — S (owner's decision 2026-11-20; CI red since the wave-E milestone push; run next)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 
@@ -291,11 +297,12 @@ hooks and the table instance; we don't build bespoke features. Accessibility (ru
 full. Components UI5 Web Components lacks are ported from **UI5 Web Components for React 2.28.2** (WCR), which H0 turns
 into a pixel / accessibility-tree / locale reference.
 
-Order: E4 and E5 first (wave P may run alongside H). Then H0. H1–H5 (AnalyticalTable) edit the same files and run strictly in order; H6–H10 run in
-parallel with them and with each other, except cards that touch the same existing file (noted in each card).
+Order (2026-11-20): E4 and E5 are done. H0 first. H1–H5 (AnalyticalTable) edit the same files and run strictly in order;
+H7–H10 run in parallel with them and with each other, except cards that touch the same existing file (noted in each card).
+H6/H6b/H6c wait for P2a.
 
-- [ ] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/H0-wcr-reference-harness.md) — M (after E4, E5; adds devDependencies)
-- [ ] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/H1-analytical-table-foundation.md) — L (after H0, P3; conforms to the approved `docs/extension-contract.md`)
+- [ ] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
+- [ ] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
 - [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)
@@ -304,7 +311,7 @@ parallel with them and with each other, except cards that touch the same existin
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
 - [ ] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
-- [ ] [H8 SplitButton, ButtonBadge, NumericInput](tasks/H8-split-button-badge-numeric.md) — M (after E4, E5)
+- [ ] [H8 SplitButton, ButtonBadge, NumericInput](tasks/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
 - [ ] [H9 SelectDialog, SplitterLayout, DynamicDateRange, CalendarLegend check](tasks/H9-select-dialog-splitter-dynamic-date-range.md) — L (after H0)
 - [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
 

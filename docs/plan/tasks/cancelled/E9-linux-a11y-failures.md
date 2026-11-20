@@ -1,3 +1,8 @@
+> **Cancelled by the owner on 2026-11-20, before it ran.** Users are on Windows and macOS, not Linux, and the project
+> is in its build-out phase. Push CI no longer runs the stored-baseline tree comparisons (`tests/a11y-tree*.spec.ts`);
+> they run on macOS at milestones. The one item worth keeping — the SegmentedButton naming tests load the whole UI5
+> reference page to read one fixture — moved to P1 as a note. See AGENTS.md "Verification budget" → "Current phase".
+
 # E9 — Linux-only failures in the accessibility tests (milestone CI after wave E)
 
 **Goal:** main's CI is green again. The first milestone push after wave E (run `44688788089`, `e5b11c0`) failed two of

@@ -107,7 +107,10 @@ jobs:
         run: |
           # Checkout's safe.directory lives in its action HOME, not this container shell's HOME.
           # Scope trust to this checkout and reject an empty list so visual phases cannot run here.
-          mapfile -t specs < <(git -c safe.directory="$GITHUB_WORKSPACE" ls-files 'tests/*.spec.ts' | grep -vE '/visual(-sapui5|-phone|-interaction)?\.spec\.ts$')
+          # Owner's decision 2026-11-20: tests/a11y-tree*.spec.ts compare stored accessibility-tree baselines that were
+          # captured on macOS (the owner's and agents' platform; users are on Windows and macOS). They run at milestones
+          # with `pnpm test:milestone` on macOS, not here: Linux-only differences there are environment noise.
+          mapfile -t specs < <(git -c safe.directory="$GITHUB_WORKSPACE" ls-files 'tests/*.spec.ts' | grep -vE '/visual(-sapui5|-phone|-interaction)?\.spec\.ts$' | grep -vE '/a11y-tree[^/]*\.spec\.ts$')
           if (( ${#specs[@]} == 0 )); then
             echo '::error::No non-visual specs found; refusing to run an unfiltered suite.'
             exit 1
