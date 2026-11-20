@@ -13,6 +13,12 @@
     ],
     "avoidWhen": [
       {
+        "when": "Show a number or attention dot attached to a button.",
+        "use": [
+          "button-badge"
+        ]
+      },
+      {
         "when": "Describe a business object state with a label and status text rather than a category marker.",
         "use": [
           "object-status"

@@ -83,28 +83,80 @@ type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
     texts?: Partial<ButtonTexts>
+    /** Place a ButtonBadge in the button’s badge slot. Supported on native buttons. */
+    badge?: React.ReactElement<ButtonBadgeSlotProps>
   }
 
-function Button({ className, variant, size, asChild = false, type, texts, "aria-description": description, ...props }: ButtonProps) {
+// Structural slot props keep installing Button independent of the optional ButtonBadge item.
+type ButtonBadgeSlotProps = {
+  design?: "InlineText" | "OverlayText" | "AttentionDot"
+  text?: string
+  texts?: Partial<ButtonBadgeTexts>
+}
+
+type ButtonBadgeTexts = {
+  oneItem: (count: string) => string
+  manyItems: (count: string) => string
+}
+
+const defaultBadgeTexts: ButtonBadgeTexts = {
+  oneItem: count => `${count} item`, // UI5 BUTTON_BADGE_ONE_ITEM
+  manyItems: count => `${count} items`, // UI5 BUTTON_BADGE_MANY_ITEMS
+}
+const badgeTextKeys = { oneItem: "BUTTON_BADGE_ONE_ITEM", manyItems: "BUTTON_BADGE_MANY_ITEMS" } as const
+
+function Button({
+  className, variant, size, asChild = false, type, texts, badge, children,
+  "aria-description": description, "aria-label": label, "aria-labelledby": labelledBy, ...props
+}: ButtonProps) {
   const resolved = useFioriTexts(defaultButtonTexts, defaultButtonTextsKeys, texts)
   const { hasProvider } = useFioriLocale()
   // UI5 Button.js/ariaDescriptionText appends the semantic design to the explicit description.
   const semantic = (hasProvider || texts) && variant && variant in resolved ? resolved[variant as keyof ButtonTexts] : undefined
   const ariaDescription = [description, semantic].filter(Boolean).join(" ") || undefined
   const Comp = asChild ? Slot.Root : "button"
+  const badgeId = React.useId()
+  const badgeTexts = useFioriTexts(defaultBadgeTexts, badgeTextKeys, badge?.props.texts)
+  const badgeDesign = badge?.props.design ?? "AttentionDot"
+  const badgeText = badge?.props.text
+  const showBadge = !asChild && !!badge && (badgeDesign === "AttentionDot" || !!badgeText)
+  // Button.js/effectiveBadgeDescriptionText and ariaLabelText append the localized
+  // numeric count to the action name. The attention dot contributes no label text.
+  const count = showBadge && badgeDesign !== "AttentionDot" && badgeText
+    ? badgeTexts[badgeText === "1" ? "oneItem" : "manyItems"](badgeText)
+    : undefined
+  const simpleText = typeof children === "string" || typeof children === "number" ? children : undefined
+  const directName = showBadge && !labelledBy && (label || simpleText !== undefined || children == null)
+  const referenceContent = showBadge && !labelledBy && !directName
+  const actionId = `${badgeId}-action`
+  const actionName = directName ? [label ?? simpleText, count].filter(Boolean).join(" ") || undefined : label
+  const actionLabelledBy = directName ? undefined
+    : [labelledBy || (referenceContent ? actionId : undefined), count ? badgeId : undefined].filter(Boolean).join(" ") || undefined
+  const content = showBadge ? <>
+    {referenceContent ? <span id={actionId} className="contents">{children}</span> : children}
+    {/* Keep the label and count separated for both visual-label matching and the AX name. */}
+    {count ? " " : null}
+    {badge}
+    {count && !directName && <span id={badgeId} hidden>{count}</span>}
+  </> : children
   return (
     <Comp
       data-slot="button"
       aria-description={ariaDescription}
       data-variant={variant ?? "default"}
       type={asChild ? type : (type ?? "button")}
-      className={cn(buttonVariants({ variant, size }), className)}
+      className={cn(buttonVariants({ variant, size }), showBadge && badgeDesign === "InlineText" && "gap-0", className)}
       {...props}
-    />
+      aria-label={actionName}
+      aria-labelledby={actionLabelledBy}
+      data-badge-design={badge && !asChild ? badgeDesign : undefined}
+    >
+      {content}
+    </Comp>
   )
 }
 
-export { Button, buttonVariants, type ButtonProps, type ButtonTexts }
+export { Button, buttonVariants, type ButtonProps, type ButtonTexts, type ButtonBadgeTexts }
 
 type ButtonTexts = { positive: string; negative: string; emphasized: string; attention: string }
 const defaultButtonTexts: ButtonTexts = { positive: "Accept", negative: "Reject", emphasized: "Emphasized", attention: "Attention" }

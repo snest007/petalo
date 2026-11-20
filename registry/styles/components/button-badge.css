@@ -1,0 +1,37 @@
+/* ButtonBadge.css.js paints the tag. Button.css.js positions its badge slot. */
+.fiori-button-badge[data-design] > .fiori-tag {
+  display: flex;
+  align-items: center;
+  height: 1rem;
+  border-radius: .5rem;
+  border-color: var(--sapContent_BadgeBorderColor);
+  background: var(--sapContent_BadgeBackground);
+  color: var(--sapContent_BadgeTextColor);
+}
+.fiori-button-badge[data-design="AttentionDot"] > .fiori-tag {
+  min-width: var(--fiori-x-button-badge-diameter);
+  min-height: var(--fiori-x-button-badge-diameter);
+  width: var(--fiori-x-button-badge-diameter);
+  height: var(--fiori-x-button-badge-diameter);
+  padding: 0;
+  border-radius: 100%;
+}
+.fiori-button[data-badge-design="InlineText"] > svg { margin-inline-end: var(--fiori-button-base-icon-margin); }
+.fiori-button-badge[data-design="InlineText"] { padding-inline-start: .25rem; }
+.fiori-button-badge:is([data-design="InlineText"], [data-design="OverlayText"]) {
+  --fiori-x-tag-height: .625rem;
+  font-family: var(--sapButton_FontFamily);
+  font-size: var(--sapFontSmallSize);
+}
+.fiori-button:is([data-badge-design="OverlayText"], [data-badge-design="AttentionDot"]) {
+  overflow: visible;
+  margin-inline-end: .3125rem;
+}
+.fiori-button-badge:is([data-design="OverlayText"], [data-design="AttentionDot"]) {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  z-index: 1;
+}
+.fiori-button-badge[data-design="OverlayText"] { margin: var(--fiori-button-overlay-badge-offset, -.5rem); }
+.fiori-button-badge[data-design="AttentionDot"] { margin: -.25rem; }
