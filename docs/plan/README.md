@@ -9,7 +9,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | all (E1–E8, E4b, E5b) | — | — |
+| E (quality infrastructure) | E1–E8, E4b, E5b | E9 (milestone CI red on Linux) | **E9** first |
 | S (Storybook) | S0–S4, S4b, SX | S5 | S5 (any time) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | **P2a first** (unblocks H6), then P1–P6 (at most two at a time) |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | after each group's P card |
@@ -122,6 +122,7 @@ F1 and F2 can run in parallel after F0.
 - [x] [E6 Fast, bounded verification: CI shards, inner test loop, compact output, round budget](tasks/done/E6-verification-budget.md) — M (done 2026-11-18: CI ≈10 min, verification budget in AGENTS.md — [E6 note](returns/done/E6.md))
 - [x] [E7 CI back under 12 minutes: Playwright container or cached system packages, time-based shards, timing warning](tasks/done/E7-ci-speed.md) — S (done 2026-11-19: Playwright container, time-based shards, timing warning; CI ≈11 min)
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
+- [ ] [E9 Linux-only failures in the accessibility tests (milestone CI after wave E)](tasks/E9-linux-a11y-failures.md) — S (owner's decision 2026-11-20; CI red since the wave-E milestone push; run next)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 
