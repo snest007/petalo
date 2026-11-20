@@ -3,7 +3,7 @@
 **Goal:** H8 (`codex/H8`, commits `ec0f60a` SplitButton, `02e790a` ButtonBadge, `663504e` NumericInput) is
 merge-ready: main's full suites pass with the new components registered everywhere the shared tests expect them.
 Trimmed by the owner on 2026-11-20 to what merging needs; polish moves to P1 (build-out phase, AGENTS.md
-"Current phase"). Read [the H8 return](../returns/H8.md) for the evidence of the first run.
+"Current phase"). Read `docs/plan/returns/H8.md` on `codex/H8` for the evidence of the first run.
 
 ## Where
 
