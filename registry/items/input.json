@@ -38,8 +38,9 @@
         ]
       },
       {
-        "when": "Adjust a numeric value with increment and decrement buttons or a visual scale.",
+        "when": "Edit a locale-aware number with NumericInput, use StepInput for increment and decrement buttons, or use Slider for a visual scale.",
         "use": [
+          "numeric-input",
           "step-input",
           "slider"
         ]
