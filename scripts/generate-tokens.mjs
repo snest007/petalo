@@ -61,6 +61,7 @@ out.push(`/*
  * Themes: ${THEMES.join(", ")}. Switch with <html data-theme="...">.
  * Density: cozy by default, <html data-density="compact"> (or any subtree) for compact.
  * --fiori-* component params: @ui5/webcomponents theme parameters (Apache-2.0, © SAP SE).
+ * WCR theme parameters, © SAP SE, Apache-2.0.
  * The 72 font is not included; it is the optional fiori-font.css (not Apache-2.0, see that file).
  */`)
 
@@ -79,7 +80,30 @@ for (const t of THEMES.filter((t) => t !== DEFAULT_THEME)) {
 const COMPONENT_PARAMS = /^--_?ui5[_-]/
 // UI5 has a few keys that differ only by "_" vs "-" (e.g. --_ui5_input_value_state_icon_display vs
 // --_ui5-input-value-state-icon-display); the dash-prefixed spelling gets an "x-" marker to stay distinct.
-const rename = (k) => "--fiori-" + (/^--_?ui5-/.test(k) ? "x-" : "") + k.replace(/^--_?ui5[_-]/, "").replace(/_/g, "-").toLowerCase()
+const WCR_PARAMS = /^--_ui5wcr[_-]/
+function rename(key) {
+  const prefix = WCR_PARAMS.test(key) ? "--fiori-wcr-" : "--fiori-"
+  const name = key.replace(/^--_?ui5(?:wcr)?/, "")
+  return prefix + (name.startsWith("-") ? "x-" : "") + name.slice(1).replace(/_/g, "-").toLowerCase()
+}
+
+// WCR theme parameters, © SAP SE, Apache-2.0. Morning and Evening share
+// sap_horizon; both high-contrast themes share sap_horizon_hc.
+const wcrDist = join(dirname(require.resolve("@ui5/webcomponents-react/package.json")), "dist")
+const readWcrTheme = (name) => readFileSync(join(wcrDist, "css/themes", `${name}.css`), "utf8")
+const wcrParams = (css) => [...css.matchAll(/(--_ui5wcr[_-][\w-]+)\s*:\s*([^;}]+)/g)]
+  .map(([, key, value]) => [key, value.trim()])
+const wcrBase = wcrParams(readWcrTheme("base"))
+const wcrHorizon = wcrParams(readWcrTheme("sap_horizon"))
+const wcrHighContrast = wcrParams(readWcrTheme("sap_horizon_hc"))
+const wcrProviderCss = readFileSync(join(wcrDist, "components/ThemeProvider/ThemeProvider.css.js"), "utf8")
+const wcrDensityParams = (selector) => {
+  const start = wcrProviderCss.indexOf(selector)
+  if (start < 0) throw new Error(`Missing WCR density selector ${selector}`)
+  return wcrParams(wcrProviderCss.slice(start + selector.length, wcrProviderCss.indexOf("}", start)))
+}
+const wcrCozy = wcrDensityParams(":root{")
+const wcrCompact = wcrDensityParams("[data-ui5-compact-size]{")
 
 function readComponentParams(theme) {
   const cozy = new Map(), compact = new Map()
@@ -96,6 +120,8 @@ function readComponentParams(theme) {
     }
   }
   }
+  for (const [k, v] of [...wcrCozy, ...wcrBase, ...(theme.startsWith("sap_horizon_hc") ? wcrHighContrast : wcrHorizon)]) cozy.set(k, v)
+  for (const [k, v] of wcrCompact) compact.set(k, v)
   return { cozy, compact }
 }
 

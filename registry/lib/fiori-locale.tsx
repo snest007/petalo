@@ -3,7 +3,7 @@
 import * as React from "react"
 
 export type FioriText = string | ((...args: any[]) => string) | Partial<Record<Intl.LDMLPluralRule, string>>
-/** Tables use the original SAP UI5 i18n keys, so optional SAP packs and application overrides compose. */
+/** Tables use the original SAP keys. UI5 Web Components for React keys use the `wcr:<KEY>` namespace. */
 export type FioriTexts = Readonly<Record<string, FioriText>>
 export type FioriDirection = "ltr" | "rtl"
 export type FioriLocaleProviderProps = { locale?: string; dir?: FioriDirection; texts?: FioriTexts; children?: React.ReactNode }
@@ -16,7 +16,10 @@ export function localeDirection(locale: string): FioriDirection {
   return /^(ar|he|iw|fa|ur)(-|$)/i.test(locale) ? "rtl" : "ltr"
 }
 
-/** Does not mutate document.dir; set the application's direction on its own root. Nested tables inherit. */
+/**
+ * Set document direction on your application root. Nested providers inherit text entries.
+ * Pass WCR overrides as `wcr:<KEY>` entries and use the same key when calling `t()`.
+ */
 export function FioriLocaleProvider({ locale, dir, texts = EMPTY, children }: FioriLocaleProviderProps) {
   const parent = React.useContext(Context)
   const value = React.useMemo(() => ({ locale: locale ?? parent?.locale, dir: dir ?? (locale ? localeDirection(locale) : parent?.dir), texts: { ...parent?.texts, ...texts } }), [parent, locale, dir, texts])

@@ -92,6 +92,14 @@ the same exact-size and 2% pixel-difference rules as the Web Components oracle. 
 to `test-results/visual-sapui5/<theme>-<density>/`. It blocks remote requests, so the reference must load its
 framework, themes and fonts locally. The `sapui5-button` Default and Emphasized cases always run as smoke checks.
 
+## Components from UI5 Web Components for React
+
+For WCR 2.28.2 controls, read the installed `dist/components/<Name>/` implementation, hooks and default renderers.
+Mark the fixture set `reference: "wcr"` and add a matching `<name>.wcr.tsx` that exports a fixture set using only SAP
+code and shared inputs. Compare `/index.html?fixtures&ref=wcr` with `/wcr.html` using the existing theme, density,
+direction and locale query options. Use `pinWcrPopup` for static dialog and popover surfaces, and keep functional
+open/close assertions in the component test. Run `PORT=4310 pnpm test:summary tests/{visual-wcr,a11y-tree-wcr}.spec.ts`.
+
 ## Adding a block (page template / floorplan)
 
 | File | Purpose |

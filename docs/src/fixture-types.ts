@@ -18,6 +18,8 @@ export type FixtureSet<P = any> = {
   name: string
   cases: FixtureCase<P>[]
   react: (props: P) => React.ReactNode
+  /** SAP reference engine for this fixture set. Defaults to UI5 Web Components. */
+  reference?: "ui5" | "wcr" | "sapui5"
   /** Max share of differing pixels per cell; default 0.02. Raise only with a comment explaining why. */
   tolerance?: number
   /** Opt out of comparing specific case ids against UI5 (keep them in the docs grid). Explain why. */

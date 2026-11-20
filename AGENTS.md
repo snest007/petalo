@@ -44,7 +44,7 @@ pnpm storybook                     # component stories at http://localhost:6006
 pnpm storybook:build               # static Storybook → storybook-static/
 PORT=4320 pnpm test:storybook       # separate Storybook render, globals, Controls and axe checks
 STORYBOOK_ONLY=toolbar PORT=4320 pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts # whole component story ids
-pnpm dev                           # http://localhost:5173 (docs), /?fixtures, /ui5.html, /block.html?name=<block>
+pnpm dev                           # http://localhost:5173 (docs), /?fixtures, /ui5.html, /wcr.html, /block.html?name=<block>
 node scripts/smoke-install.mjs     # fresh consumer app: shadcn init + add every block, build, render
 node scripts/integrate.mjs …       # merging card branches — see docs/plan/INTEGRATION.md
 node scripts/plan-check.mjs        # backlog index ↔ card files ↔ return notes ↔ links; --fix moves finished cards
@@ -57,6 +57,9 @@ Always pass a `PORT` other than 4173/5173 to Playwright so it builds and serves 
 1. **Source of truth is UI5 2.28 in `node_modules`** (`@ui5/webcomponents`, `@ui5/webcomponents-fiori`), not memory and
    not the web. Read the component's `dist/<Name>.js`, `dist/<Name>Template.js` and `dist/generated/themes/<Name>.css.js`
    before writing code. Quote the UI5 file/function you ported in a code comment where behaviour is non-obvious.
+   For controls implemented by WCR and absent from UI5 Web Components, use `@ui5/webcomponents-react` 2.28.2 in
+   `node_modules` (`dist/components/<Name>/**`). Read its hooks and default renderers before writing code and quote the
+   owning source in comments for non-obvious behaviour.
 2. **No hard-coded design values.** Use `--sap*` tokens and `--fiori-*` parameters from `registry/styles/fiori.css`
    (`grep -- '--fiori-<component>' registry/styles/fiori.css | sort -u`). If a value has a parameter, use the parameter.
 3. **Component file ownership.** Each component owns `registry/ui/<name>.tsx`, `registry/items/<name>.json`,
@@ -231,6 +234,9 @@ components comes before polish. Users run Windows and macOS (no Linux users); th
 
 ## Gotchas already paid for (don't rediscover them)
 
+- WCR fixtures share inputs with the React fixture set through a neutral module. Keep the reference free of registry
+  imports, import WCR Assets and static CSS, and wait for WCR's asynchronous i18n bundle store before measuring.
+  Morning and Evening share WCR's `sap_horizon.css`. HCB and HCW share `sap_horizon_hc.css`.
 - UI5 fixtures that use `@ui5/webcomponents-fiori` must import `@ui5/webcomponents-fiori/dist/Assets.js`.
 - Icons used in a `.ui5.ts` fixture must be imported individually (`@ui5/webcomponents-icons/dist/<icon>.js`).
 - Popups are compared "in place": see `docs/src/fixtures/ui5-popup-in-place.ts` and `ui5-picker-popover.ts`.
