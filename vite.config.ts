@@ -15,7 +15,7 @@ export default defineConfig({
   build: {
     outDir: r("dist"),
     emptyOutDir: true,
-    rollupOptions: { input: { main: r("docs/index.html"), ui5: r("docs/ui5.html"), block: r("docs/block.html") } },
+    rollupOptions: { input: { main: r("docs/index.html"), ui5: r("docs/ui5.html"), wcr: r("docs/wcr.html"), block: r("docs/block.html") } },
   },
   server: { port: 5173 },
 })

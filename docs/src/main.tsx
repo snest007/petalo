@@ -65,7 +65,8 @@ const phoneMode = query.has("fixtures-phone")
 // The paired interactive fixtures also exercise the same controls on desktop;
 // keep the default phone matrix and ordinary desktop fixture routes unchanged.
 if (phoneMode) document.documentElement.dataset.fioriDevice = query.get("device") === "desktop" ? "desktop" : "phone"
-const activeFixtureSets = phoneMode ? phoneFixtureSets : query.has("fixtures-sapui5") ? sapui5FixtureSets : fixtureSets
+const webFixtureSets = fixtureSets.filter((set) => (set.reference ?? "ui5") === (query.get("ref") === "wcr" ? "wcr" : "ui5"))
+const activeFixtureSets = phoneMode ? phoneFixtureSets : query.has("fixtures-sapui5") ? sapui5FixtureSets : webFixtureSets
 
 // E5: packs use original SAP keys; applications own document direction independently.
 const languagePacks = import.meta.glob<FioriTexts>("../../registry/i18n/*.json", { eager: true, import: "default" })

@@ -102,6 +102,12 @@ importers:
       '@ui5/webcomponents-localization':
         specifier: 2.28.1
         version: 2.28.1(react@19.3.1)
+      '@ui5/webcomponents-react':
+        specifier: 2.28.2
+        version: 2.28.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@ui5/webcomponents-base@2.28.1(react@19.3.1))(@ui5/webcomponents-fiori@2.28.1(react@19.3.1))(@ui5/webcomponents-icons@2.28.0(react@19.3.1))(@ui5/webcomponents@2.28.1(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@ui5/webcomponents-react-base':
+        specifier: 2.28.2
+        version: 2.28.2(@types/react@19.3.0)(@ui5/webcomponents-base@2.28.1(react@19.3.1))(react@19.3.1)
       '@vitejs/plugin-react':
         specifier: ^6.1.2
         version: 6.1.2(vite@8.3.5(@types/node@24.19.2)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2))
@@ -1893,6 +1899,12 @@ packages:
     peerDependencies:
       react: '>=18'
 
+  '@tanstack/react-virtual@3.14.22':
+    resolution: {integrity: sha512-zNiB9IF3prySTfAUrj9tPHjD/lonBYkfxrPP4v4ITUx+qwHajJR5cY/xirjvwc+KWkur10GX3TpsbKh7JkD8Lw==, tarball: https://registry.npmmirror.com/@tanstack/react-virtual/-/react-virtual-3.14.22.tgz}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   '@tanstack/react-virtual@3.14.24':
     resolution: {integrity: sha512-JoNsByXR68fNlB2NZuT3bSk8uYBxuOWl6YNJ7djTrw7IMwBWuaOtffxj/TcuMa80WmL6byb+80i1NEM/8Qmocw==, tarball: https://registry.npmmirror.com/@tanstack/react-virtual/-/react-virtual-3.14.24.tgz}
     peerDependencies:
@@ -1905,6 +1917,9 @@ packages:
   '@tanstack/table-core@9.3.1':
     resolution: {integrity: sha512-zQvlxSNi2qGM3L4jh85Z6hqMfdIR5qOfD9KHOU32nuKFJGN0RlJ7UvV1lsPb1fPVhpFYI0VP3jJGxLdLDpTKjQ==, tarball: https://registry.npmmirror.com/@tanstack/table-core/-/table-core-9.3.1.tgz}
     engines: {node: '>=20'}
+
+  '@tanstack/virtual-core@3.19.7':
+    resolution: {integrity: sha512-gxy5SvH0mFRJ0YujtrflB/1HAu9Wn1KGvL0bjZfQkYVVMsIpQiwcf1mR06/ViN4NjllUb4HNCjqE9FGwgTvMCQ==, tarball: https://registry.npmmirror.com/@tanstack/virtual-core/-/virtual-core-3.19.7.tgz}
 
   '@tanstack/virtual-core@3.19.9':
     resolution: {integrity: sha512-Syiaf3w69dFyYv4o2mqJ1/2VtBJTNq5Hu5cVXfnzOuJKFpUojukQR13ZW+5NvdMJM7GFHeNPmveMNhoIubiFyA==, tarball: https://registry.npmmirror.com/@tanstack/virtual-core/-/virtual-core-3.19.9.tgz}
@@ -2077,6 +2092,41 @@ packages:
 
   '@ui5/webcomponents-localization@2.28.1':
     resolution: {integrity: sha512-Z7C+yA8tbRq+ONg17kVbVMRsVeqMWezM1CN2MOcpaXydDhJSS/hYr+BxLyj9tEMwI4QW5/PrkXGcdJCldYwg1A==, tarball: https://registry.npmmirror.com/@ui5/webcomponents-localization/-/webcomponents-localization-2.28.1.tgz}
+
+  '@ui5/webcomponents-react-base@2.28.2':
+    resolution: {integrity: sha512-tJvzy8SgmTlnUIwbkR0aX0MbvseVWhphs+2Khzj61RhA7teB/AayWUXIG5mK47K4afEjLLDYFkrQtDLJ7vNrCg==, tarball: https://registry.npmmirror.com/@ui5/webcomponents-react-base/-/webcomponents-react-base-2.28.2.tgz}
+    peerDependencies:
+      '@types/react': '*'
+      '@ui5/webcomponents-base': ~2.28.1
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@ui5/webcomponents-base':
+        optional: true
+
+  '@ui5/webcomponents-react@2.28.2':
+    resolution: {integrity: sha512-lkIDBxE0mtveI/5JGmQZ0yOmsyT7YQV/21MculPnzYbuBkqR51uIqEgxQewJ4rlaiI26ENxWo2lemsGgt9osPA==, tarball: https://registry.npmmirror.com/@ui5/webcomponents-react/-/webcomponents-react-2.28.2.tgz}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      '@ui5/webcomponents': ~2.28.1
+      '@ui5/webcomponents-base': ~2.28.1
+      '@ui5/webcomponents-fiori': ~2.28.1
+      '@ui5/webcomponents-icons': ~2.28.1
+      react: ^18 || ^19
+      react-dom: ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+      '@ui5/webcomponents-base':
+        optional: true
+      '@ui5/webcomponents-fiori':
+        optional: true
+      '@ui5/webcomponents-icons':
+        optional: true
 
   '@ui5/webcomponents-theming@2.28.1':
     resolution: {integrity: sha512-r/JgTOs0VHsQZNAHwnYTXN7AJ/PbS60tB2xEbcHjx7MkVIXRLrTaf50IkFtvPb9f1kMsSMiTip+D7R75uK/mPg==, tarball: https://registry.npmmirror.com/@ui5/webcomponents-theming/-/webcomponents-theming-2.28.1.tgz}
@@ -6356,6 +6406,12 @@ snapshots:
     transitivePeerDependencies:
       - react-dom
 
+  '@tanstack/react-virtual@3.14.22(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@tanstack/virtual-core': 3.19.7
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+
   '@tanstack/react-virtual@3.14.24(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
     dependencies:
       '@tanstack/virtual-core': 3.19.9
@@ -6367,6 +6423,8 @@ snapshots:
   '@tanstack/table-core@9.3.1':
     dependencies:
       '@tanstack/store': 0.11.2
+
+  '@tanstack/virtual-core@3.19.7': {}
 
   '@tanstack/virtual-core@3.19.9': {}
 
@@ -6652,6 +6710,28 @@ snapshots:
       '@ui5/webcomponents-base': 2.28.1(react@19.3.1)
     transitivePeerDependencies:
       - react
+
+  '@ui5/webcomponents-react-base@2.28.2(@types/react@19.3.0)(@ui5/webcomponents-base@2.28.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      react: 19.3.1
+    optionalDependencies:
+      '@types/react': 19.3.0
+      '@ui5/webcomponents-base': 2.28.1(react@19.3.1)
+
+  '@ui5/webcomponents-react@2.28.2(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(@ui5/webcomponents-base@2.28.1(react@19.3.1))(@ui5/webcomponents-fiori@2.28.1(react@19.3.1))(@ui5/webcomponents-icons@2.28.0(react@19.3.1))(@ui5/webcomponents@2.28.1(react@19.3.1))(react-dom@19.3.1(react@19.3.1))(react@19.3.1)':
+    dependencies:
+      '@tanstack/react-virtual': 3.14.22(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
+      '@ui5/webcomponents': 2.28.1(react@19.3.1)
+      '@ui5/webcomponents-react-base': 2.28.2(@types/react@19.3.0)(@ui5/webcomponents-base@2.28.1(react@19.3.1))(react@19.3.1)
+      clsx: 2.1.1
+      react: 19.3.1
+      react-dom: 19.3.1(react@19.3.1)
+    optionalDependencies:
+      '@types/react': 19.3.0
+      '@types/react-dom': 19.3.0(@types/react@19.3.0)
+      '@ui5/webcomponents-base': 2.28.1(react@19.3.1)
+      '@ui5/webcomponents-fiori': 2.28.1(react@19.3.1)
+      '@ui5/webcomponents-icons': 2.28.0(react@19.3.1)
 
   '@ui5/webcomponents-theming@2.28.1(react@19.3.1)':
     dependencies:

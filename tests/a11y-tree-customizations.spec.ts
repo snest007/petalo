@@ -549,7 +549,10 @@ const excludedCustomizationPoints = {
 // Like f6-navigation.spec.ts, this builds a real consumer in memory. It imports
 // each owning fixture renderer and the distributed components; no production
 // page, shared fixture helper or caller-side ARIA repair is added.
-const fixtureFiles = readdirSync("docs/src/fixtures").filter((file) => file.endsWith(".tsx") && /\bdefineFixtures(?:<[^>]+>)?\(\s*\{/.test(readFileSync(`docs/src/fixtures/${file}`, "utf8")))
+// Native WCR renderers and H0's temporary data-only pilot have no registry customization surface.
+const fixtureFiles = readdirSync("docs/src/fixtures")
+  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".wcr.tsx") && file !== "wcr-smoke.tsx")
+  .filter((file) => /\bdefineFixtures(?:<[^>]+>)?\(\s*\{/.test(readFileSync(`docs/src/fixtures/${file}`, "utf8")))
 const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile)
 const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ".")
 const program = ts.createProgram(parsed.fileNames, parsed.options), checker = program.getTypeChecker()

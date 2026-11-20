@@ -10,6 +10,7 @@ reference-derived styling and behavior, and optional generated translations from
 - @ui5/webcomponents-fiori
 - @ui5/webcomponents-icons
 - @ui5/webcomponents-theming
+- @ui5/webcomponents-react 2.28.2 (theme parameters and translations)
 - @openui5/sap.ui.core
 - @openui5/sap.m
 - @openui5/sap.ui.mdc
@@ -21,8 +22,9 @@ reference-derived styling and behavior, and optional generated translations from
 These packages are copyright SAP SE or an SAP affiliate company and are
 licensed under the Apache License, Version 2.0. The OpenUI5 packages are used
 only as development-time control references. Optional translation tables from
-UI5 Web Components 2.28.1 and OpenUI5 1.154.0 are distributed in registry/i18n;
-the OpenUI5 control implementation is not included in the registry.
+UI5 Web Components 2.28.1, UI5 Web Components for React 2.28.2 and OpenUI5
+1.154.0 are distributed in registry/i18n. WCR theme parameters are generated into
+registry/styles/fiori.css. The WCR and OpenUI5 implementations are development-time references.
 
 Source files derived from these packages carry a header that names the source and
 states that they were modified.
