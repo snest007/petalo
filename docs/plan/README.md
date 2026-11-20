@@ -301,7 +301,7 @@ Order (2026-11-20): E4 and E5 are done. H0 first. H1–H5 (AnalyticalTable) edit
 H7–H10 run in parallel with them and with each other, except cards that touch the same existing file (noted in each card).
 H6/H6b/H6c wait for P2a.
 
-- [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
+- [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
 - [ ] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
 - [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2)
