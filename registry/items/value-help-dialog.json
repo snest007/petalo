@@ -36,10 +36,9 @@
         ]
       },
       {
-        "when": "Choose simple records in a searchable list dialog, or select several predefined values inline without conditions.",
+        "when": "Select several predefined values from fewer than 200 options without conditions.",
         "use": [
-          "multi-combobox",
-          "select-dialog"
+          "multi-combobox"
         ]
       },
       {

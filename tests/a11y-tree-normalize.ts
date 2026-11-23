@@ -280,40 +280,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
-/** As with the in-place SplitButton/Menu fixture, the closed reference is
- * painted inside its cell without opening a modal surface. Verify PopupTemplate's
- * owning host, closed block layer and both exact focus guards, then compare all
- * descendants of its inner dialog. React implements the actual trap in Radix;
- * the body, live regions, dialog name and modal state still undergo diffTree.
- */
-export function reconcilePinnedPopupShell(ours: any, ui5: any, { kind, name }: NonNullable<Allowed["pinnedPopupShell"]>) {
-  const node = (role: string, properties: object = {}) => ({ role, name: "", properties, children: [] })
-  expect(ours.ax).toHaveLength(1)
-  expect(ui5.ax).toHaveLength(1)
-  const [react] = ours.ax
-  const [host] = ui5.ax
-  const expectedHost = node(kind === "dialog" ? "group" : "generic", { focusable: true })
-  const { children: nativeHostChildren, ...nativeHostProperties } = host
-  const { children: _children, ...expectedHostProperties } = expectedHost
-  expect(nativeHostProperties).toEqual(expectedHostProperties)
-  expect(nativeHostChildren).toHaveLength(kind === "dialog" ? 2 : 1)
-  if (kind === "dialog") expect(nativeHostChildren[0]).toEqual(node("generic"))
-  const native = nativeHostChildren.at(-1)
-  for (const dialog of [react, native]) {
-    expect(dialog.role).toBe("dialog")
-    expect(dialog.name).toBe(name)
-    expect(dialog.properties.modal).toBe(true)
-  }
-  expect(react.properties.focusable).toBe(true)
-  expect(native.properties.focusable).toBeUndefined()
-  const guards = [native.children[0], native.children.at(-1)]
-  expect(guards).toEqual([node("generic", { focusable: true }), node("generic", { focusable: true })])
-  native.children = native.children.slice(1, -1)
-  delete react.properties.focusable
-  ui5.ax[0] = native
-}
-
+type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** The H8 fixture composes the existing desktop Menu in place. The UI5
  * ResponsivePopover advertises aria-modal and exposes focus guards even though
  * the fixture paints a closed surface. Pin both surfaces exactly, then compare
@@ -478,10 +445,6 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [], allowed?.ui5FormHosts)
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
     if (allowed?.calendarHeaderBug) native = correctCalendarHeaderBugs(adjusted.ours, native, allowed.calendarHeaderBug)
-    if (allowed?.pinnedPopupShell) {
-      if (!/^(select-dialog|dynamic-date-range)-/.test(id)) throw new Error("Pinned popup shell applies only to H9 paired fixtures")
-      reconcilePinnedPopupShell(adjusted.ours, native, allowed.pinnedPopupShell)
-    }
     if (allowed?.splitButtonMenu) {
       if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")
       reconcileSplitButtonMenu(adjusted.ours, native, allowed.splitButtonMenu)

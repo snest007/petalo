@@ -37,10 +37,9 @@
         ]
       },
       {
-        "when": "Open SelectDialog to choose from a searchable list. Use ValueHelpDialog for more than 200 entries, several searchable attributes, or conditions.",
+        "when": "Find a value above 200 entries, search several attributes, or define conditions in a separate search task.",
         "use": [
-          "value-help-dialog",
-          "select-dialog"
+          "value-help-dialog"
         ]
       },
       {

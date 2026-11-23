@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test } from "@playwright/test"
-import { allowedDifferences, applyAllowedWrappers, captureAX, diffTree, reconcilePinnedPopupShell } from "./a11y-tree-normalize"
+import { allowedDifferences, applyAllowedWrappers, captureAX, diffTree } from "./a11y-tree-normalize"
 
 for (const dir of ["ltr", "rtl"]) {
   test(`WCR accessibility trees ${dir}`, async ({ page: ours, context }) => {
@@ -21,17 +21,8 @@ for (const dir of ["ltr", "rtl"]) {
       const [a, b] = await Promise.all([captureAX(ours, selector), captureAX(wcr, selector)])
       const allowance = allowed[id]
       if (allowance) expect(allowance.reason.trim()).not.toBe("")
-      const adjusted = applyAllowedWrappers(a, b, allowance?.ignore ?? [], allowance?.ui5FormHosts)
-      let differences: string[]
-      try {
-        if (allowance?.pinnedPopupShell) {
-          expect(id.startsWith("select-dialog-"), "H9 pinned Dialog fixture").toBe(true)
-          reconcilePinnedPopupShell(adjusted.ours, adjusted.ui5, allowance.pinnedPopupShell)
-        }
-        differences = diffTree(adjusted.ours, adjusted.ui5, adjusted.leaves)
-      } catch (error) {
-        differences = [error instanceof Error ? error.message : String(error)]
-      }
+      const adjusted = applyAllowedWrappers(a, b, allowance?.ignore ?? [])
+      const differences = diffTree(adjusted.ours, adjusted.ui5, adjusted.leaves)
       writeFileSync(`${output}/${dir}-${id}.json`, JSON.stringify({ ours: a, wcr: b, differences, allowance }, null, 2))
 
       expect.soft(differences, `${id}: see ${output}`).toEqual([])
