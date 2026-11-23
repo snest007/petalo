@@ -25,28 +25,7 @@ for (const dir of ["ltr", "rtl"]) {
       const differences = diffTree(adjusted.ours, adjusted.ui5, adjusted.leaves)
       writeFileSync(`${output}/${dir}-${id}.json`, JSON.stringify({ ours: a, wcr: b, differences, allowance }, null, 2))
 
-      // H0's temporary pilot compares two different grid implementations. Prove
-      // that both real captures expose the data and that the comparator detects
-      // their structural differences. H1 removes these pilot assertions.
-      if (id === "wcr-smoke-table" || id === "wcr-smoke-empty") {
-        expect(differences.length, id).toBeGreaterThan(0)
-        for (const page of [ours, wcr]) {
-          const grid = page.locator(selector).getByRole("grid", { name: "Inventory" })
-          await expect(grid.getByRole("columnheader")).toHaveText(["Product", "Category", "Stock"])
-          const cells = grid.getByRole("gridcell")
-          if (id === "wcr-smoke-table") {
-            await expect(cells).toHaveText([
-              "Alpine Tent", "Shelter", "24",
-              "Trail Stove", "Cooking", "18",
-              "Camp Lantern", "Lighting", "32",
-              "Summit Pack", "Packs", "12",
-              "Ridge Mat", "Sleeping", "27",
-            ])
-          } else await expect(cells).toHaveText(/^No data$/i)
-        }
-      } else {
-        expect.soft(differences, `${id}: see ${output}`).toEqual([])
-      }
+      expect.soft(differences, `${id}: see ${output}`).toEqual([])
     }
   })
 }
