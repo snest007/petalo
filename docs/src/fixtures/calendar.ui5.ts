@@ -8,11 +8,20 @@ import "@ui5/webcomponents-icons/dist/slim-arrow-left.js"
 import "@ui5/webcomponents-icons/dist/slim-arrow-right.js"
 
 import { defineUi5, h } from "../fixture-types"
-import set, { SPECIAL } from "./calendar"
+import set, { SPECIAL, CUSTOM_LEGEND } from "./calendar"
 
 const modes = { single: "Single", multiple: "Multiple", range: "Range" }
 
-export default defineUi5(set, ({ dates = [], mode = "single", min, max, hideWeekNumbers, picker, special }) => {
+export default defineUi5(set, ({ dates = [], mode = "single", min, max, hideWeekNumbers, picker, special, legendOnly }) => {
+  if (legendOnly) {
+    const custom = legendOnly === "custom"
+    return h("ui5-calendar-legend", {
+      "hide-today": custom,
+      "hide-selected-day": custom,
+      "hide-working-day": custom,
+      "hide-non-working-day": custom,
+    }, ...(custom ? CUSTOM_LEGEND.map(item => h("ui5-calendar-legend-item", item)) : []))
+  }
   const children =
     mode === "range"
       ? [h("ui5-date-range", { "start-value": dates[0], "end-value": dates[1] })]

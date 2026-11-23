@@ -50,3 +50,5 @@ export const German: Story = { globals: { locale: "de" } }
 export const Arabic: Story = { globals: { locale: "ar", dir: "rtl" } }
 
 export const ShortcutTexts: Story = { args: { texts: { monthShortcut: "F4", nextShortcut: "Pageup", previousShortcut: "Pagedown" } } }
+
+export const LegendCustomOnly: Story = { render: () => <CalendarLegend hideToday hideSelectedDay hideWorkingDay hideNonWorkingDay><CalendarLegendItem type="Type17" text="Delivery" /><CalendarLegendItem type="Type20" text="Stocktake" /></CalendarLegend> }
