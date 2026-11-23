@@ -1,0 +1,26 @@
+/* NumericInput.css.js uses the same field as StepInput with no step-button padding. */
+.fiori-numeric-input-host { width: auto; }
+.fiori-numeric-input-host .fiori-numeric-input { max-width: none; }
+.fiori-numeric-input-host .fiori-numeric-input > .fiori-step-input__field[data-open] {
+  /* NumericInput.css.js inherits the host's height, including the high-contrast border. */
+  height: var(--fiori-input-height) !important;
+  padding-inline: 0;
+}
+.fiori-numeric-input-host .fiori-numeric-input .fiori-step-input__field:not(:has(input:focus-visible))::after { content: none; }
+.fiori-numeric-input__message {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 100%;
+  z-index: 50;
+  display: none;
+}
+.fiori-numeric-input-host:focus-within .fiori-numeric-input__message { display: flex; }
+
+.fiori-numeric-input__description {
+  position: absolute;
+  clip: rect(1px, 1px, 1px, 1px);
+  inset-inline-start: -1000px;
+  top: -1000px;
+  pointer-events: none;
+  font-size: 0;
+}

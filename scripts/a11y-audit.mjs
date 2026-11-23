@@ -66,6 +66,13 @@ verify("TreeItem", "accessibilityAttributes", "aria-haspopup on the owned treeit
 for (const component of ["TreeItem", "TreeItemCustom"]) verify(component, "accessibleRole", "role=treeitem owned on the row; UI5 TreeItemBase.js:_accInfo overrides inherited accessibleRole", "tests/tree.spec.ts: Tree [RTL] custom content cannot replace owned role, states, ids or tab stops (shared TreeNode owner)")
 verified["TreeItemCustom.accessibleName"] = { equivalent: "aria-label composes with the native active hint on the shared TreeNode owner; dedicated custom-name pair still pending", status: "gap" }
 verified["TreeItemCustom.accessibilityAttributes"] = { equivalent: "aria-haspopup reaches the shared TreeNode row; dedicated custom-popup pair still pending", status: "gap" }
+const h8NativeProof = "tests/a11y-tree-customizations.spec.ts: H8 native names, relationships and text overrides reach their owning controls"
+for (const [component, member, equivalent] of [
+  ["SplitButton", "accessibleName", "aria-label augments the group’s name in its owned hidden label"],
+  ["SplitButton", "accessibilityAttributes", "aria-haspopup and aria-keyshortcuts reach the group; arrowHasPopup and arrowExpanded reach its arrow"],
+  ["NumericInput", "accessibleName", "aria-label on the native textbox"],
+  ["NumericInput", "accessibleNameRef", "aria-labelledby on the native textbox"],
+]) verified[`${component}.${member}`] = { equivalent, proof: h8NativeProof, status: "ok" }
 const verifiedTexts = {
   "segmented-button.LIST_ITEM_SELECTED": { equivalent: "SegmentedButton.texts.selected", proof: "tests/segmented-button.spec.ts: selection announces assertively and deselection does not announce", status: "fixed in E4" },
   "segmented-button.SEGMENTEDBUTTON_ARIA_DESCRIBEDBY": { equivalent: "SegmentedButton.texts.itemDescription / SegmentedButtonItem.texts.itemDescription", proof: "tests/segmented-button.spec.ts: item description and description-ref reach the UI5 owning element", status: "fixed in E4" },
@@ -101,6 +108,24 @@ for (const [key, equivalent] of [
 ]) verifiedTexts[`calendar.${key}`] = { equivalent: `Calendar.texts.${equivalent}`, proof: "tests/calendar.spec.ts: Calendar header arrows preserve UI5 descriptions and localized shortcuts in every picker and direction", status: "fixed in E4" }
 verifiedTexts["calendar.LIST_ITEM_SELECTED"] = { equivalent: "Calendar.texts.selected", proof: "tests/calendar.spec.ts: Calendar [ltr/rtl] [single/range/multiple] selection announces with native conditions and assertive politeness; Calendar selection text override reaches the assertive announcement", status: "fixed in E4" }
 for (const [key, equivalent] of [["LIST_ITEM_POSITION", "itemPosition"], ["LIST_ITEM_GROUP_HEADER", "groupHeader"]]) verifiedTexts[`combobox.${key}`] = { equivalent: `ComboBox.texts.${equivalent}`, proof: "tests/combobox.spec.ts: ComboBox [ltr/rtl] keyboard announcements use displayed rows, group headers and additional text; ComboBox lets callers override group and displayed-position announcement texts", status: "fixed in E4" }
+for (const [owner, key, equivalent] of [
+  ["button", "BUTTON_BADGE_ONE_ITEM", "ButtonBadge.texts.oneItem via Button.badge"],
+  ["button", "BUTTON_BADGE_MANY_ITEMS", "ButtonBadge.texts.manyItems via Button.badge"],
+  ["split-button", "SPLIT_BUTTON_DESCRIPTION", "SplitButton.texts.description"],
+  ["split-button", "SPLIT_BUTTON_KEYBOARD_HINT", "SplitButton.texts.keyboardHint"],
+  ["split-button", "SPLIT_BUTTON_ARROW_BUTTON_TOOLTIP", "SplitButton.texts.arrowLabel"],
+  ["numeric-input", "NUMBERINPUT_PATTERN_MISSMATCH", "NumericInput.texts.invalidFormat"],
+  ["numeric-input", "NUMBERINPUT_RANGEUNDERFLOW", "NumericInput.texts.belowMinimum"],
+  ["numeric-input", "NUMBERINPUT_RANGEOVERFLOW", "NumericInput.texts.aboveMaximum"],
+]) verifiedTexts[`${owner}.${key}`] = { equivalent, proof: h8NativeProof, status: "ok" }
+for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) {
+  verifiedTexts[`numeric-input.${key}`] = {
+    equivalent: "NumericInputTemplate guards both buttons with private _showStepButtons, which only StepInput enables.",
+    proof: "NumericInput.js initializes _showStepButtons to false; StepInputTemplate.js explicitly enables it.",
+    status: "ok",
+  }
+}
+
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {
   const manifestPath = `node_modules/${pkg}/dist/custom-elements.json`

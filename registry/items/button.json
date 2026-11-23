@@ -16,20 +16,28 @@
     ],
     "avoidWhen": [
       {
-        "when": "Navigate to a page, object or external URL.",
+        "when": "Run a primary action and expose related alternatives.",
         "use": [
-          "link"
+          "split-button"
         ]
       },
       {
-        "when": "Keep an action visibly active until the user turns it off.",
+        "when": "Put an item count or attention dot on the action.",
         "use": [
-          "toggle-button"
+          "button-badge"
         ]
       },
       {
-        "when": "Choose related view options, one form option or independent form options.",
+        "when": "Navigate to a page, object or external URL, or guide users through a sequence of task steps.",
         "use": [
+          "link",
+          "wizard"
+        ]
+      },
+      {
+        "when": "Keep a choice visibly active or let users choose related view or form options.",
+        "use": [
+          "toggle-button",
           "segmented-button",
           "radio-group",
           "checkbox"
@@ -39,12 +47,6 @@
         "when": "Select local files for upload.",
         "use": [
           "file-uploader"
-        ]
-      },
-      {
-        "when": "Navigate through a guided sequence of task steps.",
-        "use": [
-          "wizard"
         ]
       }
     ],

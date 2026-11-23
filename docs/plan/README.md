@@ -172,7 +172,7 @@ on the way are listed for the owner, not built.
 
 | Card | Components (owner value in the baselines) |
 |---|---|
-| P1 | button, segmented-button, toggle-button, label, input, textarea, checkbox, radio-group, switch, slider, rating-indicator, step-input, select, form |
+| P1 | button, split-button, button-badge, segmented-button, toggle-button, label, input, textarea, checkbox, radio-group, switch, slider, rating-indicator, step-input, numeric-input, select, form |
 | P2 | combobox, multi-combobox, multi-input, token, tokenizer, file-uploader, color-palette, color-palette-popover, color-picker, time-picker, picker-field |
 | P2a | calendar, date-picker, date-range-picker, date-time-picker (split from P2 on 2026-11-17 so the Calendar pilot runs first) |
 | P3 | table, data-table, list, tree, timeline, upload-collection, object-status, object-number, object-identifier |

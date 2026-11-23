@@ -296,6 +296,7 @@ Draw attention to a category, condition or quantity with a compact enclosed mark
 
 ### Don't use when
 
+- Show a number or attention dot attached to a button. → [button-badge](actions.md#button-badge)
 - Describe a business object state with a label and status text rather than a category marker. → [object-status](data.md#object-status)
 - Represent an already selected value that users can remove from a field. → [token](forms.md#token)
 

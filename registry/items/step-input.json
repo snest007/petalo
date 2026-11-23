@@ -15,13 +15,19 @@
     ],
     "avoidWhen": [
       {
+        "when": "Enter a localized number with keyboard stepping and no visible step buttons.",
+        "use": [
+          "numeric-input"
+        ]
+      },
+      {
         "when": "Adjust a value approximately along a visual range, such as volume or brightness.",
         "use": [
           "slider"
         ]
       },
       {
-        "when": "Enter a number without increment and decrement controls.",
+        "when": "Enter a static identifier such as a postal code or phone number.",
         "use": [
           "input"
         ]

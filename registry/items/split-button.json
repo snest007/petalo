@@ -1,0 +1,14 @@
+{
+  "title": "SplitButton",
+  "description": "A primary Fiori action paired with an arrow for related commands.",
+  "registryDependencies": ["@petalo/button", "@petalo/icons", "@petalo/menu", "@petalo/locale"],
+  "usage": {
+    "summary": "Run a common action directly and keep alternatives available from the adjacent arrow.",
+    "useWhen": ["Give users a shortcut to the most common action, such as exporting to PDF, while offering other formats in a menu.", "Use the same design for both action parts and give the primary action a clear label."],
+    "avoidWhen": [
+      { "when": "Only one action is available.", "use": ["button"] },
+      { "when": "All commands require opening the menu first.", "use": ["menu"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

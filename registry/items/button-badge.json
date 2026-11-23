@@ -1,0 +1,14 @@
+{
+  "title": "ButtonBadge",
+  "description": "A numeric count or attention dot in a Fiori Button badge slot.",
+  "registryDependencies": ["@petalo/button", "@petalo/tag"],
+  "usage": {
+    "summary": "Show a count or attract attention on an existing action.",
+    "useWhen": ["Show a count inline in compact density, overlay a count in cozy density, or draw attention with a dot in either density.", "Use a count for the number of relevant items or an attention dot to indicate activity without a count."],
+    "avoidWhen": [
+      { "when": "Trigger an action that needs no count or attention indicator.", "use": ["button"] },
+      { "when": "Label a standalone category or status outside an action.", "use": ["tag"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

@@ -8,7 +8,7 @@ export type BaselineEntry = { matrix: string; caseId: string; path: string; kind
 export type TreeBaseline = { version: 1; entries: BaselineEntry[] }
 // docs/plan/README.md wave P is the owning-card map; keep aliases explicit.
 export const groups: Record<string, string[]> = {
-  P1: "button segmented-button toggle-button label input textarea checkbox radio-group switch slider rating-indicator step-input select form".split(" "),
+  P1: "button split-button button-badge numeric-input segmented-button toggle-button label input textarea checkbox radio-group switch slider rating-indicator step-input select form".split(" "),
   P2: "combobox multi-combobox multi-input token tokenizer file-uploader color-palette color-palette-popover color-picker time-picker picker-field".split(" "),
   P2a: "calendar date-picker date-range-picker date-time-picker".split(" "),
   P3: "table data-table list tree timeline upload-collection object-status object-number object-identifier".split(" "),

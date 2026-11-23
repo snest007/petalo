@@ -21,6 +21,12 @@
     ],
     "avoidWhen": [
       {
+        "when": "Make the common command available immediately beside the menu arrow.",
+        "use": [
+          "split-button"
+        ]
+      },
+      {
         "when": "Show mixed contextual information or editable content beside an opener on every device.",
         "use": [
           "popover"

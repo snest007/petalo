@@ -102,9 +102,11 @@ export function normalizeAX(nodes: AXNode[], rootId: string): unknown[] {
 /** Explicit DOM-only allowances unwrap one inert generic node, preserving all children.
  * This is applied only to paths listed by a fixture's a11yDiff; it is not a global normalization.
  */
-export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[]) {
+export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[], ui5FormHosts: string[] = []) {
   const values: Record<string, any> = { ours: structuredClone(ours), ui5: structuredClone(ui5) }
-  const wrappers = paths.filter((path) => /^\/(ours|ui5)\/ax\//.test(path)).map((path) => path.slice(1).split("/"))
+  const forms = new Set(ui5FormHosts)
+  if ([...forms].some(path => !path.startsWith("/ui5/ax/"))) throw new Error("Form host allowances must name an exact UI5 AX path")
+  const wrappers = [...paths.filter(path => /^\/(ours|ui5)\/ax\//.test(path)), ...forms].map(path => path.slice(1).split("/"))
   wrappers.sort((a, b) => b.length - a.length || b.join("/").localeCompare(a.join("/"), "en", { numeric: true }))
   for (const parts of wrappers) {
     let parent: any = values
@@ -113,8 +115,18 @@ export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[
       if (parent === undefined) throw new Error(`Stale a11yDiff wrapper path: /${parts.join("/")}`)
     }
     const index = Number(parts.at(-1)), node = parent?.[index]
+    const props = node?.properties ?? {}
+    const form = forms.has("/" + parts.join("/"))
+    const disabled = props.disabled === true
+    const ownedControl = Array.isArray(node?.children) ? node.children.filter((child: { role: string }) => child.role === "button" || child.role === "textbox") : []
+    // Button, NumericInput and its inner Input are form-associated custom
+    // elements. CDP repeats the native control's disabled state on an otherwise
+    // inert shadow host and adds implicit invalid=false. Keep the control itself.
+    const formState = form
+      && props.invalid === "false" && Object.keys(props).length === (disabled ? 2 : 1)
+      && ownedControl.length === 1 && (ownedControl[0].properties.disabled === true) === disabled
     if (!Array.isArray(parent) || !node || node.role !== "generic" || node.name !== "" || node.description !== undefined
-      || node.value !== undefined || Object.keys(node.properties ?? {}).length !== 0 || !Array.isArray(node.children)) {
+      || node.value !== undefined || !(form ? formState : Object.keys(props).length === 0) || !Array.isArray(node.children)) {
       throw new Error(`a11yDiff may unwrap only an unnamed state-free generic wrapper: /${parts.join("/")}`)
     }
     parent.splice(index, 1, ...node.children)
@@ -267,13 +279,87 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
   return native
 }
 
-type Allowed = { ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
+type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+/** The H8 fixture composes the existing desktop Menu in place. The UI5
+ * ResponsivePopover advertises aria-modal and exposes focus guards even though
+ * the fixture paints a closed surface. Pin both surfaces exactly, then compare
+ * the common menu and item semantics together with the whole SplitButton. */
+function reconcileSplitButtonMenu(ours: any, ui5: any, entry: SplitButtonMenu) {
+  const { item, opener, dialog, activeHint } = entry
+  const label = (text: string) => ({ text, valid: true })
+  const ax = (role: string, name = "", properties = {}, children: unknown[] = []) => ({ role, name, properties, children })
+  const guard = ax("generic", "", { focusable: true })
+  const generic = (children: unknown[]) => ax("generic", "", {}, children)
+  const text = generic([ax("StaticText", item)])
+  const activeName = `${item} ${activeHint}`
+  const nativeRow = ax("menuitem", activeName, {
+    describedby: [label("")], focusable: true, labelledby: [label(item), label(activeHint)],
+  }, [text, ax("StaticText", activeHint)])
+  const nativeMenu = ax("menu", "", { orientation: "vertical" }, [nativeRow])
+  const nativeSurface = ax("group", "", { focusable: true }, [
+    ax("dialog", dialog, { modal: true }, [guard, generic([generic([generic([generic([guard, nativeMenu, guard])])])]), guard]),
+  ])
+  const row = ax("menuitem", item, { focusable: true }, [text])
+  const menu = ax("menu", opener, { focusable: true, labelledby: [label(opener)], orientation: "vertical" }, [row])
+  const snapshot = (role: string, name: string | undefined, children: unknown[]) => ({
+    role, ...(name === undefined ? {} : { name }), states: [], children,
+  })
+  const snapshotMenu = snapshot("menu", undefined, [snapshot("menuitem", item, [])])
+  const nativeSnapshot = snapshot("dialog", dialog, [snapshot("menu", undefined, [snapshot("menuitem", activeName, [])])])
+  expect(ours.ax).toHaveLength(2)
+  expect(ui5.ax).toHaveLength(2)
+  expect(ours.snapshot).toHaveLength(2)
+  expect(ui5.snapshot).toHaveLength(2)
+  expect(ours.ax[1]).toEqual(menu)
+  expect(ui5.ax[1]).toEqual(nativeSurface)
+  expect(ours.snapshot[1]).toEqual(snapshotMenu)
+  expect(ui5.snapshot[1]).toEqual(nativeSnapshot)
+
+  const oursArrow = ours.ax[0].children[1]
+  const nativeArrow = ui5.ax[0].children[1]
+  expect(oursArrow.name).toBe(opener)
+  expect(nativeArrow.name).toBe(opener)
+  expect(oursArrow.properties.controls).toEqual([{ role: "menu", name: opener, ignored: false, valid: true }])
+  // SplitButtonTemplate lacks an aria-controls link to the separately composed
+  // popup. Compare the remaining arrow channels and preserve the verified link.
+  expect(nativeArrow.properties.controls).toBeUndefined()
+  nativeArrow.properties.controls = oursArrow.properties.controls
+  ui5.ax[1] = menu
+  ui5.snapshot[1] = snapshotMenu
+}
+
+/** NumericInputTemplate forwards a slot element, whose textContent is empty
+ * in Input.ariaValueStateHiddenText. Verify the native omission and our complete
+ * message on the textbox, target and snapshot before aligning the text. */
+function reconcileNumericInputMessage(ours: any, ui5: any, { state, message }: NonNullable<Allowed["numericInputMessage"]>) {
+  const complete = `${state} ${message}`
+  for (const [capture, description] of [[ours, complete], [ui5, state]]) {
+    expect(capture.ax[0].role).toBe("textbox")
+    expect(capture.ax[0].description).toBe(description)
+    expect(capture.ax[0].properties.describedby).toEqual([{ text: description, valid: true }])
+    expect(capture.ax[1]).toEqual({ role: "StaticText", name: description, properties: {}, children: [] })
+    expect(capture.snapshot[1]).toEqual({ role: "text", states: [], text: description, children: [] })
+  }
+  ui5.ax[0].description = complete
+  ui5.ax[0].properties.describedby[0].text = complete
+  ui5.ax[1].name = complete
+  ui5.snapshot[1].text = complete
+}
+
 /** Read only the literal a11yDiff object, without running fixture React modules or broadening main.tsx ownership. */
 export function allowedDifferences(directory: string): Record<string, Allowed> {
   const result: Record<string, Allowed> = {}
   for (const file of readdirSync(directory).filter((name) => name.endsWith(".tsx"))) {
     const source = ts.createSourceFile(file, readFileSync(`${directory}/${file}`, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
     const visit = (node: ts.Node) => {
+      if (ts.isPropertyAssignment(node) && node.name.getText(source) === "a11yDiffGroups") {
+        const groups: { cases: string[]; diff: Allowed }[] = JSON.parse(node.initializer.getText(source))
+        for (const { cases, diff } of groups) for (const id of cases) {
+          if (result[id]) throw new Error(`Duplicate a11yDiff fixture: ${id}`)
+          result[id] = diff
+        }
+      }
       if (ts.isPropertyAssignment(node) && node.name.getText(source) === "a11yDiff") {
         const json = node.initializer.getText(source)
         // JSON literal metadata gives stable paths and cannot execute arbitrary fixture code.
@@ -356,9 +442,17 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
   }
   let differences: string[], allowanceError: string | undefined
   try {
-    const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [])
+    const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [], allowed?.ui5FormHosts)
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
     if (allowed?.calendarHeaderBug) native = correctCalendarHeaderBugs(adjusted.ours, native, allowed.calendarHeaderBug)
+    if (allowed?.splitButtonMenu) {
+      if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")
+      reconcileSplitButtonMenu(adjusted.ours, native, allowed.splitButtonMenu)
+    }
+    if (allowed?.numericInputMessage) {
+      if (id !== "numeric-input-information") throw new Error("Nested value-state slot allowance is specific to numeric-input-information")
+      reconcileNumericInputMessage(adjusted.ours, native, allowed.numericInputMessage)
+    }
     differences = diffTree(adjusted.ours, native, adjusted.leaves)
   } catch (error) {
     // A stale or invalid allowance is a case failure, never a reason to lose the

@@ -1,0 +1,14 @@
+{
+  "title": "NumericInput",
+  "description": "Experimental (follows UI5). A locale-aware numeric textbox with range and precision validation and keyboard stepping.",
+  "registryDependencies": ["@petalo/icons", "@petalo/input", "@petalo/locale"],
+  "usage": {
+    "summary": "Edit a localized number in a plain textbox with keyboard stepping.",
+    "useWhen": ["Enter quantities, rates or other numbers with locale-aware grouping, decimal places and bounds.", "Allow direct editing with keyboard stepping and retain invalid entries for correction."],
+    "avoidWhen": [
+      { "when": "Show increment and decrement buttons alongside the editable value.", "use": ["step-input"] },
+      { "when": "Enter identifiers, postal codes or phone numbers, where leading zeros and exact characters matter.", "use": ["input"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}
