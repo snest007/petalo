@@ -9,7 +9,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | — | E9 cancelled 2026-11-20 (Linux-only CI noise; see Phase) |
+| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | E11 | **E11 next** (ports, structural-diff recording, popup cells); E9 cancelled 2026-11-20 |
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
@@ -30,8 +30,8 @@ Run [`node scripts/plan-check.mjs`](../../scripts/plan-check.mjs) after editing 
 1. Merge the reviewed card branches into main; `node scripts/plan-check.mjs --fix` moves ticked cards (and their
    return notes) to `done/` and fixes links. `plan-check` must report 0 errors.
 2. Update the **Status** table above and the README "Not done yet" list if a wave changed.
-3. Check that rules agreed with the owner since the last milestone are in AGENTS.md (and RUN.md / INTEGRATION.md if
-   they describe the same step), and that open cards still match them (dependencies, file names, test counts).
+3. Check that rules agreed with the owner since the last milestone are in AGENTS.md and [decisions.md](decisions.md)
+   (and RUN.md / INTEGRATION.md if they describe the same step), and that open cards still match them (dependencies, file names, test counts).
 4. Run tier 3 on macOS: `pnpm test:milestone` once (full main + Storybook incl. the stored-baseline tree comparisons),
    then push (= publish; Pages redeploys). Record the summary lines in the commit message. Note the CI result: a
    failure that reproduces on macOS or in a behaviour test gets fixed; a Linux-only one is only noted.
@@ -72,9 +72,9 @@ run the inventory specs in the scoped run instead of forcing the full suite (own
 and prompts don't need to repeat the registration steps. Other `docs/plan/` files stay shared.
 
 One card per branch. Cards in the same wave touch disjoint files and can run in parallel (separate worktrees/branches);
-later waves depend on earlier ones. Optional orchestration: [RUN.md](RUN.md) (one Codex session with sub-agents) or
-[INTEGRATION.md](INTEGRATION.md) (a separate merge session); today the owner runs one Codex session per card and a
-Claude session reviews and merges.
+later waves depend on earlier ones. Orchestration: [RUN.md](RUN.md) (one session per card, one orchestrator/reviewer;
+any agent) and [INTEGRATION.md](INTEGRATION.md) (review, follow-up cards, merge). Why things are this way:
+[decisions.md](decisions.md).
 
 Sizes: S ≈ <300 changed lines, M ≈ 300–900, L ≈ 900+.
 
@@ -132,6 +132,7 @@ F1 and F2 can run in parallel after F0.
 - [x] [E7 CI back under 12 minutes: Playwright container or cached system packages, time-based shards, timing warning](tasks/done/E7-ci-speed.md) — S (done 2026-11-19: Playwright container, time-based shards, timing warning; CI ≈11 min)
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
 - [x] [E10 A missing registration fails in seconds, with one clear message](tasks/done/E10-fast-registration-failure.md) — S (any time; found 2026-11-23 reviewing H8: an unregistered new component took 40 min of noisy failures)
+- [ ] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/E11-ports-structural-diffs-popup-cells.md) — M (next; shared-file card; see [decisions](decisions.md) 2026-11-23)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 

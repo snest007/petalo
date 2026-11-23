@@ -46,7 +46,7 @@ PORT=4320 pnpm test:storybook       # separate Storybook render, globals, Contro
 STORYBOOK_ONLY=toolbar PORT=4320 pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts # whole component story ids
 pnpm dev                           # http://localhost:5173 (docs), /?fixtures, /ui5.html, /wcr.html, /block.html?name=<block>
 node scripts/smoke-install.mjs     # fresh consumer app: shadcn init + add every block, build, render
-node scripts/integrate.mjs …       # merging card branches — see docs/plan/INTEGRATION.md
+node scripts/integrate.mjs …       # merging card branches — see docs/plan/INTEGRATION.md (review + merge)
 node scripts/plan-check.mjs        # backlog index ↔ card files ↔ return notes ↔ links; --fix moves finished cards
 ```
 
@@ -94,8 +94,9 @@ Always pass a `PORT` other than 4173/5173 to Playwright so it builds and serves 
      Known differences live in the **ratchet baseline** `tests/a11y-tree-baseline.json` (one entry per matrix, case,
      node path and semantic kind, each with a P1–P6 owning card id and an exact mismatch fingerprint). The test fails on any difference **not** in the baseline, on a changed mismatch at the same identity, and on any baseline entry
      that no longer differs (so a fix must delete its entry — the baseline only shrinks). Only a card listed as the
-     entry's owner may delete entries; nobody adds entries except E4 (which creates the baseline) — new code must match
-     UI5 or use `a11yDiff`. `a11yDiff` is for permanent, justified deviations (documented UI5 bug, inert wrapper, rule 5
+     entry's owner may delete entries. Changes to existing components add no entries — they must match UI5 or use
+     `a11yDiff`. **New-component cards** (wave H and later) may add entries for *structural* differences only, owned by
+     the component's P card (`docs/plan/decisions.md`, 2026-11-23): see "New components" under Definition of done. `a11yDiff` is for permanent, justified deviations (documented UI5 bug, inert wrapper, rule 5
      over UI5) with a concrete reason (e.g. "UI5 bug: role=listitem inside role=grid, TableTemplate.js:…"), never to
      make a failing test pass.
    - `scripts/a11y-baseline.mjs --write` creates E4's initial baseline once from complete, successful captures of Web
@@ -228,7 +229,17 @@ components comes before polish. Users run Windows and macOS (no Linux users); th
   `tests/a11y-tree-customizations.spec.ts`; verified members/texts in `scripts/a11y-audit.mjs`; reachable and
   unrendered native keys in `scripts/i18n-audit.mjs`, including keys an existing component gains through a new
   slot. Then `pnpm generate && pnpm registry:build` regenerates the audits, locale packs and `skills/petalo/`.
-  No new baseline entries; no gap count rises. `pnpm test:changed` runs the inventory specs whenever a new
+  No gap count rises.
+- **New-component accessibility acceptance** (`docs/plan/decisions.md`, 2026-11-23). Must hold in the card: behaviour
+  and keyboard tests (LTR and RTL), axe clean, and every role, accessible name, description, state/property, text and
+  label/description relationship UI5 exposes. May be recorded instead of fixed: purely structural tree differences —
+  an extra or missing unnamed, state-free `generic` wrapper, or the same semantic node one level higher/lower — and
+  open-popup pixel cells. Record them as tree-baseline entries owned by the component's P card (add the component to
+  that card's list in `tests/a11y-tree-baseline.ts` `groups`, not a card of its own) and pixel cells as `skipCompare`
+  with the P card id in the reason; list both in the card's return note. Until E11's `a11y-baseline.mjs --record`
+  lands, record a structural wrapper as an exact `a11yDiff` wrapper path (the normalizer already refuses anything but
+  an unnamed, state-free generic) with the reason `structural; owned by P<n>`. A difference in role, name, description,
+  state, text or relationship is never recorded: fix it, or use an exact `a11yDiff` with a concrete reason. `pnpm test:changed` runs the inventory specs whenever a new
   `registry/ui|items` file or an inventory file changes, so a missing registration fails in tier 1.
   The Node registration preflight in `pnpm test:changed` reports missing registrations before Playwright starts.
 - Extensibility (rule 11): new extension points meet the contract (example, ownership tests, Customise docs, story).
