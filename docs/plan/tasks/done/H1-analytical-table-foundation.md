@@ -59,7 +59,7 @@ copies it.
 
 ## Conformance to the X0 extension contract (approved 2026-11-17)
 
-The extension contract above conforms to [docs/extension-contract.md](../../extension-contract.md), tiers T1–T3.
+The extension contract above conforms to [docs/extension-contract.md](../../../extension-contract.md), tiers T1–T3.
 Keep tableOptions/tableRef, controlled states, content-only wrappers, class maps, protected prop merging and all
 texts/locale promises. Add a public `useAnalyticalTable()` facade with read-only model/actions, protected row/cell/
 header getters and typed structural replacements; default wrappers continue owning grid roles/count/index/focus.
