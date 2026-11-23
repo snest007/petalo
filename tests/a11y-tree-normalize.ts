@@ -3,7 +3,7 @@ import { expect, type Page } from "@playwright/test"
 import ts from "typescript"
 import { join } from "node:path"
 import { treeReportDirectory, treeReportFile } from "./a11y-tree-coverage"
-import { ratchetCase, readTreeBaseline } from "./a11y-tree-baseline"
+import { pairedWrapperDifferences, ratchetCase, readTreeBaseline } from "./a11y-tree-baseline"
 
 type SnapshotNode = { role: string; name?: string; states: string[]; text?: string; children: SnapshotNode[] }
 /** Parse Playwright's actual snapshot while normalizing whitespace in accessible names only.
@@ -426,6 +426,17 @@ export function writeComparisonReport() {
   } finally { rmSync(lock, { recursive: true }) }
 }
 
+export function diffCapturedTrees(
+  ours: Parameters<typeof pairedWrapperDifferences>[0],
+  ui5: Parameters<typeof pairedWrapperDifferences>[1],
+  ignore: string[] = [],
+  legacy = false,
+) {
+  const raw = diffTree(ours, ui5, ignore)
+  if (legacy || !raw.length) return raw
+  return pairedWrapperDifferences(ours, ui5) ?? raw
+}
+
 export async function compareCase(ours: Page, reference: Page, id: string, key: string, allowed?: Allowed, selector = `[data-fixture="${id}"]`, matrix?: { ours: AXNode[]; reference: AXNode[] }) {
   let a: Awaited<ReturnType<typeof captureAX>>, b: Awaited<ReturnType<typeof captureAX>>
   try {
@@ -456,7 +467,10 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
       if (id !== "numeric-input-information") throw new Error("Nested value-state slot allowance is specific to numeric-input-information")
       reconcileNumericInputMessage(adjusted.ours, native, allowed.numericInputMessage)
     }
-    differences = diffTree(adjusted.ours, native, adjusted.leaves)
+    const [engine, direction, ...casePath] = key.split("/")
+    const legacy = existsSync("tests/a11y-tree-baseline.json") && readTreeBaseline().entries.some((entry) =>
+      entry.matrix === `${engine}/${direction}` && entry.caseId === casePath.join("/") && !entry.path.startsWith("/wrappers/"))
+    differences = diffCapturedTrees(adjusted.ours, native, adjusted.leaves, legacy)
     if (allowed && differences.length) compared = { ours: adjusted.ours, ui5: native }
   } catch (error) {
     // A stale or invalid allowance is a case failure, never a reason to lose the

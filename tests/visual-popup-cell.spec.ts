@@ -23,3 +23,33 @@ test("popup containment detects a misplaced top-layer surface and its owning por
   await page.locator('[data-fixture="scratch"]').evaluate((el) => el.setAttribute("data-fixture-popup-overflow", "Deliberate viewport overlay"))
   expect(await page.evaluate(popupOverflow, { viewport: false })).toEqual([])
 })
+
+test("E11 review detects a listbox popup owned via aria-controls", async ({ page }) => {
+  await page.setContent(`
+    <div data-fixture="combo" style="position:fixed;left:100px;top:100px;width:120px;height:100px">
+      <input role="combobox" aria-controls="combo-list" aria-expanded="true">
+    </div>
+    <div data-fixture="next" style="position:fixed;left:240px;top:100px;width:100px;height:100px"></div>
+    <div id="combo-list" role="listbox" style="position:fixed;left:240px;top:100px;width:80px;height:40px;background:red">
+      <div role="option">Example</div>
+    </div>
+  `)
+  await expect(page.getByRole("listbox")).toBeVisible()
+  expect(await page.evaluate(popupOverflow, { viewport: false })).toEqual([
+    { caseId: "combo", surface: "combo-list", pixels: 100 },
+  ])
+})
+
+test("E11 review detects painted content escaping a contained popup", async ({ page }) => {
+  await page.setContent(`
+    <div data-fixture="dialog" style="position:fixed;left:100px;top:100px;width:120px;height:100px">
+      <div role="dialog" id="surface" style="position:relative;width:80px;height:40px;overflow:visible">
+        <div id="flyout-child" style="position:absolute;left:140px;top:0;width:80px;height:40px;background:red">Example</div>
+      </div>
+    </div>
+    <div data-fixture="next" style="position:fixed;left:240px;top:100px;width:100px;height:100px"></div>
+  `)
+  await expect(page.locator("#flyout-child")).toBeVisible()
+  expect(await page.evaluate(popupOverflow, { viewport: false })).toEqual(
+    expect.arrayContaining([expect.objectContaining({ caseId: "dialog", pixels: 100 })]))
+})

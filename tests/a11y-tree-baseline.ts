@@ -139,6 +139,31 @@ function semanticSequence(nodes: Node[]) {
   return sequence
 }
 
+export function pairedWrapperDifferences(ours: Trees, ui5: Trees): string[] | undefined {
+  const lines: string[] = []
+  for (const channel of ["ax", "snapshot"] as const) {
+    if (!Array.isArray(ours[channel]) || !Array.isArray(ui5[channel])
+      || !isDeepStrictEqual(semanticSequence(ours[channel]), semanticSequence(ui5[channel]))) return undefined
+    const wrappers = (nodes: Node[], path: string, result = new Map<string, Node>()) => {
+      nodes.forEach((node, index) => {
+        const here = `${path}/${index}`
+        if (isInertGeneric(node)) result.set(here, node)
+        wrappers(node.children, `${here}/children`, result)
+      })
+      return result
+    }
+    const actual = wrappers(ours[channel], `/wrappers/${channel}`)
+    const reference = wrappers(ui5[channel], `/wrappers/${channel}`)
+    for (const path of new Set([...actual.keys(), ...reference.keys()])) {
+      const a = actual.get(path), b = reference.get(path)
+      if (a && b) {
+        if (!isDeepStrictEqual(a.properties ?? {}, b.properties ?? {})) return undefined
+      } else lines.push(`${path}: ours ${JSON.stringify(a)}; UI5 ${JSON.stringify(b)}`)
+    }
+  }
+  return lines.length ? lines : undefined
+}
+
 function atPath(tree: Trees, path: string) {
   return path.slice(1).split("/").reduce<unknown>((value, key) => {
     return value && typeof value === "object" && Object.hasOwn(value, key) ? (value as Record<string, unknown>)[key] : undefined
@@ -158,12 +183,14 @@ export function recordStructuralDifferences(component: string, report: Record<st
     const ours = capture.compared?.ours ?? capture.ours
     const ui5 = capture.compared?.ui5 ?? capture.ui5
     if (!ours || !ui5) throw new Error(`Missing paired trees for ${key}`)
+    const paired = pending.some(({ entry }) => entry.path.startsWith("/wrappers/"))
+      ? new Set(pairedWrapperDifferences(ours, ui5) ?? []) : undefined
     const sameSemantics = (["ax", "snapshot"] as const).every((channel) =>
       Array.isArray(ours[channel]) && Array.isArray(ui5[channel])
       && isDeepStrictEqual(semanticSequence(ours[channel]), semanticSequence(ui5[channel])))
     for (const { entry, line } of pending) {
       const actual = atPath(ours, entry.path), reference = atPath(ui5, entry.path)
-      const structural = entry.kind === "extra-node" ? isInertGeneric(actual) && reference === undefined
+      const structural = entry.path.startsWith("/wrappers/") ? paired?.has(line) : entry.kind === "extra-node" ? isInertGeneric(actual) && reference === undefined
         : entry.kind === "missing-node" ? actual === undefined && isInertGeneric(reference)
         : entry.kind === "structure" && isInertGeneric(actual) && isInertGeneric(reference)
       const reason = !structural ? "difference is not an unnamed state-free generic node"

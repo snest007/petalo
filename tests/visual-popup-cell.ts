@@ -15,26 +15,37 @@ export function popupOverflow({ viewport }: { viewport: boolean }): PopupOverflo
     '[data-slot="menu-sub-content"]', '[data-slot="toast"]', "[data-fixture-owner]",
   ].join(",")
   const roots: ParentNode[] = [document]
-  const surfaces: Element[] = []
+  const elements: Element[] = []
+  const surfaces = new Set<Element>()
   const triggers = new Map<string, string>()
+  function composedParent(el: Element): Element | null {
+    const root = el.getRootNode()
+    return el.assignedSlot ?? el.parentElement ?? (root instanceof ShadowRoot ? root.host : null)
+  }
   function ancestors(node: Element): Element[] {
     const chain: Element[] = []
-    for (let el: Element | null = node; el;) {
-      chain.push(el)
-      const root = el.getRootNode()
-      el = el.assignedSlot ?? el.parentElement ?? (root instanceof ShadowRoot ? root.host : null)
-    }
+    for (let el: Element | null = node; el; el = composedParent(el)) chain.push(el)
     return chain
   }
   for (const root of roots) {
     for (const el of root.querySelectorAll("*")) {
+      elements.push(el)
       if (el.shadowRoot) roots.push(el.shadowRoot)
-      if (el.matches(popupSelector)) surfaces.push(el)
+      if (el.matches(popupSelector)) surfaces.add(el)
       const ids = el.getAttribute("aria-controls") ?? el.getAttribute("popovertarget")
       if (!ids) continue
       const owner = ancestors(el).find((parent) => parent.hasAttribute("data-fixture"))?.getAttribute("data-fixture")
       if (owner) for (const id of ids.trim().split(/\s+/)) triggers.set(id, owner)
     }
+  }
+
+  for (const el of elements) {
+    if (!triggers.has(el.id) || surfaces.has(el)) continue
+    const { position } = getComputedStyle(el)
+    // A control's in-flow panels also use aria-controls. Recognize portalled
+    // popup targets by their popup role or by their out-of-flow positioning.
+    if (el.matches('[role="menu"], [role="listbox"], [role="tree"], [role="grid"]')
+      || position === "fixed" || position === "absolute") surfaces.add(el)
   }
 
   function ownerOf(chain: Element[]) {
@@ -65,8 +76,14 @@ export function popupOverflow({ viewport }: { viewport: boolean }): PopupOverflo
     let { left, top, right, bottom } = rect
     let positioned: string | undefined
     for (const [index, ancestor] of chain.entries()) {
-      if (ancestor.matches(":popover-open, :modal")) break
+      const topLayer = ancestor.matches(":popover-open, :modal")
       const style = getComputedStyle(ancestor)
+      const clip = /^rect\(([-.\d]+)px,\s*([-.\d]+)px,\s*([-.\d]+)px,\s*([-.\d]+)px\)$/.exec(style.clip)
+      const emptyClip = clip && (style.position === "absolute" || style.position === "fixed")
+        && (Number(clip[3]) <= Number(clip[1]) || Number(clip[2]) <= Number(clip[4]))
+      if (emptyClip || style.clipPath === "inset(50%)") {
+        return { left: 0, top: 0, right: 0, bottom: 0 }
+      }
       const fixedBlock = style.transform !== "none" || style.perspective !== "none" || style.filter !== "none"
         || style.backdropFilter !== "none" || /layout|paint|strict|content/.test(style.contain)
         || /transform|perspective|filter/.test(style.willChange)
@@ -76,33 +93,75 @@ export function popupOverflow({ viewport }: { viewport: boolean }): PopupOverflo
         if (style.overflowX !== "visible") { left = Math.max(left, clip.left); right = Math.min(right, clip.right) }
         if (style.overflowY !== "visible") { top = Math.max(top, clip.top); bottom = Math.min(bottom, clip.bottom) }
       }
+      if (topLayer) break
       if (!positioned && (style.position === "fixed" || style.position === "absolute")) positioned = style.position
     }
     return { left, top, right, bottom }
   }
 
-  const findings: PopupOverflow[] = []
-  for (const el of surfaces) {
-    if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) continue
+  function isTransparentHitArea(el: Element) {
+    const root = el.getRootNode()
+    // UI5 PopupBlockLayerTemplate draws a pointer interceptor. OpenUI5
+    // DialogRenderer adds an oversized resize hit target with a separate icon.
+    // Check the icon and every other descendant independently.
+    const blockLayer = el.matches("div.ui5-block-layer") && root instanceof ShadowRoot
+      && root.host.localName.startsWith("ui5-")
+    const resizeHandle = el.matches(".sapMDialog .sapMDialogResizeHandle")
+    if ((!blockLayer && !resizeHandle) || [...el.childNodes].some(
+      (node) => node.nodeType === Node.TEXT_NODE && node.textContent?.trim(),
+    )) return false
+    const style = getComputedStyle(el)
+    return style.backgroundColor === "rgba(0, 0, 0, 0)" && style.backgroundImage === "none"
+      && style.borderImageSource === "none" && style.boxShadow === "none" && style.outlineStyle === "none"
+      && [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth]
+        .every((width) => width === "0px")
+      && ["::before", "::after"].every((pseudo) => getComputedStyle(el, pseudo).content === "none")
+  }
+
+  const findings = new Map<Element, PopupOverflow>()
+  const nearest = new Map<Element, Element | null>()
+  function popupFor(el: Element): Element | null {
+    if (surfaces.has(el)) return el
+    if (nearest.has(el)) return nearest.get(el)!
+    const parent = composedParent(el)
+    const popup = parent ? popupFor(parent) : null
+    nearest.set(el, popup)
+    return popup
+  }
+
+  const owners = new Map<Element, { caseId: string; surface: string; bounds?: DOMRect } | null>()
+  for (const el of elements) {
+    const popup = popupFor(el)
+    if (!popup) continue
+    if (!owners.has(popup)) {
+      const chain = ancestors(popup)
+      const caseId = ownerOf(chain)
+      const cell = caseId ? cells.get(caseId) : undefined
+      const surface = popup.id || popup.getAttribute("data-slot") || popup.localName
+      owners.set(popup, cell?.getAttribute("data-fixture-popup-overflow")?.trim() ? null : {
+        caseId: caseId ?? "<unowned>", surface,
+        bounds: cell && (viewport ? new DOMRect(0, 0, innerWidth, innerHeight) : cell.getBoundingClientRect()),
+      })
+    }
+    const owner = owners.get(popup)
+    if (!owner) continue
     const rect = el.getBoundingClientRect()
     if (!(rect.width && rect.height)) continue
-    const chain = ancestors(el)
-    const painted = paintedBox(rect, chain)
+    const { bounds, caseId, surface } = owner
+    const excess = (box: Pick<DOMRect, "left" | "top" | "right" | "bottom">) => bounds
+      ? Math.max(bounds.left - box.left, bounds.top - box.top, box.right - bounds.right, box.bottom - bounds.bottom)
+      : -1
+    // Boxes already inside the cell cannot paint outside it after clipping.
+    if (bounds && excess(rect) <= 0.5) continue
+    if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true }) || isTransparentHitArea(el)) continue
+    const painted = paintedBox(rect, ancestors(el))
     if (painted.right <= painted.left || painted.bottom <= painted.top) continue
-    const caseId = ownerOf(chain)
-    const cell = caseId ? cells.get(caseId) : undefined
-    const surface = el.id || el.getAttribute("data-slot") || el.localName
-    if (!cell) {
-      findings.push({ caseId: caseId ?? "<unowned>", surface, pixels: -1 })
-      continue
+    const pixels = excess(painted)
+    if ((!bounds || pixels > 0.5) && (!findings.has(popup) || pixels > findings.get(popup)!.pixels)) {
+      findings.set(popup, { caseId, surface, pixels: Math.ceil(pixels) })
     }
-    if (cell.getAttribute("data-fixture-popup-overflow")?.trim()) continue
-    const bounds = viewport ? new DOMRect(0, 0, innerWidth, innerHeight) : cell.getBoundingClientRect()
-    const pixels = Math.max(bounds.left - painted.left, bounds.top - painted.top, painted.right - bounds.right, painted.bottom - bounds.bottom)
-    // Ignore subpixel rounding at fractional flex/transform coordinates.
-    if (pixels > 0.5) findings.push({ caseId: caseId!, surface, pixels: Math.ceil(pixels) })
   }
-  return findings
+  return [...findings.values()]
 }
 
 export async function assertPopupsInCells(page: Page, viewport = false) {

@@ -32,21 +32,23 @@ function claim(port) {
     if (error.code !== "EEXIST") throw error
     const pid = claimedBy(path)
     if (pid !== null) return { pid }
-    // A killed process may leave a claim. An automatic selection can move
-    // on safely; a caller can still use that port explicitly once it is free.
-    return { abandoned: true }
+    return { abandoned: path }
   }
 }
 
-function probe(port, host) {
+function withBoundPort(port, host, action) {
   return new Promise((resolve, reject) => {
     const server = createServer()
     server.once("error", (error) => {
-      if (error.code === "EADDRINUSE" || error.code === "EACCES") resolve(false)
-      else if (host === "::1" && ["EADDRNOTAVAIL", "EAFNOSUPPORT"].includes(error.code)) resolve(true)
+      if (error.code === "EADDRINUSE" || error.code === "EACCES") resolve(undefined)
+      else if (host === "::1" && ["EADDRNOTAVAIL", "EAFNOSUPPORT"].includes(error.code)) resolve(action())
       else reject(error)
     })
-    server.listen({ port, host, exclusive: true }, () => server.close((error) => error ? reject(error) : resolve(true)))
+    server.listen({ port, host, exclusive: true }, () => {
+      let result, failure
+      try { result = action() } catch (error) { failure = error }
+      server.close((error) => failure || error ? reject(failure ?? error) : resolve(result))
+    })
   })
 }
 
@@ -102,20 +104,30 @@ export async function reservePort(variable, explicit, base) {
   mkdirSync(claims, { recursive: true, mode: 0o700 })
   const last = explicit === undefined ? Math.min(first + 999, 65535) : first
   for (let port = first; port <= last; port++) {
-    const reservation = claim(port)
+    let reservation = claim(port)
+    let recovered = false
+    if (reservation.abandoned) {
+      const abandoned = reservation.abandoned
+      // Serialize recovery with the OS listener. Recheck inside the bind so a
+      // second recovering process cannot remove the new process's live claim.
+      reservation = await withBoundPort(port, "127.0.0.1", () => {
+        if (claimedBy(abandoned) === null) unlinkSync(abandoned)
+        return claim(port)
+      }) ?? { abandoned }
+      recovered = !!reservation.release
+    }
     if (!reservation.release && !reservation.pid && !reservation.abandoned) { port--; continue }
-    const canProbe = reservation.release || (reservation.abandoned && explicit !== undefined)
-    if (canProbe) {
+    if (reservation.release) {
       try {
-        if (await probe(port, "127.0.0.1") && await probe(port, "::1")) {
-          return { port, release: reservation.release ?? (() => {}) }
+        if ((recovered || await withBoundPort(port, "127.0.0.1", () => true)) && await withBoundPort(port, "::1", () => true)) {
+          return { port, release: reservation.release }
         }
       } catch (error) {
-        reservation.release?.()
+        reservation.release()
         throw error
       }
+      reservation.release()
     }
-    reservation.release?.()
     if (explicit !== undefined) throw new Error(`${variable}=${port} is busy.\n${listener(port, reservation.pid)}`)
   }
   throw new Error(`No free port for ${variable} in ${first}–${last}.`)

@@ -341,3 +341,22 @@ test("record rejects wrapper-shaped differences that change semantic order or ow
     [{ ...wrapper, ...namedButton, name: "First", children: [{ ...wrapper, ...namedButton }] } as typeof wrapper], [wrapperLine])
   expect(() => recordStructuralDifferences("button", report, emptyBaseline, true)).toThrow(/semantic sequence or parentage differs/)
 })
+
+test("E11 review records an inert wrapper around the same named control", async () => {
+  const { recordStructuralDifferences, ratchetCase } = await import("./a11y-tree-baseline")
+  const { diffCapturedTrees } = await import("./a11y-tree-normalize")
+  const control = { role: "button", name: "Confirm", children: [] }
+  const ours = { ax: [{ role: "generic", name: "", children: [control] }], snapshot: [control] }
+  const ui5 = { ax: [control], snapshot: [control] }
+  const key = "wcr/ltr/button-default"
+  const differences = diffCapturedTrees(ours, ui5)
+  const entries = recordStructuralDifferences("button", {
+    [key]: { ours, ui5, differences },
+  }, { version: 1, entries: [] }, true)
+  expect(entries).toEqual([expect.objectContaining({ owner: "P1", matrix: "wcr/ltr", path: "/wrappers/ax/0", kind: "extra-node" })])
+  const baseline = { version: 1 as const, entries }
+  expect(ratchetCase(key, differences, baseline)).toEqual([])
+  expect(ratchetCase(key, diffCapturedTrees(ui5, ui5), baseline)).toEqual([expect.stringContaining("stale")])
+  const changed = { ...ui5, ax: [{ ...control, name: "Delete" }] }
+  expect(diffCapturedTrees(ours, changed)).toEqual(expect.arrayContaining([expect.stringContaining("/ax/0/name")]))
+})
