@@ -10,6 +10,16 @@ run the full tree matrix).
 
 `combobox`, `multi-combobox`, `multi-input`, `token`, `tokenizer`, `file-uploader`, `color-palette`, `color-palette-popover`, `color-picker`, `time-picker`, `picker-field`. (`calendar` and the three date pickers moved to **P2a** on 2026-11-17.)
 
+## Review finding
+
+`color-palette-popover: outside pointer dismisses without selection` intermittently closes the palette and leaves
+the opener unfocused. On clean main `2d2a787`, 23 of 24 runs passed and one failed at the same `toBeFocused()`
+assertion as H2. The H2 merge candidate passed 22 of 24 with the same macOS Chromium setup, six workers and
+retries disabled. The demo, spec, and ColorPalettePopover and Popover code are identical across those revisions.
+Trace the outside pointer’s focus change and `onCloseAutoFocus` in `registry/ui/color-palette-popover.tsx`.
+Radix FocusScope dispatches that callback on a timer after unmount. Check which element was saved in
+`previousFocus` and which element receives focus last before choosing a production fix.
+
 ## How
 
 1. Start from the data, not from memory: `node scripts/a11y-baseline.mjs --list P2` (or filter the JSON by
