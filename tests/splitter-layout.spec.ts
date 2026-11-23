@@ -1,10 +1,53 @@
 import { AxeBuilder } from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
+import { captureAX } from "./a11y-tree-normalize"
 
 const fixture = (variant = "horizontal", dir = "ltr", theme = "sap_horizon", density = "cozy") =>
   `/index.html?fixtures&ref=wcr&only=splitter-layout-${variant}&dir=${dir}&theme=${theme}&density=${density}`
 
 for (const dir of ["ltr", "rtl"]) {
+  test(`SplitterLayout holds its intrinsic automatic sizes and resizes in ${dir}`, async ({ page, context }) => {
+    const wcr = await context.newPage()
+    const cell = '[data-fixture="splitter-layout-automatic"]'
+    await Promise.all([
+      page.goto(fixture("automatic", dir)),
+      wcr.goto(`/wcr.html?only=splitter-layout-automatic&dir=${dir}`),
+    ])
+    const ours = page.locator(`${cell} [data-slot="splitter-element"]`)
+    const reference = wcr.locator(`${cell} [data-min-size]`)
+    const separator = page.locator(cell).getByRole("separator")
+    const referenceSeparator = wcr.locator(cell).getByRole("separator")
+    for (const panes of [ours, reference]) {
+      await expect(panes.nth(0)).toHaveCSS("flex", "0 0 162px")
+      await expect(panes.nth(1)).toHaveCSS("flex", "0 0 322px")
+      // Both layouts retain the observed extent when the contents grow.
+      await panes.nth(0).locator(":scope > div").evaluate((content: HTMLElement) => { content.style.width = "125px" })
+      await expect(panes.nth(0)).toHaveCSS("width", "162px")
+      await expect(panes.nth(1)).toHaveCSS("width", "322px")
+    }
+    await expect(separator).toHaveAttribute("aria-valuenow", "29.4")
+    await expect(referenceSeparator).not.toHaveAttribute("aria-valuenow", /./)
+    for (const [canvas, value] of [[page, Math.fround(29.4)], [wcr, 50]] as const) {
+      const { ax } = await captureAX(canvas, cell)
+      expect(ax).toMatchObject([{ children: [{}, { role: "separator", value }, {}] }])
+    }
+    const increase = dir === "ltr" ? "ArrowRight" : "ArrowLeft"
+    for (const [bar, panes] of [[separator, ours], [referenceSeparator, reference]] as const) {
+      await bar.focus()
+      await bar.press(increase)
+      await expect(panes.nth(0)).toHaveCSS("width", "182px")
+      await expect(panes.nth(1)).toHaveCSS("width", "302px")
+      await expect(bar).toBeFocused()
+    }
+    await separator.press("Home")
+    await expect(ours.nth(0)).toHaveCSS("width", "48px")
+    await expect(separator).toHaveAttribute("aria-valuenow", "0")
+    await separator.press("End")
+    await expect(ours.nth(1)).toHaveCSS("width", "48px")
+    await expect(separator).toHaveAttribute("aria-valuenow", "100")
+    await expect(separator).toBeFocused()
+  })
+
   test(`SplitterLayout keyboard bounds and steps in ${dir}`, async ({ page }) => {
     await page.goto(fixture("horizontal", dir))
     const separator = page.getByRole("separator", { name: "Press ARROW keys to move" })

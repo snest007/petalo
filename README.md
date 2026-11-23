@@ -193,8 +193,8 @@ The backlog with task cards is in [docs/plan](docs/plan/README.md) (open cards i
   E4, E5) and the per-group fixes (wave P) are in progress.
 - **Extension points** for every component (wave X, after its P card), following [the extension contract](docs/extension-contract.md).
 - **From [issue #1](https://github.com/snest007/petalo/issues/1)** (wave H): AnalyticalTable, Calendar extension
-  points, Input suggestions + MessageBox, SplitButton, ButtonBadge, NumericInput, SplitterLayout and
-  the remaining lower-priority components.
+  points, Input suggestions + MessageBox, SplitButton, ButtonBadge, NumericInput, SelectDialog,
+  DynamicDateRange and the remaining lower-priority components.
 - **Storybook coverage gate** (card S5).
 
 ## License

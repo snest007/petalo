@@ -29,13 +29,37 @@ type SplitterLayoutProps = Omit<React.ComponentProps<"div">, "onResize"> & {
   classNames?: Partial<Record<SplitterLayoutSlot, string>>
 }
 
-type PaneLayout = { basis: string; className?: string; vertical: boolean }
+type PaneLayout = { basis?: string; className?: string; vertical: boolean }
 const PaneContext = React.createContext<PaneLayout | null>(null)
 
-function SplitterElement({ size: _size, minSize = 0, resizable: _resizable, children, className, style, ...props }: SplitterElementProps) {
+function SplitterElement({ size: _size, minSize = 0, resizable: _resizable, children, className, style, ref, ...props }: SplitterElementProps) {
   const layout = React.useContext(PaneContext)
-  return <div {...props} data-slot="splitter-element" className={cn("fiori-splitter-element", layout?.className, className)}
-    style={{ ...style, flex: layout?.basis, [layout?.vertical ? "minHeight" : "minWidth"]: minSize }}>
+  const element = React.useRef<HTMLDivElement>(null)
+  React.useImperativeHandle(ref, () => element.current!, [])
+  const automatic = !!layout && layout.basis === undefined
+  const extent = layout?.vertical ? "height" : "width"
+  const [automaticExtent, setAutomaticExtent] = React.useState<number>()
+
+  React.useLayoutEffect(() => {
+    setAutomaticExtent(undefined)
+    if (!automatic || !element.current) return
+    // WCR SplitterElement/index.js distributes space from min-content and
+    // holds the first visible extent observed by ResizeObserver.
+    const observer = new ResizeObserver(([entry]) => {
+      const rect = entry.target.getBoundingClientRect()
+      if (rect.width === 0) return
+      observer.disconnect()
+      setAutomaticExtent(rect[extent])
+    })
+    observer.observe(element.current)
+    return () => observer.disconnect()
+  }, [automatic, extent])
+
+  const flex = automatic
+    ? automaticExtent === undefined ? "1 0 min-content" : `0 0 ${automaticExtent}px`
+    : layout?.basis
+  return <div {...props} ref={element} data-slot="splitter-element" className={cn("fiori-splitter-element", layout?.className, className)}
+    style={{ ...style, flex, [layout?.vertical ? "minHeight" : "minWidth"]: minSize }}>
     {children}
   </div>
 }
@@ -103,7 +127,7 @@ function SplitterLayout({
       const cssSize = typeof initial === "number" ? initial + "px" : initial
       const fixed = requestedSizes?.[index]
       // WCR useConcatSplitterElements subtracts the following bar from an explicitly sized pane.
-      const basis = fixed !== undefined ? `0 0 ${fixed}px` : initial === "auto" ? "1 1 0px" :
+      const basis = fixed !== undefined ? `0 0 ${fixed}px` : initial === "auto" ? undefined :
         `0 1 ${showSeparator ? `calc(${cssSize} - var(--fiori-wcr-x-splittersize))` : cssSize}`
       const gripIcon = vertical ? horizontalGrip : verticalGrip
       const min = pane.props.minSize ?? 0

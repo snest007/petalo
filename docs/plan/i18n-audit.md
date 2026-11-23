@@ -2426,6 +2426,19 @@ Owner: P1
 | VALUE_STATE_TYPE_WARNING | Value State Warning | select: texts/labels.criticalType | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/Select.js:687 (valueStateTypeMappings) | ui5 |
 | VALUE_STATE_WARNING | Warning issued | delegated delegated delegated input: texts/labels.critical | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/CheckBox.js:259 (valueStateTextMappings); node_modules/@ui5/webcomponents/dist/RadioButton.js:289 (valueStateText); node_modules/@ui5/webcomponents/dist/Select.js:679 (valueStateTextMappings) | ui5 |
 
+## select-dialog
+
+Owner: H9
+
+| SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| wcr:CANCEL | Cancel | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:CLEAR | Clear | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SEARCH | Search | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECT | Select | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECTED | Selected | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECTED_ITEMS | Selected Items {0} | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+
 ## shell-bar
 
 Owner: P6

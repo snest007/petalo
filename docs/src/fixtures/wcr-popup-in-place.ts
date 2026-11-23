@@ -1,7 +1,7 @@
 import { placeInPlace } from "./ui5-popup-in-place"
 
 /**
- * Use as the ref of a WCR MessageBox or Popover with open={false},
+ * Use as the ref of a WCR MessageBox, SelectDialog or Popover with open={false},
  * or pass its inner dialog/popover here if the wrapper owns the ref.
  * Keeping Popup.js out of the top layer also keeps its focus management from
  * disturbing other cases. UI5 still owns the surface styling and semantics.

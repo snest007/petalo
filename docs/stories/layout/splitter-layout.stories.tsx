@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { SplitterLayout, SplitterElement } from "@/components/ui/splitter-layout"
+import { automaticContent, automaticFrame, automaticWidths, paneStyle } from "../../src/fixtures/splitter-layout.cases"
 import { fioriMeta } from "../_lib/meta"
 
 const base = fioriMeta({ name: "splitter-layout", component: SplitterLayout })
@@ -19,3 +20,8 @@ export const Playground: Story = {}
 export const Vertical: Story = { args: { vertical: true } }
 export const RTL: Story = { globals: { dir: "rtl" } }
 export const Customise: Story = { args: { classNames: { pane: "p-4" } } }
+export const Automatic: Story = {
+  render: args => <SplitterLayout {...args} style={automaticFrame}>
+    {automaticWidths.map(width => <SplitterElement key={width} minSize={48} style={paneStyle}>{automaticContent(width)}</SplitterElement>)}
+  </SplitterLayout>,
+}

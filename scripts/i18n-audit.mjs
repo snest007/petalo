@@ -260,6 +260,7 @@ const wcrComponents = {
   'analytical-table': ['AnalyticalTable', 'H1'],
   'message-box': ['MessageBox', 'H7'],
   'message-view': ['MessageView', 'H0'],
+  'select-dialog': ['SelectDialog', 'H9'],
   'splitter-layout': ['SplitterLayout', 'H9'],
 }
 
