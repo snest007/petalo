@@ -1,8 +1,40 @@
 import * as React from "react"
 import { AnalyticalTable } from "@ui5/webcomponents-react/AnalyticalTable"
 import { useAnnounceEmptyCells, useStickyColumns } from "@ui5/webcomponents-react/AnalyticalTableHooks"
+import { ColumnHeaderModal } from "@ui5/webcomponents-react/dist/components/AnalyticalTable/defaults/Column/ColumnHeaderModal.js"
 import { defineFixtures } from "../fixture-types"
 import { fixtureInputs, headersFor, inventory } from "./analytical-table.cases"
+
+import { pinWcrPopup } from "./wcr-popup-in-place"
+
+function OpenColumnMenu({ children }: { children: React.ReactNode }) {
+  const frame = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    const node = frame.current
+    if (!node) return
+    let requested = false
+    const sync = () => {
+      const header = node.querySelector<HTMLElement>('[role="columnheader"]')
+      if (header && !requested) {
+        requested = true
+        header.click()
+      }
+      const popup = node.querySelector<HTMLElement>('[data-component-name="ATHeaderPopover"]')
+      if (!popup || popup.dataset.pinned) return
+      popup.dataset.pinned = "true"
+      // Pin the actual modal within the capture cell, independent of the opener's viewport position.
+      pinWcrPopup(popup)
+      popup.style.setProperty("position", "absolute", "important")
+      popup.style.setProperty("inset-inline-start", "0", "important")
+      popup.style.setProperty("inset-block-start", "100%", "important")
+    }
+    const observer = new MutationObserver(sync)
+    observer.observe(node, { subtree: true, childList: true })
+    sync()
+    return () => observer.disconnect()
+  }, [])
+  return <div ref={frame} style={{ position: "relative" }}>{children}</div>
+}
 
 const sticky = [useStickyColumns()]
 const announceEmpty = [useAnnounceEmptyCells]
@@ -31,15 +63,22 @@ export default defineFixtures({
         columns={headersFor(props.longHeader).map(({ key, label }, index) => ({
           accessor: key, Header: label, width: props.widths?.[index],
           sticky: props.frozen && index === 0 ? "start" : undefined,
+          ...(props.openHeaderMenu ? { Popover: (instance: Parameters<typeof ColumnHeaderModal>[0]) => (
+            <ColumnHeaderModal {...instance} popoverProps={{ ...instance.popoverProps, openerRef: { current: null! }, openerId: "" }} />
+          ) } : {}),
+          ...(props.sortable || props.filterable ? { headerLabel: label } : {}),
         }))}
         reactTableOptions={{ manualGlobalFilter: props.filtered, useControlledState: props.filtered ? (state: Record<string, unknown>) => ({ ...state, globalFilter: "unmatched product" }) : undefined, initialState: { hiddenColumns: props.hidden ?? [],
-          globalFilter: props.filtered ? "unmatched product" : undefined } }}
+          globalFilter: props.filtered ? "unmatched product" : undefined,
+          ...(props.sorting ? { sortBy: props.sorting } : {}),
+          ...(props.columnFilters ? { filters: props.columnFilters } : {}),
+        } }}
         tableHooks={props.frozen ? sticky : props.emptyCell ? announceEmpty : undefined}
-        alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
+        sortable={props.sortable} filterable={props.filterable} alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
         visibleRows={5} minRows={3} onLoadMore={() => {}} visibleRowCountMode={props.countMode} loading={props.loading}
         noDataText={props.german ? "Keine Daten" : undefined} />
     return <div dir={props.rtl ? "rtl" : undefined} style={{ width: 480, height: props.height }}>
-      {props.scaleWidthMode === "Smart" || props.scaleWidthMode === "Grow" ? <AfterFonts>{table}</AfterFonts> : table}
+      {props.scaleWidthMode === "Smart" || props.scaleWidthMode === "Grow" ? <AfterFonts>{table}</AfterFonts> : props.openHeaderMenu ? <OpenColumnMenu>{table}</OpenColumnMenu> : table}
     </div>
   },
 })

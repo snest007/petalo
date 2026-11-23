@@ -203,6 +203,16 @@ for (const [key, field, file] of h1Texts) {
   textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source: `${h1Source}/${file}` })
 }
 
+for (const [key, field, source] of [
+  ["wcr:SORT_ASCENDING", "sortAscending", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:SORT_DESCENDING", "sortDescending", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:CLEAR_SORTING", "clearSorting", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:FILTER", "filter", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:FILTERED", "filtered", `${h1Source}/hooks/useA11y.js`],
+  ["LIST_ITEM_ACTIVE", "menuItemActive", "node_modules/@ui5/webcomponents/dist/ListItemBase.js"],
+  ["INPUT_CLEAR_ICON_ACC_NAME", "clearFilter", "node_modules/@ui5/webcomponents/dist/Input.js"],
+]) textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source })
+
 // The allowed consumer spec owns the exact runtime proof map and source-backed
 // nonfunctional classifications; unknown public points stay gap.
 const consumerSpec = read("tests/a11y-tree-customizations.spec.ts")
@@ -239,6 +249,12 @@ for (const point of ["DataTable.columns.header", "DataTable.columns.cell", "Filt
   const owner = point.startsWith("DataTable") ? "data-table" : "adapt-filters-dialog", proof = customizationProofs[point]
   custom.push({ owner, point, source: `registry/ui/${owner}.tsx`, declaration: point, status: proof ? "fixed in E4" : "gap", functional: true, proof: proof && `tests/a11y-tree-customizations.spec.ts: ${proof}` })
 }
+
+custom.push({
+  owner: "analytical-table", point: "AnalyticalTable.columns.Filter", source: "registry/ui/analytical-table.tsx",
+  declaration: "AnalyticalTable.columns.Filter", status: "ok", functional: true,
+  proof: "tests/analytical-table.spec.ts: controlled sorting and the custom Filter renderer keep the owned menu and header",
+})
 
 const live = owners.flatMap((file) => read(`registry/ui/${file}`).split("\n").flatMap((line, index) =>
   /aria-live=|role="(?:status|alert)"|\bannounce\(/.test(line)

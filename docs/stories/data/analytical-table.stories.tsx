@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AnalyticalTable } from "@/components/ui/analytical-table"
-import { columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
+import { AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
 import { fioriMeta } from "../_lib/meta"
 
 const base = fioriMeta({ name: "analytical-table", component: AnalyticalTable<(typeof inventory)[number]> })
@@ -40,3 +40,13 @@ export const German: Story = { args: { data: [], locale: "de-DE", texts: { noDat
 export const Styled: Story = { args: { classNames: { cell: "tabular-nums" }, columnOrder: ["stock", "product", "category"] } }
 export const CustomContent: Story = { args: { columns: columns.map(column => ({ ...column, cell: ({ defaultContent }) => <strong>{defaultContent}</strong> })) } }
 export const Custom: Story = { render: () => <CustomAnalyticalTable /> }
+
+
+export const SortAscending: Story = { args: { sortable: true, defaultSorting: [{ id: "product", desc: false }] } }
+export const SortDescending: Story = { args: { sortable: true, defaultSorting: [{ id: "stock", desc: true }] } }
+export const MultiSort: Story = { args: { sortable: true, enableMultiSort: true, sortPriority: ["category", "stock"],
+  defaultSorting: [{ id: "category", desc: false }, { id: "stock", desc: true }] } }
+export const ColumnFilter: Story = { args: { filterable: true, defaultColumnFilters: [{ id: "product", value: "tent" }] } }
+export const ColumnFilterEmpty: Story = { args: { filterable: true, defaultColumnFilters: [{ id: "product", value: "missing" }] } }
+export const SortFilterMenu: Story = { render: () => <AnalyticalTableSortFilterDemo /> }
+export const SortFilterRTL: Story = { render: () => <AnalyticalTableSortFilterDemo dir="rtl" /> }

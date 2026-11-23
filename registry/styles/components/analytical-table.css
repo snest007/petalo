@@ -245,3 +245,77 @@
   opacity: .5;
   pointer-events: none;
 }
+
+/* WCR ColumnHeader/index.js offsets single-line text by the icon count, with .75rem for the icon band's edges. */
+.fiori-at-header-cell:is([data-sorted], [data-filtered]) .fiori-at-header-text {
+  margin-inline-end: calc(.8125rem + .75rem);
+}
+.fiori-at-header-cell[data-sorted][data-filtered] .fiori-at-header-text {
+  margin-inline-end: calc(2 * .8125rem + .75rem);
+}
+.fiori-at-header-icons { color: var(--sapContent_IconColor); gap: .125rem; }
+.fiori-at-header-icons > svg { width: .8125rem; height: .8125rem; }
+.fiori-at-sort-popup { font-weight: 400; cursor: auto; }
+.fiori-at-header-filter {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+}
+.fiori-at-header-filter > svg {
+  flex: 0 0 var(--fiori-list-item-icon-size);
+  width: var(--fiori-list-item-icon-size);
+  height: var(--fiori-list-item-icon-size);
+  margin-inline-end: .5rem;
+  color: var(--sapContent_NonInteractiveIconColor);
+}
+.fiori-at-header-filter > span {
+  margin-inline-end: .5rem;
+  font-family: var(--sapFontFamily);
+  font-size: var(--fiori-list-item-title-size);
+}
+.fiori-at-header-filter [data-slot="input-icon"] button { display: grid; place-items: center; }
+.fiori-at-sort-popup {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  width: max-content;
+  max-width: 100vw;
+  max-height: 100dvh;
+  overflow: auto;
+  color: var(--sapList_TextColor);
+  background: var(--fiori-popover-background);
+  border-radius: var(--fiori-popup-border-radius);
+  box-shadow: var(--fiori-popover-no-arrow-box-shadow);
+  outline: none;
+  font: var(--sapFontSize)/normal var(--sapFontFamily);
+  z-index: 1;
+}
+.fiori-at-menu-container { display: inline-block; vertical-align: top; }
+.fiori-at-sort-popup ul { margin: 0; padding: 0; }
+.fiori-at-menu-item-text { font-size: var(--fiori-list-item-title-size); }
+.fiori-at-menu-item:last-child { border-bottom-color: transparent; }
+.fiori-at-menu-item:has(> .fiori-at-header-filter) {
+  height: auto;
+  min-height: calc(var(--fiori-list-item-base-height) + 1px); /* ListItemCustom paints its border below the minimum height. */
+}
+.fiori-at-menu-sentinel,
+.fiori-at-menu-active {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/* InputTemplate.js uses a native, intrinsically sized editor beside its icon area. */
+.fiori-at-header-filter .fiori-field { width: auto; }
+.fiori-at-header-filter .fiori-field::before {
+  content: "";
+  position: absolute;
+  inset-inline: 1px;
+  inset-block-end: 0;
+  height: var(--fiori-input-bottom-border-height);
+  background: var(--fiori-input-bottom-border-color);
+}
+.fiori-at-header-filter .fiori-field > input { width: auto; box-sizing: content-box; }

@@ -1,9 +1,11 @@
 {
   "title": "AnalyticalTable",
-  "description": "Virtualized Fiori analytical grid with WCR column sizing, reordering, visibility, freezing, and keyboard navigation.",
+  "description": "Virtualized Fiori analytical grid with WCR column sizing, reordering, visibility, freezing, sorting, filtering, and keyboard navigation.",
   "dependencies": ["@tanstack/react-table", "@tanstack/react-virtual"],
-  "registryDependencies": ["@petalo/busy-indicator", "@petalo/menu", "@petalo/icons", "@petalo/locale"],
+  "registryDependencies": ["@petalo/busy-indicator", "@petalo/menu", "@petalo/icons", "@petalo/icon", "@petalo/input", "@petalo/list", "@petalo/locale"],
   "files": [
+    { "path": "registry/lib/analytical-table/header-menu.tsx", "type": "registry:lib", "target": "lib/analytical-table/header-menu.tsx" },
+    { "path": "registry/lib/analytical-table/sort-filter.ts", "type": "registry:lib", "target": "lib/analytical-table/sort-filter.ts" },
     { "path": "registry/lib/analytical-table/layout.ts", "type": "registry:lib", "target": "lib/analytical-table/layout.ts" },
     { "path": "registry/lib/analytical-table/navigation.ts", "type": "registry:lib", "target": "lib/analytical-table/navigation.ts" },
     { "path": "registry/lib/analytical-table/owned-props.ts", "type": "registry:lib", "target": "lib/analytical-table/owned-props.ts" }

@@ -29,6 +29,11 @@ type Case = {
   countMode?: "Fixed" | "Auto" | "AutoWithEmptyRows" | "Interactive"
   height?: number
   emptyCell?: boolean
+  sortable?: boolean
+  filterable?: boolean
+  sorting?: { id: string; desc: boolean }[]
+  columnFilters?: { id: string; value: string }[]
+  openHeaderMenu?: boolean
 }
 
 const cases: [string, Case][] = [
@@ -48,6 +53,15 @@ const cases: [string, Case][] = [
   ["rtl", { rtl: true, frozen: true, widths: [140, 180, 220] }],
   ["de", { german: true, data: [] }],
   ["neutral-extension", { neutral: true }],
+  ["sorted-asc", { sortable: true, sorting: [{ id: "product", desc: false }] }],
+  ["sorted-desc", { sortable: true, sorting: [{ id: "product", desc: true }] }],
+  ["multi-sorted", { sortable: true, sorting: [{ id: "category", desc: false }, { id: "stock", desc: true }],
+    data: [{ ...inventory[0], category: "Lighting" }, ...inventory.slice(1)] }],
+  ["column-filter", { filterable: true, columnFilters: [{ id: "product", value: "tent" }] }],
+  ["column-filter-empty", { filterable: true, columnFilters: [{ id: "product", value: "missing" }] }],
+  ["sort-filter-rtl", { rtl: true, sortable: true, filterable: true, sorting: [{ id: "product", desc: true }],
+    columnFilters: [{ id: "product", value: "a" }] }],
+  ["sort-filter-open", { sortable: true, filterable: true, openHeaderMenu: true }],
   ["empty-cell", { emptyCell: true, data: [{ ...inventory[0], category: "" }, ...inventory.slice(1)] }],
 ]
 export const fixtureInputs = {
