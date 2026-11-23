@@ -1,7 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { expect, type Page } from "@playwright/test"
 import ts from "typescript"
-import { ratchetCase, readTreeBaseline } from "./a11y-tree-baseline"
+import { join } from "node:path"
+import { treeReportDirectory, treeReportFile } from "./a11y-tree-coverage"
+import { pairedWrapperDifferences, ratchetCase, readTreeBaseline } from "./a11y-tree-baseline"
 
 type SnapshotNode = { role: string; name?: string; states: string[]; text?: string; children: SnapshotNode[] }
 /** Parse Playwright's actual snapshot while normalizing whitespace in accessible names only.
@@ -398,13 +400,13 @@ export async function captureAX(page: Page, selector: string, matrixNodes?: AXNo
 }
 
 export function recordComparison(id: string, record: unknown) {
-  const directory = "test-results/a11y-tree"
+  const directory = join(treeReportDirectory, "a11y-tree")
   mkdirSync(directory, { recursive: true })
   writeFileSync(`${directory}/${encodeURIComponent(id)}.json`, JSON.stringify({ id, record }, null, 2))
 }
 
 export function writeComparisonReport() {
-  const directory = "test-results/a11y-tree"
+  const directory = join(treeReportDirectory, "a11y-tree")
   mkdirSync(directory, { recursive: true })
   // Each case already has its complete shard. Merge once per matrix under a lock,
   // instead of reparsing every prior capture for every new case.
@@ -420,8 +422,19 @@ export function writeComparisonReport() {
     }))
     const temp = `${directory}/report-${process.pid}.tmp`
     writeFileSync(temp, JSON.stringify(report, null, 2))
-    renameSync(temp, "test-results/a11y-tree-report.json")
+    renameSync(temp, treeReportFile)
   } finally { rmSync(lock, { recursive: true }) }
+}
+
+export function diffCapturedTrees(
+  ours: Parameters<typeof pairedWrapperDifferences>[0],
+  ui5: Parameters<typeof pairedWrapperDifferences>[1],
+  ignore: string[] = [],
+  legacy = false,
+) {
+  const raw = diffTree(ours, ui5, ignore)
+  if (legacy || !raw.length) return raw
+  return pairedWrapperDifferences(ours, ui5) ?? raw
 }
 
 export async function compareCase(ours: Page, reference: Page, id: string, key: string, allowed?: Allowed, selector = `[data-fixture="${id}"]`, matrix?: { ours: AXNode[]; reference: AXNode[] }) {
@@ -441,6 +454,7 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     for (const path of allowed.ignore) expect(path, "Use an absolute exact channel, explicit inert wrapper, or verified snapshot ownership relocation").toMatch(/^\/(?:snapshot|ax|(?:ours|ui5)\/(?:ax|snapshot))\//)
   }
   let differences: string[], allowanceError: string | undefined
+  let compared: { ours: typeof a; ui5: typeof b } | undefined
   try {
     const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [], allowed?.ui5FormHosts)
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
@@ -453,7 +467,11 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
       if (id !== "numeric-input-information") throw new Error("Nested value-state slot allowance is specific to numeric-input-information")
       reconcileNumericInputMessage(adjusted.ours, native, allowed.numericInputMessage)
     }
-    differences = diffTree(adjusted.ours, native, adjusted.leaves)
+    const [engine, direction, ...casePath] = key.split("/")
+    const legacy = existsSync("tests/a11y-tree-baseline.json") && readTreeBaseline().entries.some((entry) =>
+      entry.matrix === `${engine}/${direction}` && entry.caseId === casePath.join("/") && !entry.path.startsWith("/wrappers/"))
+    differences = diffCapturedTrees(adjusted.ours, native, adjusted.leaves, legacy)
+    if (allowed && differences.length) compared = { ours: adjusted.ours, ui5: native }
   } catch (error) {
     // A stale or invalid allowance is a case failure, never a reason to lose the
     // rest of the matrix. Keep both full captures for reviewing that allowance.
@@ -465,7 +483,7 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
   // Before E4's one initial --write, capture real differences and fail normally.
   // The absent-baseline path is never an acceptance waiver.
   const failures = allowanceError || !existsSync("tests/a11y-tree-baseline.json") ? differences : ratchetCase(key, differences, readTreeBaseline())
-  recordComparison(key, { captured: true, differences, ratchetFailures: failures, allowed, allowanceError, ours: a, ui5: b })
+  recordComparison(key, { captured: true, differences, ratchetFailures: failures, allowed, allowanceError, ours: a, ui5: b, compared })
   return failures.map((line) => `${id}${allowed ? ` (${allowed.reason})` : ""}: ${line}`)
 }
 

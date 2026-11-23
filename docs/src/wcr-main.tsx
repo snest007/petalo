@@ -51,9 +51,9 @@ const reactRoot = createRoot(root)
 flushSync(() => reactRoot.render(
   <ThemeProvider staticCssInjected>
     <div dir="ltr" style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "flex-start" }}>
-      {fixtures.map(({ id, props, render }) => (
+      {fixtures.map(({ id, props, render, popupOverflowReason }) => (
         <div key={id} data-fixture-slot="" style={{ display: "flex" }}>
-          <div dir={opts.dir} data-fixture={id} style={{ display: "inline-flex", padding: "0.25rem", lineHeight: "normal" }}>
+          <div dir={opts.dir} data-fixture={id} data-fixture-popup-overflow={popupOverflowReason} style={{ display: "inline-flex", padding: "0.25rem", lineHeight: "normal" }}>
             {render(props)}
           </div>
         </div>

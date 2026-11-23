@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { ensureStorybookBuild, run, testSummary } from "./test-milestone.mjs"
+import { checkExplicitPorts, reservePort } from "./free-port.mjs"
 
 // Fixed smoke inventory. Keep scope here, rather than scattering grep lists in package.json.
 const main = [
@@ -22,9 +23,10 @@ async function docsConsoleCheck() {
   // Reuse the docs build made by the main smoke run; Vite and Chromium are closed in finally.
   const { preview } = await import("vite")
   const { chromium } = await import("@playwright/test")
-  let server, browser
+  let server, browser, reservation
   try {
-    server = await preview({ preview: { port: Number(process.env.PORT ?? "4310"), host: "127.0.0.1", strictPort: true } })
+    reservation = await reservePort("PORT", process.env.PORT, 4310)
+    server = await preview({ preview: { port: reservation.port, host: "127.0.0.1", strictPort: true } })
     browser = await chromium.launch({ headless: true })
     const page = await browser.newPage()
     const errors = []
@@ -42,11 +44,14 @@ async function docsConsoleCheck() {
     return false
   } finally {
     try { await browser?.close() } finally {
-      if (server) await new Promise((resolve, reject) => server.httpServer.close((error) => error ? reject(error) : resolve()))
+      try {
+        if (server) await new Promise((resolve, reject) => server.httpServer.close((error) => error ? reject(error) : resolve()))
+      } finally { reservation?.release() }
     }
   }
 }
 
+if (!await checkExplicitPorts(process.env, ["PORT", "SAPUI5_PORT", "STORYBOOK_PORT"])) process.exit(1)
 const started = Date.now()
 const registry = run("pnpm", ["registry:build"], { log: ".integration/smoke-registry.log" })
 let ok = registry.ok
@@ -59,7 +64,7 @@ if (ok) {
 if (ok) ok = await docsConsoleCheck()
 if (ok) ok = ensureStorybookBuild()
 if (ok) ok = testSummary(["-c", "playwright.storybook.config.ts", ...storybook], {
-  env: { PORT: process.env.STORYBOOK_PORT ?? "4320", STORYBOOK_ONLY: undefined, VISUAL_ONLY: undefined },
+  env: { PORT: undefined, STORYBOOK_ONLY: undefined, VISUAL_ONLY: undefined },
   log: ".integration/smoke-storybook.log",
 }).ok
 console.log(`Smoke ${ok ? "PASS" : "FAIL"} (${((Date.now() - started) / 1000).toFixed(1)}s) | Logs: .integration/smoke-*.log`)

@@ -1,5 +1,8 @@
 # H9 — SelectDialog, SplitterLayout, DynamicDateRange, CalendarLegend check
 
+The [owner split recorded in the H9 return](../returns/H9.md#owner-split) limits H9 and H9b to SplitterLayout and
+CalendarLegend. [H9d](H9d-splitter-layout-auto-sizing.md) carries the reviewer’s remaining findings for that delivery.
+
 **Goal:** add the components below from issue #1's list. Depends on: H0, E4 and E5 (merged). Can run in parallel with H1–H6 and with
 the other H7+ cards (disjoint files), except where a component edits an existing component's file — then don't run
 it at the same time as another card that edits that file: `input.tsx` (H7), `button.tsx` (H8), `menu.tsx` and

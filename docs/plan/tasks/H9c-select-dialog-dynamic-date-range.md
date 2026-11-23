@@ -1,20 +1,21 @@
-# H9c — SelectDialog and DynamicDateRange parity
+# H9c — Finish SelectDialog parity
 
-Continue on `codex/H9c` after H9 and H9b are merged. Use the preserved H9b tip `966e1a4` and `docs/plan/returns/H9.md` at that tip for the implementation and capture history. When syncing merged main, restore the deferred components and their registrations from that tip or the inverse of the move commit `e0e1720`. Preserve the merged H9 bookkeeping and regenerate derived files.
+Continue on `codex/H9c` in `.worktrees/H9c` after H9, H9b and H9d merge. The branch preserves H9b's tip
+`966e1a4`. After merging local main, recover the SelectDialog-owned sources, registrations and usage routing
+from that tip. The original [H9 return](../returns/H9.md) records both components' checkpoint history.
 
-## Scope
+## Review findings
 
-- **SelectDialog** (WCR 2.28.2). Keep the field-only search, public search slot, text overrides, dialog focus and selection behavior. Finish the LTR and RTL content-tree comparison. Keep the pinned-shell guards and compare the inner modal, semantic regions, list selection and live announcements.
-- **DynamicDateRange** (UI5 Web Components 2.28.1). Retain the passing closed trees, options and date-only editor pixel parity. Finish LTR and RTL comparisons for the open list and editors. Complete the date-time editor pixel matrix, including compact high-contrast white (worst recorded 12.06%), and the ar-EG localized fixture (2.57%). Retain the de-DE and zh-CN fixtures and complete the remaining localized matrix and editor stories.
-- Install each component independently from its registry item in a fresh consumer, build and render it, and verify the owned behavior and extension points.
+1. The H9b LTR and RTL WCR comparison still fails after the exact pinned Dialog shell is verified. The
+   single-selection capture has an extra empty React `alert` and a search field wrapper with differing `invalid`
+   and focusability properties. The WCR heading is one level deeper with level 1 on the heading itself.
+   Compare the named modal's header, searchbox, list (including selection states), footer and live region.
+2. Trace the empty alert's lifecycle and keep the announcement tests. Reuse exact, guarded native host
+   handling for inert wrappers where appropriate. Keep the search slot, clear behavior and focus return.
 
-## Open-state tree review
+## Acceptance
 
-1. About half the differences are form-associated UI5 hosts around Input, Button and CheckBox. Extend the existing guarded `ui5FormHosts` mechanism at the exact fixture paths and preserve each underlying control's accessible name, focusability, state and descendants.
-2. UI5 places the heading in a generic wrapper and keeps the heading level on the inner node. Preserve the inner level and heading text during comparison.
-3. Names such as “Navigate Back” and “Submit” sit on the inner button nodes in UI5. Compare the names on the controls that own them.
-4. Trace the extra empty React `alert` in the static capture. Match the live-region lifecycle and keep the interaction and announcement assertions.
-
-## Acceptance and budget
-
-Follow AGENTS.md and the original H9 parity criteria for these two components. Run focused pixel, tree, axe and behavior checks, then Tier 2 and the installed-consumer proofs. Use `PORT=4370`, `STORYBOOK_PORT=4380` and `SAPUI5_PORT=4371`. Use two hypotheses per failing check, about two hours, and zero pushes. Record unresolved checks if the budget is reached. Close all task-owned servers and browsers.
+- Keep the passing WCR pixel matrix and complete LTR/RTL tree, axe, behavior and extension ownership checks.
+- Install `@petalo/select-dialog` as the only requested item in a fresh consumer, build and render it, and prove
+  the search slot and focus behavior. Complete tier 2 and tick H9c. Budget is two hypotheses per failing check,
+  about two hours, and zero pushes.

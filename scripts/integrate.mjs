@@ -4,7 +4,7 @@
 // writes details to .integration/; `verify` also writes REPORT.md (paste that back).
 //
 //   node scripts/integrate.mjs prepare <card-id…>     create .worktrees/<id> on branch codex/<id> from main, install, generate;
-//                                                     prints the path and the PORT/SAPUI5_PORT pair reserved for it
+//                                                     prints the worktree path
 //   node scripts/integrate.mjs status                 list codex/* branches, worktrees, merge state
 //   node scripts/integrate.mjs scope [branch…]        files each branch changes vs. what its card allows
 //   node scripts/integrate.mjs merge [branch…]        scope check, then merge --no-ff in the given order
@@ -13,16 +13,15 @@
 //   node scripts/integrate.mjs cleanup [branch…]      remove merged branches and their (clean) worktrees
 //
 // Branches default to every local codex/* branch not yet merged into main (cleanup: merged ones).
-// Ports: PORT (docs, 4310), SAPUI5_PORT (4311); the smoke install uses 4312/4313.
+// Test runners select their own ports at invocation.
 import { spawnSync } from "node:child_process"
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, appendFileSync } from "node:fs"
 import { join } from "node:path"
+import { checkExplicitPorts } from "./free-port.mjs"
 
 // Not under test-results/: Playwright empties that folder at the start of every run.
 const OUT = ".integration"
 mkdirSync(OUT, { recursive: true })
-const PORT = process.env.PORT ?? "4310"
-const SAPUI5_PORT = process.env.SAPUI5_PORT ?? "4311"
 
 function sh(cmd, { allowFail = false, quiet = true, env = {}, log } = {}) {
   const r = spawnSync(cmd, { shell: true, encoding: "utf8", maxBuffer: 1 << 28, env: { ...process.env, ...env } })
@@ -125,8 +124,7 @@ if (cmd === "prepare") {
   const ids = args.filter((a) => !a.startsWith("--"))
   if (!ids.length) fail("prepare needs card ids, e.g. prepare F3 A1")
   const taken = new Set([...worktrees().values()])
-  const used = codexBranches().length
-  ids.forEach((id, i) => {
+  ids.forEach((id) => {
     const card = readdirSync("docs/plan/tasks").find((f) => f.startsWith(`${id}-`))
     if (!card) fail(`No card docs/plan/tasks/${id}-*.md`)
     const branch = `codex/${id}`
@@ -134,8 +132,7 @@ if (cmd === "prepare") {
     if (codexBranches().includes(branch) || taken.has(path)) fail(`${branch} or ${path} already exists — finish or clean it up first`)
     sh(`git worktree add -b ${branch} "${path}" main`)
     sh(`cd "${path}" && pnpm install --frozen-lockfile --prefer-offline && pnpm generate`, { log: `prepare-${id}.log` })
-    const port = 4320 + 2 * (used + i)
-    console.log(JSON.stringify({ card: `docs/plan/tasks/${card}`, branch, path, PORT: port, SAPUI5_PORT: port + 1 }))
+    console.log(JSON.stringify({ card: `docs/plan/tasks/${card}`, branch, path }))
   })
 } else if (cmd === "status") {
   const wt = worktrees()
@@ -189,10 +186,11 @@ if (cmd === "prepare") {
     || args.some((a) => !a.startsWith("--runs=") && !a.startsWith("--workers="))) {
     fail("verify accepts --runs=1|2 (default 1) and --workers=<positive integer>.")
   }
+  if (!await checkExplicitPorts(process.env, ["PORT", "SAPUI5_PORT", "STORYBOOK_PORT"])) process.exit(1)
   const install = sh("pnpm install --frozen-lockfile", { allowFail: true, log: "install.log" })
   // The milestone entry point owns fresh builds, both full suites, compact summaries and timings.
   const milestone = install.ok ? sh(`pnpm test:milestone --runs=${runs}${workers ? ` --workers=${workers}` : ""}`, {
-    allowFail: true, env: { PORT, SAPUI5_PORT }, log: "milestone.log",
+    allowFail: true, log: "milestone.log",
   }) : { ok: false, out: "skipped (install failed)" }
   let smoke = { ok: false, out: "skipped (earlier step failed)" }
   let usageBuild = { ok: false, out: "skipped (earlier step failed)" }
