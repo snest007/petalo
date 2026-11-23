@@ -10,6 +10,8 @@ run the full tree matrix).
 
 `dialog`, `popover`, `responsive-popover`, `menu`, `toast`, `user-menu`, `value-help-dialog`, `view-settings-dialog`, `adapt-filters-dialog` — includes the unnamed ViewSettingsDialog mode control that blocks S3 (`view-settings-dialog.tsx:447`; UI5 shares the defect → fix it and record an `a11yDiff`).
 
+Also: `tests-storybook/known-issues.spec.ts` › "S3 Playground-open marker binds its live … canvas" times out about 1 in 40 isolated runs waiting for the open dialog's mode control (`.fiori-vsd__sub-header > [data-slot="segmented-button"]`), on main as well (measured 2026-11-23 at the H8 merge). Make the open wait deterministic when the marker is removed.
+
 ## How
 
 1. Start from the data, not from memory: `node scripts/a11y-baseline.mjs --list P4` (or filter the JSON by
