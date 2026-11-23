@@ -230,6 +230,7 @@ components comes before polish. Users run Windows and macOS (no Linux users); th
   slot. Then `pnpm generate && pnpm registry:build` regenerates the audits, locale packs and `skills/petalo/`.
   No new baseline entries; no gap count rises. `pnpm test:changed` runs the inventory specs whenever a new
   `registry/ui|items` file or an inventory file changes, so a missing registration fails in tier 1.
+  The Node registration preflight in `pnpm test:changed` reports missing registrations before Playwright starts.
 - Extensibility (rule 11): new extension points meet the contract (example, ownership tests, Customise docs, story).
 - Localization (rule 10): every new user-visible or announced string is in `texts` with its UI5 key named; new formatted
   values use `Intl` with the resolved locale; new states have an RTL fixture; the i18n audit baseline doesn't grow.

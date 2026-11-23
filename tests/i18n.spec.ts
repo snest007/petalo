@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
-import { execFileSync } from "node:child_process"
+import { execFileSync, spawnSync } from "node:child_process"
 import { devices, expect, test, type Locator, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
@@ -11,6 +11,7 @@ import * as React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { FioriLocaleProvider, useFioriLocale, useFioriTexts } from "../registry/lib/fiori-locale"
 import { Card, CardContent } from "../registry/ui/card"
+import { auditFailure } from "../scripts/changed-scope.mjs"
 
 const de = JSON.parse(readFileSync("registry/i18n/de.json", "utf8"))
 const locales = ["de-DE", "zh-CN", "ar-EG"]
@@ -22,8 +23,11 @@ type AuditBaseline = Record<string, { owner: string; gapCount: number; okKeys: s
 function readSourceAudit(): AuditGroup[] {
   // The complete source/reference inventory exceeds execFileSync's default 1 MiB.
   // Preserve every row instead of truncating the audit consumed by the ratchet.
-  const { audit } = JSON.parse(execFileSync(process.execPath, ["scripts/i18n-audit.mjs", "--json"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 })) as { audit: AuditGroup[] }
-  return audit
+  const script = "scripts/i18n-audit.mjs"
+  const result = spawnSync(process.execPath, [script, "--json"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 })
+  const failure = auditFailure(script, result)
+  if (failure) throw new Error(failure)
+  return (JSON.parse(result.stdout) as { audit: AuditGroup[] }).audit
 }
 function auditRatchetProblems(audit: AuditGroup[], baseline: AuditBaseline) {
   const problems: string[] = []
@@ -41,45 +45,74 @@ function auditRatchetProblems(audit: AuditGroup[], baseline: AuditBaseline) {
   return problems
 }
 
-test("i18n audit assigns the Calendar pilot to P2a and leaves time controls in P2", () => {
-  const audit = readSourceAudit()
-  for (const group of audit.filter((group) => group.reference !== "wcr")) expect(group.owner, group.component).toMatch(/^P(?:2a|[1-6])$/)
-  expect(audit.filter(group => group.owner === "P2a").map(group => group.component).sort()).toEqual(["calendar", "date-picker", "date-range-picker", "date-time-picker"])
-  for (const name of ["time-picker", "picker-field"]) expect(audit.find(group => group.component === name)?.owner, name).toBe("P2")
-})
+test.describe("i18n source audit", () => {
+  // These tests share one audit. A load failure is reported by the first test
+  // and skips its dependents, including the pack regeneration test.
+  test.describe.configure({ mode: "serial" })
+  let audit: AuditGroup[]
+  test.beforeAll(() => { audit = readSourceAudit() })
 
-test("i18n audit ratchet guards owning gap counts and every implemented key", () => {
-  const audit = readSourceAudit()
-  const baseline = JSON.parse(readFileSync("tests/i18n-audit-baseline.json", "utf8")) as AuditBaseline
-  expect(auditRatchetProblems(audit, baseline)).toEqual([])
-  for (const group of audit) {
-    expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:10|[0-9])$/ : /^P(?:2a|[1-6])$/)
-    expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
-  }
-  for (const key of ["BUTTON_BADGE_ONE_ITEM", "BUTTON_BADGE_MANY_ITEMS"]) {
-    expect(audit.find(group => group.component === "button")?.rows.find(row => row.key === key)?.status).toBe("fixed in E5")
-    expect(audit.find(group => group.component === "split-button")?.rows.find(row => row.key === key)?.status).toBe("not rendered")
-    expect(de[key]).toBeTruthy()
-  }
-  expect(audit.find(group => group.component === "numeric-input")?.rows.find(row => row.key === "NUMBERINPUT_DEC_ICON_TITLE")?.status).toBe("not rendered")
-  // Exercise regressions against the real source inventory: a gap reduction needs
-  // a baseline reduction, and swapping one fixed/gap row cannot hide a lost key.
-  const component = audit.find(group => group.rows.some(row => row.status === "gap") && group.rows.some(row => row.status === "fixed in E5"))!
-  const changed = structuredClone(component)
-  changed.rows.find(row => row.status === "gap")!.status = "fixed in E5"
-  expect(auditRatchetProblems([changed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining("lower the owning baseline in the same commit"))
-  const fixed = changed.rows.find((row, index) => component.rows[index].status === "fixed in E5")!
-  fixed.status = "gap"
-  expect(auditRatchetProblems([changed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining(`${fixed.key}: previously implemented key became gap`))
-  const regressed = structuredClone(component)
-  regressed.rows.find(row => row.status === "fixed in E5")!.status = "gap"
-  expect(auditRatchetProblems([regressed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining("new gaps are forbidden"))
-  // The native WC contract must survive the sap.m bundle's colliding key.
-  for (const name of ["combobox", "select"]) {
-    const position = audit.find(group => group.component === name)!.rows.find(row => row.key === "LIST_ITEM_POSITION")!
-    expect(position.english).toBe("List item {0} of {1}")
-    expect(position.englishSource).toContain("@ui5/webcomponents/dist/generated/i18n/i18n-defaults.js:132")
-  }
+  test("i18n audit assigns the Calendar pilot to P2a and leaves time controls in P2", () => {
+    for (const group of audit.filter((group) => group.reference !== "wcr")) expect(group.owner, group.component).toMatch(/^P(?:2a|[1-6])$/)
+    expect(audit.filter(group => group.owner === "P2a").map(group => group.component).sort()).toEqual(["calendar", "date-picker", "date-range-picker", "date-time-picker"])
+    for (const name of ["time-picker", "picker-field"]) expect(audit.find(group => group.component === name)?.owner, name).toBe("P2")
+  })
+
+  test("i18n audit ratchet guards owning gap counts and every implemented key", () => {
+    const baseline = JSON.parse(readFileSync("tests/i18n-audit-baseline.json", "utf8")) as AuditBaseline
+    expect(auditRatchetProblems(audit, baseline)).toEqual([])
+    for (const group of audit) {
+      expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:10|[0-9])$/ : /^P(?:2a|[1-6])$/)
+      expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
+    }
+    for (const key of ["BUTTON_BADGE_ONE_ITEM", "BUTTON_BADGE_MANY_ITEMS"]) {
+      expect(audit.find(group => group.component === "button")?.rows.find(row => row.key === key)?.status).toBe("fixed in E5")
+      expect(audit.find(group => group.component === "split-button")?.rows.find(row => row.key === key)?.status).toBe("not rendered")
+      expect(de[key]).toBeTruthy()
+    }
+    expect(audit.find(group => group.component === "numeric-input")?.rows.find(row => row.key === "NUMBERINPUT_DEC_ICON_TITLE")?.status).toBe("not rendered")
+    // Exercise regressions against the real source inventory: a gap reduction needs
+    // a baseline reduction, and swapping one fixed/gap row cannot hide a lost key.
+    const component = audit.find(group => group.rows.some(row => row.status === "gap") && group.rows.some(row => row.status === "fixed in E5"))!
+    const changed = structuredClone(component)
+    changed.rows.find(row => row.status === "gap")!.status = "fixed in E5"
+    expect(auditRatchetProblems([changed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining("lower the owning baseline in the same commit"))
+    const fixed = changed.rows.find((row, index) => component.rows[index].status === "fixed in E5")!
+    fixed.status = "gap"
+    expect(auditRatchetProblems([changed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining(`${fixed.key}: previously implemented key became gap`))
+    const regressed = structuredClone(component)
+    regressed.rows.find(row => row.status === "fixed in E5")!.status = "gap"
+    expect(auditRatchetProblems([regressed], { [component.component]: baseline[component.component] })).toContainEqual(expect.stringContaining("new gaps are forbidden"))
+    // The native WC contract must survive the sap.m bundle's colliding key.
+    for (const name of ["combobox", "select"]) {
+      const position = audit.find(group => group.component === name)!.rows.find(row => row.key === "LIST_ITEM_POSITION")!
+      expect(position.english).toBe("List item {0} of {1}")
+      expect(position.englishSource).toContain("@ui5/webcomponents/dist/generated/i18n/i18n-defaults.js:132")
+    }
+  })
+
+  test("packs regenerate deterministically and contain audited registry and WCR keys", () => {
+    test.setTimeout(30_000)
+    const files = () => readdirSync("registry/i18n").sort().map(name => [name, readFileSync(`registry/i18n/${name}`, "utf8")])
+    execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
+    const before = files()
+    execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
+    expect(files()).toEqual(before)
+    const rendered = new Set(audit.flatMap(group => group.rows.filter(row => row.source === "wcr" || row.status !== "gap").map(row => row.key)))
+    const analyticalTable = audit.find(group => group.component === "analytical-table")!
+    const wcrKeys = analyticalTable.rows.map(row => row.key)
+    expect(wcrKeys).toHaveLength(43)
+    expect(wcrKeys).toContain("wcr:LIST_NO_DATA")
+    expect(analyticalTable.rows.every(row => row.source === "wcr" && row.key.startsWith("wcr:"))).toBe(true)
+    const packs = readdirSync("registry/i18n").filter(name => name.endsWith(".json") && name !== "registry-items.json")
+    expect(packs).toHaveLength(48)
+    for (const name of packs) {
+      const pack = JSON.parse(readFileSync(`registry/i18n/${name}`, "utf8"))
+      for (const key of Object.keys(pack)) expect(rendered.has(key), `${name}/${key}`).toBe(true)
+      for (const key of wcrKeys) expect(typeof pack[key], `${name}/${key}`).toBe("string")
+    }
+    expect(de["wcr:LIST_NO_DATA"]).toBe("Keine Daten")
+  })
 })
 
 test("provider texts reach real controls and component overrides win", async ({ page }) => {
@@ -645,30 +678,6 @@ test("RTL slider keys follow the inherited DOM direction", async ({ page }) => {
   await expect(handle).toHaveAttribute("aria-valuenow", "0.4")
   await handle.press("ArrowLeft")
   await expect(handle).toHaveAttribute("aria-valuenow", "0.5")
-})
-
-test("packs regenerate deterministically and contain audited registry and WCR keys", () => {
-  test.setTimeout(30_000)
-  const files = () => readdirSync("registry/i18n").sort().map(name => [name, readFileSync(`registry/i18n/${name}`, "utf8")])
-  execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
-  const before = files()
-  execFileSync(process.execPath, ["scripts/build-i18n-packs.mjs"])
-  expect(files()).toEqual(before)
-  const audit = readSourceAudit()
-  const rendered = new Set(audit.flatMap(group => group.rows.filter(row => row.source === "wcr" || row.status !== "gap").map(row => row.key)))
-  const analyticalTable = audit.find(group => group.component === "analytical-table")!
-  const wcrKeys = analyticalTable.rows.map(row => row.key)
-  expect(wcrKeys).toHaveLength(43)
-  expect(wcrKeys).toContain("wcr:LIST_NO_DATA")
-  expect(analyticalTable.rows.every(row => row.source === "wcr" && row.key.startsWith("wcr:"))).toBe(true)
-  const packs = readdirSync("registry/i18n").filter(name => name.endsWith(".json") && name !== "registry-items.json")
-  expect(packs).toHaveLength(48)
-  for (const name of packs) {
-    const pack = JSON.parse(readFileSync(`registry/i18n/${name}`, "utf8"))
-    for (const key of Object.keys(pack)) expect(rendered.has(key), `${name}/${key}`).toBe(true)
-    for (const key of wcrKeys) expect(typeof pack[key], `${name}/${key}`).toBe("string")
-  }
-  expect(de["wcr:LIST_NO_DATA"]).toBe("Keine Daten")
 })
 
 test("collation follows German and Swedish accent ordering", async ({ page }) => {
