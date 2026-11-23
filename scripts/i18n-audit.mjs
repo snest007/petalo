@@ -285,10 +285,11 @@ function wcrRows(component, name) {
   return [...imports].sort(([a], [b]) => a.localeCompare(b)).map(([symbol, nativeReferences]) => {
     const definition = wcrEnglish[symbol]
     const property = resolveKey(component, definition.key)
-    const status = property ? 'ok' : shipped.includes(component) ? 'gap' : 'reference only'
+    const reason = unreachable[`${component}/${definition.key}`]
+    const status = property ? 'ok' : reason ? 'not rendered' : shipped.includes(component) ? 'gap' : 'reference only'
     return {
       ...definition, source: 'wcr', nativeReferences, status,
-      property: property ?? (status === 'gap' ? 'No implemented provider/override text owner' : 'Port pending'),
+      property: property ?? reason ?? (status === 'gap' ? 'No implemented provider/override text owner' : 'Port pending'),
     }
   })
 }
@@ -317,6 +318,20 @@ unrendered('numeric-input', ['POPOVER_ARIA_DESCRIBEDBY_RESIZABLE', 'POPOVER_HAND
   'InputPopoverTemplate does not make the NumericInput value-state popover resizable.')
 unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STATE_LINKS_MAC', 'VALUE_STATE_LINK_MAC'],
   'NumericInputTemplate forwards a slot element to the inner Input; Input.valueStateLinks inspects element children, not assigned nodes of that slot.')
+
+for (const [card, keys] of [
+  ['H2 sorting and filters', ['CLEAR_SORTING', 'FILTER', 'FILTERED', 'SORT_ASCENDING', 'SORT_DESCENDING']],
+  ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
+  ['H4 tree, selection and row states', [
+    'ALL_ROWS_DESELECTED', 'ALL_ROWS_DESELECTED_FILTERED', 'ALL_ROWS_SELECTED', 'ALL_ROWS_SELECTED_FILTERED',
+    'COLLAPSE_NODE', 'DESELECT_ALL', 'EXPAND_NODE',
+    'HIGHLIGHT_COLUMN', 'NAVIGATION_COLUMN', 'ROW_COLLAPSED', 'ROW_DESELECTED', 'ROW_DESELECTED_MULTI',
+    'ROW_DESELECTED_MULTI_FILTERED', 'ROW_EXPANDED', 'ROW_SELECTED', 'ROW_SELECTED_MULTI',
+    'ROW_SELECTED_MULTI_FILTERED', 'SELECT_ALL',
+    'SELECTION_COLUMN',
+  ]],
+  ['H5 overlay', ['INVALID_TABLE']],
+]) unrendered('analytical-table', keys.map(key => `wcr:${key}`), `Native channel activates with ${card}.`)
 
 for (const component of shipped) if (!ownerByComponent[component] && !wcrComponents[component]) throw new Error(`Missing owning card for ${component}`)
 const audit = shipped.filter(component => !wcrComponents[component]).map(component => ({ component, owner: ownerByComponent[component], rows: [...new Set([...nativeByComponent[component], ...Object.keys(resolutions[component].rows).filter(key => key in defaults)])].sort().map(key => {

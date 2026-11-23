@@ -1,0 +1,735 @@
+"use client"
+
+// Derived from SAP UI5 Web Components for React 2.28.2, © SAP SE or an SAP affiliate
+// company and UI5 contributors. SPDX-License-Identifier: Apache-2.0.
+//
+// Experimental extension contract for H1–H5:
+// - tableOptions adds TanStack v9 features, row models and meta. tableRef exposes the
+//   engine and imperative scroll/focus/reset actions. Grid semantics stay in this item.
+// - Each public column state has controlled, default and change props.
+// - Render functions receive the model, locale and default content. The owned parts
+//   retain their role, identity, relationships, roving focus and event handlers.
+// - useAnalyticalTable, the protected props getters, components keys, classNames and
+//   data-slot names are public API. Replacement layouts arrange protected parts.
+// - texts resolve from FioriLocaleProvider, with explicit overrides taking precedence.
+
+import * as React from "react"
+import {
+  columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
+  flexRender, tableFeatures, useTable,
+  type Cell, type Column, type ColumnDef, type ColumnOrderState, type ColumnPinningState,
+  type ColumnSizingState, type Header, type Row, type RowData, type TableOptions,
+  type Updater, type ColumnVisibilityState,
+} from "@tanstack/react-table"
+import { defaultRangeExtractor, useVirtualizer, type ScrollToOptions } from "@tanstack/react-virtual"
+import { BusyIndicator } from "@/components/ui/busy-indicator"
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu"
+import { pushpinOff, pushpinOn } from "@/lib/fiori-icons"
+import { useFioriLocale, useFioriTexts } from "@/lib/fiori-locale"
+import { formatNumber } from "@/lib/fiori-numbers"
+import { cn } from "@/lib/utils"
+import { clampWidth, measureWidths, minimumColumnWidth, type ScaleWidthMode } from "@/lib/analytical-table/layout"
+import { useGridNavigation, type Position } from "@/lib/analytical-table/navigation"
+import { mergeHost, type HostProps } from "@/lib/analytical-table/owned-props"
+
+const features = tableFeatures({
+  columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
+  columnMeta: {} as AnalyticalTableColumnMeta,
+})
+type Features = typeof features
+type Table<T extends RowData> = ReturnType<typeof useTable<Features, T>>
+type GridColumn<T extends RowData> = Column<Features, T>
+type GridHeader<T extends RowData> = Header<Features, T, unknown>
+type GridRow<T extends RowData> = Row<Features, T>
+type GridCell<T extends RowData> = Cell<Features, T, unknown>
+type Align = "Start" | "Center" | "End" | "Left" | "Right"
+type VerticalAlign = "Top" | "Middle" | "Bottom"
+export type AnalyticalTableSlot = "grid" | "header-row" | "header-cell" | "header-content" | "header-menu" |
+  "body" | "row" | "cell" | "cell-content" | "resizer" | "vertical-resizer" | "empty-row" |
+  "no-data" | "loading" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text"
+
+export type AnalyticalTableColumnMeta = {
+  className?: string
+  headerClassName?: string
+}
+
+export type AnalyticalTableContentInfo<T extends RowData> = {
+  table: Table<T>
+  locale: string
+  defaultContent: React.ReactNode
+  webComponentsReactProperties: { locale: string; texts: AnalyticalTableTexts }
+}
+
+export type AnalyticalTableCellInfo<T extends RowData, V = unknown> = AnalyticalTableContentInfo<T> & { cell: Cell<Features, T, V>; row: GridRow<T>; column: GridColumn<T>; value: V }
+
+type ColumnRenderKeys = "header" | "cell" | "footer"
+type WithoutRenderers<Def> = Def extends unknown ? Omit<Def, ColumnRenderKeys> : never
+type HeaderInfo<T extends RowData, V> = AnalyticalTableContentInfo<T> & { header: Header<Features, T, V>; column: GridColumn<T> }
+
+export type AnalyticalTableColumnDef<T extends RowData, V = unknown> = WithoutRenderers<ColumnDef<Features, T, V>> & {
+  cell?: string | ((info: AnalyticalTableCellInfo<T, V> & ReturnType<Cell<Features, T, V>["getContext"]>) => React.ReactNode)
+  header?: string | ((info: HeaderInfo<T, V>) => React.ReactNode)
+  footer?: string | ((info: HeaderInfo<T, V>) => React.ReactNode)
+  width?: number
+  minWidth?: number
+  maxWidth?: number
+  hAlign?: Align
+  vAlign?: VerticalAlign
+  headerTooltip?: string
+  headerLabel?: string
+  cellLabel?: (info: AnalyticalTableCellInfo<T, V>) => string
+  disableResizing?: boolean
+  disableDragAndDrop?: boolean
+  interactiveElementName?: string | ((cell: GridCell<T>) => string)
+  autoResizable?: boolean
+  sticky?: "start"
+  scaleWidthModeOptions?: { cellString?: string; headerString?: string }
+  aggregatedCell?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
+  placeholderCell?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
+}
+
+export type AnalyticalTableInstance<T extends RowData> = {
+  table: Table<T>
+  /** Scroll to a zero-based index in the current row/visible column model. */
+  scrollToRow(index: number, options?: ScrollToOptions): void
+  scrollToColumn(index: number, options?: ScrollToOptions): void
+  scrollTo(offset: number, align?: ScrollToOptions["align"]): void
+  scrollToItem(index: number, align?: ScrollToOptions["align"]): void
+  horizontalScrollTo(offset: number, align?: ScrollToOptions["align"]): void
+  horizontalScrollToItem(index: number, align?: ScrollToOptions["align"]): void
+  /** The grid header is row 0. Body data starts at row 1. */
+  focusCell(row: number, column: number): void
+  resetColumnSizing(): void
+  toggleStickyColumn(id: string, sticky?: boolean): void
+}
+
+const defaultTexts = {
+  noData: "No data", // WCR LIST_NO_DATA
+  noDataFiltered: "No data found. Try adjusting the filter settings.", // WCR NO_DATA_FILTERED
+  selectRow: "To select the row, press the spacebar.", // WCR SELECT_PRESS_SPACE
+  unselectRow: "To deselect the row, press the spacebar.", // WCR UNSELECT_PRESS_SPACE
+  selectAll: "To select all rows, press the spacebar.", // WCR SELECT_ALL_PRESS_SPACE
+  unselectAll: "To deselect all rows, press the spacebar.", // WCR UNSELECT_ALL_PRESS_SPACE
+  expandRow: "To expand the row, press the spacebar.", // WCR EXPAND_PRESS_SPACE
+  collapseRow: "To collapse the row, press the spacebar.", // WCR COLLAPSE_PRESS_SPACE
+  fixedColumn: "Fixed Column", // WCR FIXED_COLUMN
+  freezeColumn: "Freeze Column", // WCR FREEZE_COLUMN
+  unfreezeColumn: "Unfreeze Column", // WCR UNFREEZE_COLUMN
+  dragToResize: "Drag to resize", // WCR DRAG_TO_RESIZE
+  pleaseWait: "Please wait", // WCR PLEASE_WAIT
+  moveToContent: "To move to the content, press F2.", // WCR MOVE_TO_CONTENT_F2
+  includesContent: (name: string) => `Includes ${name}`, // WCR INCLUDES_X
+  busy: "Busy", // WCR TablePlaceholder.js aria-valuetext
+  emptyCell: "Empty", // UI5 ARIA_LABEL_EMPTY_CELL
+}
+export type AnalyticalTableTexts = typeof defaultTexts
+const textKeys = {
+  selectRow: "wcr:SELECT_PRESS_SPACE", unselectRow: "wcr:UNSELECT_PRESS_SPACE",
+  selectAll: "wcr:SELECT_ALL_PRESS_SPACE", unselectAll: "wcr:UNSELECT_ALL_PRESS_SPACE",
+  expandRow: "wcr:EXPAND_PRESS_SPACE", collapseRow: "wcr:COLLAPSE_PRESS_SPACE",
+  noData: "wcr:LIST_NO_DATA", noDataFiltered: "wcr:NO_DATA_FILTERED",
+  fixedColumn: "wcr:FIXED_COLUMN", freezeColumn: "wcr:FREEZE_COLUMN", unfreezeColumn: "wcr:UNFREEZE_COLUMN",
+  dragToResize: "wcr:DRAG_TO_RESIZE", pleaseWait: "wcr:PLEASE_WAIT",
+  emptyCell: "ARIA_LABEL_EMPTY_CELL", moveToContent: "wcr:MOVE_TO_CONTENT_F2", includesContent: "wcr:INCLUDES_X",
+}
+
+export type AnalyticalTableHeaderMenuItem = { id: string; text: string; onSelect: () => void }
+type EmptyReason = "Empty" | "Filtered"
+type EmptyInfo<T extends RowData> = AnalyticalTableContentInfo<T> & { noDataText: string; noDataReason: EmptyReason }
+export type AnalyticalTableBodyProps = { children: React.ReactNode }
+export type AnalyticalTableComponents = { Body: React.ComponentType<AnalyticalTableBodyProps> }
+
+export type AnalyticalTableProps<T extends RowData> = Omit<HostProps, "children"> & {
+  data: T[]
+  columns: AnalyticalTableColumnDef<T, any>[]
+  tableOptions?: Partial<TableOptions<Features, T>> & { _features?: Partial<Features> & Record<string, unknown> }
+  tableRef?: React.Ref<AnalyticalTableInstance<T>>
+  columnSizing?: ColumnSizingState
+  defaultColumnSizing?: ColumnSizingState
+  onColumnSizingChange?: (sizing: ColumnSizingState) => void
+  columnOrder?: ColumnOrderState
+  defaultColumnOrder?: ColumnOrderState
+  onColumnOrderChange?: (order: ColumnOrderState) => void
+  columnVisibility?: ColumnVisibilityState
+  defaultColumnVisibility?: ColumnVisibilityState
+  onColumnVisibilityChange?: (visibility: ColumnVisibilityState) => void
+  columnPinning?: ColumnPinningState
+  defaultColumnPinning?: ColumnPinningState
+  onColumnPinningChange?: (pinning: ColumnPinningState) => void
+  initialState?: { hiddenColumns?: string[] }
+  classNames?: Partial<Record<AnalyticalTableSlot, string>>
+  components?: Partial<AnalyticalTableComponents>
+  getRowProps?: (row: GridRow<T>) => HostProps
+  getCellProps?: (cell: GridCell<T>) => HostProps
+  getHeaderProps?: (header: GridHeader<T>) => HostProps
+  /** Header menu items run within the same menu as Freeze/Unfreeze. */
+  headerMenuItems?: (column: GridColumn<T>, table: Table<T>) => readonly AnalyticalTableHeaderMenuItem[]
+  /** Enable the WCR useStickyColumns menu contribution. Initially sticky columns are also freeze-enabled. */
+  enableColumnFreeze?: boolean
+  onStickyColumnsChange?: (change: { column: GridColumn<T>; sticky: boolean; stickyColumns: string[] }) => void
+  onColumnResize?: (change: { columnWidth: number; header: GridColumn<T> }) => void
+  onAutoResize?: (change: { columnId: string; width: number; event: React.MouseEvent }) => void
+  onColumnsReorder?: (change: { columnsNewOrder: GridColumn<T>[]; column: GridColumn<T> }) => void
+  scaleWidthMode?: ScaleWidthMode
+  retainColumnWidth?: boolean
+  rowHeight?: number
+  headerRowHeight?: number
+  alternateRowColor?: boolean
+  minRows?: number
+  visibleRows?: number
+  defaultVisibleRows?: number
+  onVisibleRowsChange?: (visibleRows: number) => void
+  visibleRowCountMode?: "Fixed" | "Auto" | "AutoWithEmptyRows" | "Interactive"
+  loading?: boolean
+  loadingDelay?: number
+  alwaysShowBusyIndicator?: boolean
+  noDataText?: string
+  noDataReason?: EmptyReason
+  NoDataComponent?: React.ComponentType<EmptyInfo<T>>
+  LoadingComponent?: React.ComponentType<AnalyticalTableContentInfo<T>>
+  renderRowSubComponent?: (info: AnalyticalTableContentInfo<T> & { row: GridRow<T> }) => React.ReactNode
+  announceEmptyCells?: boolean
+  texts?: Partial<AnalyticalTableTexts>
+  locale?: string
+  /** aria-label, aria-labelledby, aria-describedby and aria-details target the inner grid. */
+}
+
+export type AnalyticalTableContext<T extends RowData> = {
+  model: { readonly rows: readonly GridRow<T>[]; readonly columns: readonly GridColumn<T>[]; readonly locale: string }
+  state: Readonly<{ visibleRows: number; columnSizing: Readonly<ColumnSizingState>; columnOrder: readonly string[];
+    columnVisibility: Readonly<ColumnVisibilityState>; columnPinning: { readonly start: readonly string[]; readonly end: readonly string[] } }>
+  actions: Pick<AnalyticalTableInstance<T>, "focusCell" | "scrollToRow" | "scrollToColumn" | "resetColumnSizing" | "toggleStickyColumn">
+  getRowProps(row: GridRow<T>, extra?: HostProps): HostProps
+  getCellProps(cell: GridCell<T>, extra?: HostProps): HostProps
+  getHeaderProps(header: GridHeader<T>, extra?: HostProps): HostProps
+}
+
+const Context = React.createContext<AnalyticalTableContext<any> | null>(null)
+export function useAnalyticalTable<T extends RowData>(): AnalyticalTableContext<T> {
+  const context = React.useContext(Context)
+  if (!context) throw new Error("useAnalyticalTable requires an AnalyticalTable.")
+  return context
+}
+
+export function AnalyticalTableRow<T extends RowData>({ row, children, ...extra }: HostProps & { row: GridRow<T> }) {
+  return <div {...useAnalyticalTable<T>().getRowProps(row, extra)}>{children}</div>
+}
+export function AnalyticalTableCell<T extends RowData>({ cell, children, ...extra }: HostProps & { cell: GridCell<T> }) {
+  return <div {...useAnalyticalTable<T>().getCellProps(cell, extra)}>{children}</div>
+}
+export function AnalyticalTableHeaderCell<T extends RowData>({ header, children, ...extra }: HostProps & { header: GridHeader<T> }) {
+  return <div {...useAnalyticalTable<T>().getHeaderProps(header, extra)}>{children}</div>
+}
+
+function useColumnState<T>(value: T | undefined, initial: () => T, onChange?: (next: T) => void) {
+  const [internal, setInternal] = React.useState(initial)
+  const state = value ?? internal
+  const latest = React.useRef(state)
+  latest.current = state
+  function update(action: Updater<T>) {
+    const next = typeof action === "function" ? (action as (previous: T) => T)(latest.current) : action
+    if (value === undefined) {
+      latest.current = next
+      setInternal(next)
+    }
+    onChange?.(next)
+  }
+  return [state, update] as const
+}
+
+function columnId<T extends RowData>(definition: AnalyticalTableColumnDef<T>) {
+  return definition.id ?? ("accessorKey" in definition ? String(definition.accessorKey).replaceAll(".", "_") : undefined) ??
+    (typeof definition.header === "string" ? definition.header : "")
+}
+
+function useViewport(root: React.RefObject<HTMLDivElement | null>, grid: React.RefObject<HTMLDivElement | null>, dir: "ltr" | "rtl" | undefined) {
+  const [viewport, setViewport] = React.useState({ width: 0, availableHeight: 0, rowHeight: 0, headerHeight: 0, rtl: dir === "rtl", fontsReady: false })
+  React.useLayoutEffect(() => {
+    const element = grid.current
+    const parent = root.current?.parentElement
+    if (!element || !parent) return
+    const refresh = () => {
+      const style = getComputedStyle(element)
+      const measured = {
+        width: element.clientWidth,
+        availableHeight: parent.clientHeight,
+        rowHeight: Number.parseFloat(style.getPropertyValue("--fiori-wcr-x-analyticaltablerowheight")) || 44,
+        headerHeight: Number.parseFloat(style.getPropertyValue("--fiori-wcr-x-analyticaltableheaderrowheight")) || 44,
+        rtl: style.direction === "rtl",
+      }
+      setViewport(previous => Object.entries(measured).every(([key, val]) => previous[key as keyof typeof measured] === val) ? previous : { ...previous, ...measured })
+    }
+    refresh()
+    const observer = new ResizeObserver(refresh)
+    observer.observe(element)
+    observer.observe(parent)
+    const attributes = new MutationObserver(refresh)
+    attributes.observe(element.ownerDocument.documentElement, { attributes: true, subtree: true, attributeFilter: ["dir", "data-density", "data-theme"] })
+    let live = true
+    void element.ownerDocument.fonts.ready.then(() => {
+      if (live) setViewport(previous => ({ ...previous, fontsReady: true }))
+    })
+    return () => { live = false; observer.disconnect(); attributes.disconnect() }
+  }, [dir, grid, root])
+  return viewport
+}
+
+const dragType = "application/x-petalo-analytical-table-column"
+const slot = (name: AnalyticalTableSlot) => `analytical-table-${name}`
+
+export function AnalyticalTable<T extends RowData>({
+  data, columns, tableOptions, tableRef,
+  columnSizing, defaultColumnSizing, onColumnSizingChange,
+  columnOrder, defaultColumnOrder, onColumnOrderChange,
+  columnVisibility, defaultColumnVisibility, onColumnVisibilityChange,
+  columnPinning, defaultColumnPinning, onColumnPinningChange, initialState,
+  className, classNames, components, getRowProps, getCellProps, getHeaderProps, headerMenuItems,
+  enableColumnFreeze, onStickyColumnsChange, onColumnResize, onAutoResize, onColumnsReorder,
+  retainColumnWidth = false, scaleWidthMode = "Default", rowHeight, headerRowHeight,
+  alternateRowColor = false, minRows = 5, visibleRows, defaultVisibleRows = 15, onVisibleRowsChange,
+  visibleRowCountMode = "Fixed", loading = false, loadingDelay, alwaysShowBusyIndicator = false,
+  noDataText, noDataReason = "Empty", NoDataComponent, LoadingComponent, renderRowSubComponent,
+  announceEmptyCells = false, locale: localeProp, texts: textOverrides, dir,
+  "aria-label": label, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-description": description, "aria-details": details,
+  ref, ...rootProps
+}: AnalyticalTableProps<T>) {
+  const id = React.useId()
+  const { locale, dir: localeDir, localized, hasProvider } = useFioriLocale(localeProp)
+  const texts = useFioriTexts(defaultTexts, textKeys, textOverrides, localeProp)
+  const direction = (dir ?? (localized || hasProvider ? localeDir : undefined)) as "ltr" | "rtl" | undefined
+  const root = React.useRef<HTMLDivElement>(null)
+  const grid = React.useRef<HTMLDivElement>(null)
+  const viewport = useViewport(root, grid, direction)
+  const rtl = viewport.rtl
+  const [voiceOver, setVoiceOver] = React.useState(false)
+  React.useEffect(() => setVoiceOver(/Mac|iPhone|iPad|iPod/.test(navigator.platform)), [])
+
+  // useStickyColumns.js seeds pins from column definitions; the pinning state is authoritative thereafter.
+  const [pinning, setPinning] = useColumnState(columnPinning, () => defaultColumnPinning ??
+    tableOptions?.initialState?.columnPinning ??
+    { start: columns.filter(column => column.sticky === "start").map(columnId), end: [] }, onColumnPinningChange)
+  const [order, setOrder] = useColumnState(columnOrder, () => defaultColumnOrder ?? tableOptions?.initialState?.columnOrder ?? [], onColumnOrderChange)
+  const [visibility, setVisibility] = useColumnState(columnVisibility, () => defaultColumnVisibility ??
+    tableOptions?.initialState?.columnVisibility ?? Object.fromEntries((initialState?.hiddenColumns ?? []).map(key => [key, false])), onColumnVisibilityChange)
+  const [sizing, setSizing] = useColumnState(columnSizing, () => defaultColumnSizing ?? tableOptions?.initialState?.columnSizing ?? {}, onColumnSizingChange)
+  const [requestedRows, setVisibleRows] = useColumnState(visibleRows, () => defaultVisibleRows, onVisibleRowsChange)
+  const startsFrozen = columns.some(column => column.sticky === "start")
+  const frozenMenu = enableColumnFreeze ?? startsFrozen
+  const densityRow = rowHeight ?? (viewport.rowHeight || 44)
+  const densityHeader = headerRowHeight ?? rowHeight ?? (viewport.headerHeight || densityRow)
+  const priorWidth = React.useRef(viewport.width)
+  const wasResized = React.useRef(false)
+  React.useEffect(() => {
+    if (priorWidth.current !== viewport.width && wasResized.current && !retainColumnWidth && columnSizing === undefined) {
+      setSizing(defaultColumnSizing ?? {})
+      wasResized.current = false
+    }
+    priorWidth.current = viewport.width
+  }, [viewport.width, retainColumnWidth, columnSizing, defaultColumnSizing])
+
+  const print = React.useCallback((value: unknown) => typeof value === "number" ?
+    formatNumber(value, locale, { useGrouping: false, maxFractionDigits: 20 }) : String(value ?? ""), [locale])
+  const baseWidths = React.useMemo(() => measureWidths(columns
+    .filter(column => visibility[columnId(column)] !== false)
+    .map(column => ({
+      id: columnId(column),
+      width: column.width ?? column.size,
+      minWidth: column.minWidth ?? column.minSize,
+      maxWidth: column.maxWidth ?? column.maxSize,
+      header: typeof column.header === "string" ? column.header : column.headerLabel ?? "",
+      ...column.scaleWidthModeOptions,
+      sample: (scaleWidthMode !== "Default" && viewport.fontsReady ? data.slice(0, 20) : []).map((row, index) => print(
+        "accessorFn" in column && column.accessorFn ? column.accessorFn(row, index) :
+          "accessorKey" in column ? String(column.accessorKey).split(".").reduce<unknown>((obj, key) => (obj as Record<string, unknown> | undefined)?.[key], row) : undefined,
+      )),
+    })), viewport.width, viewport.fontsReady && !(loading && !data.length) ? scaleWidthMode : "Default", grid.current),
+    [columns, data, visibility, viewport, scaleWidthMode, loading, print])
+  const definitions = React.useMemo(() => columns.map(column => ({
+    ...column, minSize: column.minWidth ?? column.minSize ?? minimumColumnWidth,
+    maxSize: column.maxWidth ?? column.maxSize ?? (scaleWidthMode === "Grow" ? 700 : Infinity),
+  })) as ColumnDef<Features, T, any>[], [columns, scaleWidthMode])
+  const table = useTable({
+    ...tableOptions,
+    features: { ...tableOptions?.features, ...tableOptions?._features, ...features },
+    columns: definitions,
+    data,
+    state: { ...tableOptions?.state, columnSizing: { ...baseWidths, ...sizing }, columnOrder: order, columnVisibility: visibility, columnPinning: pinning },
+    onColumnOrderChange: setOrder, onColumnVisibilityChange: setVisibility, onColumnPinningChange: setPinning,
+    onColumnSizingChange: setSizing,
+  })
+  const rows = table.getRowModel().rows
+  const visible = table.getVisibleLeafColumns()
+  const headersById = new Map(table.getHeaderGroups().at(-1)?.headers.map(header => [header.column.id, header]) ?? [])
+  const pinned = visible.filter(column => pinning.start.includes(column.id))
+  const unpinned = visible.filter(column => !pinning.start.includes(column.id))
+  const frozenSize = pinned.reduce((sum, column) => sum + column.getSize(), 0)
+  // useStickyColumns.js keeps the configured pins when there is too little room to render them.
+  const freezeActive = pinned.length > 0 && (!viewport.width || frozenSize + (unpinned.length ? minimumColumnWidth : 0) <= viewport.width)
+  const ordered = [...pinned, ...unpinned]
+  const pinnedCount = freezeActive ? pinned.length : 0
+  const rowCount = rows.length
+  const auto = visibleRowCountMode.startsWith("Auto")
+  const availableBody = viewport.availableHeight - densityHeader
+  const fitRows = auto && availableBody >= densityRow ? Math.max(1, Math.floor(availableBody / densityRow)) : requestedRows
+  const viewportRows = visibleRowCountMode === "AutoWithEmptyRows" || (auto && !rowCount) ? fitRows :
+    rowCount < fitRows ? Math.max(rowCount, minRows) : fitRows
+  const bodyHeight = Math.max(0, viewportRows) * densityRow
+  const footer = ordered.some(column => column.columnDef.footer != null)
+  const virtualRows = React.useRef<ReturnType<typeof useVirtualizer<HTMLDivElement, HTMLDivElement>>>(null)
+  const virtualColumns = React.useRef<ReturnType<typeof useVirtualizer<HTMLDivElement, HTMLDivElement>>>(null)
+  function reveal(position: Position) {
+    if (position.row > 0) virtualRows.current?.scrollToIndex(position.row - 1, { align: "auto" })
+    if (position.column >= pinnedCount) virtualColumns.current?.scrollToIndex(position.column, { align: "auto" })
+  }
+  const nav = useGridNavigation(grid, rowCount, ordered.length, densityRow, Math.max(1, viewportRows), rtl, reveal)
+  const rowVirtual = useVirtualizer<HTMLDivElement, HTMLDivElement>({
+    count: rowCount ? Math.max(rowCount, minRows, viewportRows) : 0,
+    getScrollElement: () => grid.current, estimateSize: () => densityRow,
+    getItemKey: index => rows[index]?.id ?? `empty-${index}`,
+    overscan: Math.floor(fitRows / 2), paddingStart: densityHeader, scrollPaddingStart: densityHeader,
+    rangeExtractor: range => keepIndexes(defaultRangeExtractor(range), nav.active?.row ? [nav.active.row - 1] : []),
+  })
+  const colVirtual = useVirtualizer<HTMLDivElement, HTMLDivElement>({
+    count: ordered.length, getScrollElement: () => grid.current, horizontal: true, isRtl: rtl,
+    estimateSize: index => ordered[index]?.getSize() ?? minimumColumnWidth,
+    getItemKey: index => ordered[index]?.id ?? index, overscan: 10,
+    scrollPaddingStart: freezeActive ? frozenSize : 0,
+    rangeExtractor: range => keepIndexes(defaultRangeExtractor(range),
+      [...Array.from({ length: pinnedCount }, (_, index) => index), ...(nav.active ? [nav.active.column] : [])]),
+  })
+  virtualRows.current = rowVirtual
+  virtualColumns.current = colVirtual
+  const widthSignature = ordered.map(column => `${column.id}:${column.getSize()}`).join("|")
+  React.useLayoutEffect(() => { colVirtual.measure() }, [colVirtual, widthSignature])
+  React.useLayoutEffect(() => { rowVirtual.measure() }, [rowVirtual, densityRow])
+
+  const scrollToRow: AnalyticalTableInstance<T>["scrollToRow"] = (index, options) => rowVirtual.scrollToIndex(index, options)
+  const scrollToColumn: AnalyticalTableInstance<T>["scrollToColumn"] = (index, options) => colVirtual.scrollToIndex(index, options)
+  const resetColumnSizing = () => { wasResized.current = false; setSizing(defaultColumnSizing ?? {}) }
+  function toggleStickyColumn(key: string, target = !pinning.start.includes(key)) {
+    if (!table.getColumn(key)) return
+    const next = pinning.start.filter(id => id !== key)
+    setPinning({ start: target ? [...next, key] : next, end: [] })
+  }
+  React.useImperativeHandle(tableRef, () => ({
+    table, scrollToRow, scrollToColumn, focusCell: nav.focusCell, resetColumnSizing, toggleStickyColumn,
+    scrollTo: (offset, align) => rowVirtual.scrollToOffset(offset, { align }), scrollToItem: (index, align) => scrollToRow(index, { align }),
+    horizontalScrollTo: (offset, align) => colVirtual.scrollToOffset(offset, { align }), horizontalScrollToItem: (index, align) => scrollToColumn(index, { align }),
+  }))
+
+  const [openColumn, setOpenColumn] = React.useState<string>()
+  const [dropTarget, setDropTarget] = React.useState<string>()
+  const [guide, setGuide] = React.useState<{ id: string; delta: number }>()
+  const menuItems = new Map(ordered.map(column => [column.id, headerMenuItems?.(column, table) ?? []]))
+  const virtualItems = new Map(colVirtual.getVirtualItems().map(item => [item.index, item]))
+  const cellStyle = (index: number): React.CSSProperties => {
+    const item = virtualItems.get(index)
+    return {
+      width: item?.size ?? ordered[index]?.getSize(),
+      insetInlineStart: item?.start ?? 0,
+      position: index < pinnedCount ? "sticky" : "absolute",
+    }
+  }
+  const rowPositions = new Map(rowVirtual.getVirtualItems().map(item => [rows[item.index]?.id, item]))
+  const rowIndexes = new Map(rows.map((row, index) => [row.id, index]))
+  const columnIndexes = new Map(ordered.map((column, index) => [column.id, index]))
+  const part = (name: AnalyticalTableSlot, base?: string) => ({ "data-slot": slot(name), className: cn(base, classNames?.[name]) })
+  const headerId = (column: GridColumn<T>) => `${id}-head-${encodeURIComponent(column.id)}`
+  const valueId = (cell: GridCell<T>) => `${id}-value-${encodeURIComponent(cell.id)}`
+  const emptyId = `${id}-empty`
+  const customColumns = new Map(columns.map(column => [columnId(column), column]))
+  const isFrozen = (index: number) => index < pinnedCount
+  const canFreeze = (column: GridColumn<T>) => frozenMenu && column.getCanPin()
+  function definition(column: GridColumn<T>) { return column.columnDef as AnalyticalTableColumnDef<T> }
+  function info(defaultContent: React.ReactNode): AnalyticalTableContentInfo<T> {
+    return { table, defaultContent, locale, webComponentsReactProperties: { locale, texts } }
+  }
+  function isResizable(column: GridColumn<T>) { return !definition(column).disableResizing }
+
+  function resize(column: GridColumn<T>, delta: number) {
+    const def = definition(column)
+    const width = clampWidth(column.getSize() + delta, def.minSize, def.maxSize)
+    wasResized.current = true
+    setSizing(previous => ({ ...previous, [column.id]: width }))
+    onColumnResize?.({ columnWidth: width, header: column })
+  }
+  function autoResize(event: React.MouseEvent, column: GridColumn<T>) {
+    if (!definition(column).autoResizable || !rowCount) return
+    // useAutoResize measures rendered content and includes 2px for rounding and borders.
+    const index = columnIndexes.get(column.id)
+    const cells = [...(grid.current?.querySelectorAll<HTMLElement>(`[role="gridcell"][data-grid-column="${index}"]`) ?? [])]
+    const widths = cells.map(cell => Array.from(cell.children).reduce((sum, child) => sum + child.scrollWidth, 0))
+    if (!widths.length) return
+    const def = definition(column)
+    const width = clampWidth(Math.max(...widths) + 20, def.minSize, def.maxSize)
+    onAutoResize?.({ columnId: column.id, width, event })
+    if (!event.defaultPrevented) resize(column, width - column.getSize())
+  }
+  function onResizeStart(event: React.PointerEvent<HTMLDivElement>, column: GridColumn<T>) {
+    if (!event.isPrimary || event.button !== 0) return
+    event.preventDefault()
+    const node = event.currentTarget
+    const start = event.clientX
+    let delta = 0
+    node.setPointerCapture(event.pointerId)
+    // useColumnResizing.js: dead zone, clamped guide, commit only on release.
+    node.onpointermove = move => {
+      const next = (move.clientX - start) * (rtl ? -1 : 1)
+      if (Math.abs(next) < 3 && !delta) return
+      const def = definition(column)
+      delta = clampWidth(column.getSize() + next, def.minSize, def.maxSize) - column.getSize()
+      setGuide({ id: column.id, delta })
+    }
+    const finish = (commit: boolean) => {
+      node.onpointermove = node.onpointerup = node.onpointercancel = node.onlostpointercapture = null
+      setGuide(undefined)
+      if (commit && delta) resize(column, delta)
+    }
+    node.onpointerup = () => finish(true)
+    node.onpointercancel = node.onlostpointercapture = () => finish(false)
+  }
+  function reorder(event: React.DragEvent, target: GridColumn<T>) {
+    setDropTarget(undefined)
+    if (!event.dataTransfer.types.includes(dragType) || pinning.start.includes(target.id)) return
+    const source = table.getColumn(event.dataTransfer.getData(dragType))
+    if (!source || source === target || pinning.start.includes(source.id) || definition(source).disableDragAndDrop) return
+    event.preventDefault()
+    // useDragAndDrop.js reconciles user order including hidden columns and inserts before the drop
+    // target, except for a forward drop in RTL.
+    const all = table.getAllLeafColumns()
+    const next = all.map(column => column.id)
+    const from = next.indexOf(source.id)
+    const to = next.indexOf(target.id)
+    next.splice(from, 1)
+    next.splice(to > from && !rtl ? to - 1 : to, 0, source.id)
+    setOrder(next)
+    onColumnsReorder?.({ column: source, columnsNewOrder: next.map(key => table.getColumn(key)!) })
+  }
+
+  function ownedHeader(header: GridHeader<T>, extra?: HostProps) {
+    const column = header.column
+    const index = columnIndexes.get(column.id) ?? 0
+    const def = definition(column)
+    const hasMenu = canFreeze(column) || Boolean(menuItems.get(column.id)?.length)
+    const name = def.headerLabel ?? (typeof def.header === "string" ? def.header : undefined)
+    const draggable = !def.disableDragAndDrop && !isFrozen(index) && !guide
+    return mergeHost("header-cell", {
+      ...part("header-cell", cn("fiori-at-header-cell", def.meta?.headerClassName)),
+      id: headerId(column), role: "columnheader", "aria-colindex": index + 1,
+      // WCR useStickyColumns.getHeaderProps supplies FIXED_COLUMN as the frozen header name.
+      "aria-label": isFrozen(index) ? texts.fixedColumn : name ? `${name} ` : undefined,
+      "aria-haspopup": hasMenu ? "menu" : undefined, "aria-expanded": hasMenu ? openColumn === column.id : undefined,
+      "aria-controls": hasMenu ? `${headerId(column)}-menu` : undefined,
+      tabIndex: !loading && nav.isActive(0, index) ? 0 : -1,
+      draggable,
+      "data-grid-row": 0, "data-grid-column": index, "data-column-id": column.id,
+      "data-frozen": isFrozen(index) || undefined, "data-dragging": dropTarget === column.id || undefined,
+      onFocus: event => nav.onHostFocus(event, 0, index), onBlur: nav.onHostBlur,
+      onClick: () => { if (hasMenu) setOpenColumn(column.id) },
+      onKeyUp: event => { if (event.target === event.currentTarget && event.key === " " && hasMenu) setOpenColumn(column.id) },
+      onKeyDown: event => {
+        if (event.target === event.currentTarget) {
+          if (event.shiftKey && isResizable(column) && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
+            event.preventDefault()
+            resize(column, (event.key === "ArrowRight" ? 16 : -16) * (rtl ? -1 : 1))
+            return
+          }
+          if (hasMenu && event.key === "Enter") { event.preventDefault(); setOpenColumn(column.id); return }
+          if (hasMenu && event.key === " ") { event.preventDefault(); return }
+        }
+        nav.onKeyDown(event, 0, index)
+      },
+      onDragStart: event => {
+        if (!draggable) { event.preventDefault(); return }
+        event.dataTransfer.setData(dragType, column.id)
+        event.dataTransfer.effectAllowed = "move"
+      },
+      onDragOver: event => {
+        if (!isFrozen(index) && event.dataTransfer.types.includes(dragType)) { event.preventDefault(); setDropTarget(column.id) }
+      },
+      onDragLeave: event => { if (!(event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget))) setDropTarget(undefined) },
+      onDragEnd: () => setDropTarget(undefined),
+      onDrop: event => reorder(event, column),
+    } as HostProps, getHeaderProps?.(header), extra)
+  }
+
+  function cellInfo(cell: GridCell<T>): AnalyticalTableCellInfo<T> {
+    const value = cell.getValue()
+    return { ...info(print(value)), cell, value, row: cell.row, column: cell.column }
+  }
+  const context: AnalyticalTableContext<T> = {
+    model: { rows, columns: ordered, locale },
+    state: { visibleRows: requestedRows, columnSizing: sizing, columnOrder: order, columnVisibility: visibility, columnPinning: pinning },
+    actions: { focusCell: nav.focusCell, scrollToRow, scrollToColumn, resetColumnSizing, toggleStickyColumn },
+    getHeaderProps: ownedHeader,
+    getRowProps: (row, extra) => {
+      const index = rowIndexes.get(row.id) ?? 0
+      return mergeHost("row", {
+        ...part("row", "fiori-at-row"), role: "row", "aria-rowindex": index + 2, id: `${id}-row-${encodeURIComponent(row.id)}`,
+        "data-alternate": alternateRowColor && index % 2 === 0 || undefined,
+        style: { top: (rowPositions.get(row.id)?.start ?? densityHeader) - densityHeader, height: densityRow },
+      } as HostProps, getRowProps?.(row), extra)
+    },
+    getCellProps: (cell, extra) => {
+      const row = (rowIndexes.get(cell.row.id) ?? 0) + 1
+      const column = columnIndexes.get(cell.column.id) ?? 0
+      const def = definition(cell.column)
+      const value = cell.getValue()
+      const empty = announceEmptyCells && typeof value !== "number" && !value
+      // useA11y.setCellProps + useCanUseVoiceOver: value first, then the header on Apple platforms.
+      const interactiveName = typeof def.interactiveElementName === "function" ? def.interactiveElementName(cell) : def.interactiveElementName
+      const cellName = def.cellLabel?.(cellInfo(cell))
+      const name = interactiveName ? `${texts.includesContent(interactiveName)} ${cellName ?? print(value)}` : cellName
+      return mergeHost("cell", {
+        ...part("cell", cn("fiori-at-cell", def.meta?.className)),
+        role: "gridcell", id: `${valueId(cell)}-cell`, "aria-colindex": column + 1,
+        "aria-label": name,
+        "aria-labelledby": name === undefined ? [valueId(cell), voiceOver && headerId(cell.column), empty && emptyId].filter(Boolean).join(" ") : undefined,
+        "data-grid-row": row, "data-grid-column": column, "data-column-id": cell.column.id,
+        "data-frozen": isFrozen(column) || undefined,
+        tabIndex: !loading && nav.isActive(row, column) ? 0 : -1,
+        style: { ...cellStyle(column), justifyContent: def.hAlign?.toLowerCase(),
+          alignItems: def.vAlign === "Top" ? "start" : def.vAlign === "Bottom" ? "end" : "center" },
+        onFocus: event => nav.onHostFocus(event, row, column), onBlur: nav.onHostBlur,
+        onKeyDown: event => nav.onKeyDown(event, row, column),
+      } as HostProps, getCellProps?.(cell), extra)
+    },
+  }
+
+  const renderedColumns = colVirtual.getVirtualItems()
+  const totalWidth = colVirtual.getTotalSize()
+  const noData = noDataText ?? (noDataReason === "Filtered" ? texts.noDataFiltered : texts.noData)
+  const placeholder = loading && !rowCount && !alwaysShowBusyIndicator
+  const Body = components?.Body
+  const renderedRows = rowVirtual.getVirtualItems().map(item => {
+    const row = rows[item.index]
+    if (!row) return <div key={item.key} {...part("empty-row", "fiori-at-row")}
+      data-alternate={alternateRowColor && item.index % 2 !== 0 || undefined}
+      style={{ top: item.start - densityHeader, height: densityRow }}>
+      {renderedColumns.map(col => <div key={col.key} className="fiori-at-cell" aria-hidden="true" style={cellStyle(col.index)} data-frozen={isFrozen(col.index) || undefined} />)}
+    </div>
+    const cells = new Map(row.getAllCells().map(cell => [cell.column.id, cell]))
+    return <AnalyticalTableRow row={row} key={item.key}>
+      {renderedColumns.map(col => {
+        const cell = cells.get(ordered[col.index].id)
+        if (!cell) return null
+        const content = cellInfo(cell)
+        const custom = customColumns.get(cell.column.id)?.cell ?? tableOptions?.defaultColumn?.cell
+        return <AnalyticalTableCell key={cell.id} cell={cell}>
+          <span {...part("cell-content", custom ? undefined : "fiori-at-ellipsis")} id={valueId(cell)}
+            title={custom ? undefined : String(content.defaultContent)} aria-hidden={custom ? undefined : true}>
+            {custom ? flexRender(custom, { ...cell.getContext(), ...content }) : content.defaultContent}
+          </span>
+        </AnalyticalTableCell>
+      })}
+      {renderRowSubComponent && <div {...part("sub-component")} role="gridcell">
+        {renderRowSubComponent({ ...info(null), row })}
+      </div>}
+    </AnalyticalTableRow>
+  })
+  return <Context.Provider value={context}>
+    <div {...rootProps} data-slot="analytical-table" dir={direction} className={cn("fiori-at", className)} style={{ "--at-grid-height": `${densityHeader + bodyHeight + (footer ? densityHeader : 0)}px`, ...rootProps.style } as React.CSSProperties}
+      ref={node => { root.current = node; if (typeof ref === "function") return ref(node); if (ref) ref.current = node }}>
+      <div {...part("grid", "fiori-at-grid")} ref={grid} role="grid" aria-label={label} aria-labelledby={labelledBy}
+        aria-describedby={describedBy} aria-description={[description, columns.some(column => column.interactiveElementName) && texts.moveToContent].filter(Boolean).join(" ") || undefined} aria-details={details} aria-rowcount={rowCount}
+        aria-colcount={ordered.length} aria-multiselectable={false} data-fills-width={totalWidth >= viewport.width || undefined}
+        tabIndex={!loading && !nav.active && rowCount ? 0 : -1} onFocus={nav.onGridFocus}
+        style={{ height: densityHeader + bodyHeight + (footer ? densityHeader : 0),
+          scrollPaddingInlineStart: freezeActive ? frozenSize : undefined,
+          "--at-header-height": `${densityHeader}px`, "--at-row-height": `${densityRow}px`,
+          "--at-content-height": `${bodyHeight + densityHeader}px`,
+        } as React.CSSProperties}>
+        <div {...part("header-row", "fiori-at-header-row")} role="row" aria-rowindex={1} style={{ width: totalWidth }}>
+          {renderedColumns.map(item => {
+            const column = ordered[item.index]
+            const header = headersById.get(column.id)
+            if (!header) return null
+            const def = definition(column)
+            const frozen = isFrozen(item.index)
+            const configuredPin = pinning.start.includes(column.id)
+            const extra = menuItems.get(column.id) ?? []
+            const content = flexRender(def.header, { ...header.getContext(), ...info(typeof def.header === "string" ? def.header : column.id) }) ?? column.id
+            const host = <div {...context.getHeaderProps(header)}>
+              <div {...part("header-content", "fiori-at-header-content")} style={{ textAlign: def.hAlign?.toLowerCase() as React.CSSProperties["textAlign"] }}>
+                <div className="fiori-at-header-text" title={def.headerTooltip ?? (typeof content === "string" ? content : undefined)}>{content}</div>
+                <div className="fiori-at-header-icons" />
+              </div>
+            </div>
+            return <div className="fiori-at-header-position" key={column.id} style={cellStyle(item.index)}
+              data-frozen={frozen || undefined} data-frozen-edge={frozen && item.index === pinnedCount - 1 || undefined}>
+              {canFreeze(column) || extra.length ? <Menu dir={rtl ? "rtl" : "ltr"} modal={false}
+                open={openColumn === column.id} onOpenChange={open => setOpenColumn(open ? column.id : undefined)}>
+                {host}
+                <MenuTrigger aria-hidden="true" tabIndex={-1} className="fiori-at-menu-anchor" />
+
+                <MenuContent data-slot="analytical-table-header-menu" id={`${headerId(column)}-menu`} aria-labelledby={headerId(column)} className={classNames?.["header-menu"]} onCloseAutoFocus={event => {
+                  event.preventDefault()
+                  grid.current?.ownerDocument.getElementById(headerId(column))?.focus({ preventScroll: true })
+                }}>
+                  {extra.map(menuItem => <MenuItem key={menuItem.id} onSelect={menuItem.onSelect}>{menuItem.text}</MenuItem>)}
+                  {canFreeze(column) && <MenuItem icon={configuredPin ? pushpinOff : pushpinOn} onSelect={() => {
+                    toggleStickyColumn(column.id)
+                    onStickyColumnsChange?.({ column, sticky: !configuredPin,
+                      stickyColumns: configuredPin ? pinning.start.filter(key => key !== column.id) : [...pinning.start, column.id] })
+                  }}>{configuredPin ? texts.unfreezeColumn : texts.freezeColumn}</MenuItem>}
+                </MenuContent>
+              </Menu> : host}
+              {isResizable(column) && <div {...part("resizer", "fiori-at-resizer")} role="separator" aria-hidden="true"
+                data-column={column.id} data-dragging={guide?.id === column.id || undefined}
+                data-last={item.index === ordered.length - 1 || undefined}
+                style={guide?.id === column.id ? { transform: `translateX(${guide.delta * (rtl ? -1 : 1)}px)` } : undefined}
+                onPointerDown={event => onResizeStart(event, column)} onDoubleClick={event => autoResize(event, column)} />}
+            </div>
+          })}
+        </div>
+        {rowCount ? <div {...part("body", "fiori-at-body")} role="rowgroup" tabIndex={-1}>
+          <div className="fiori-at-body-content" style={{ width: totalWidth, height: rowVirtual.getTotalSize() - densityHeader }}>
+            {Body ? <Body>{renderedRows}</Body> : renderedRows}
+          </div>
+        </div> : <div role="row" tabIndex={loading ? -1 : 0} className="fiori-at-empty" style={{ height: bodyHeight, width: totalWidth || undefined }}>
+          <div {...part(placeholder ? "loading" : "no-data", placeholder ? "fiori-at-placeholder" : "fiori-at-no-data")} role="gridcell">
+            {placeholder ? <div role="progressbar" title={texts.pleaseWait} aria-valuetext={texts.busy}>
+              {LoadingComponent ? <LoadingComponent {...info(null)} /> : Array.from({ length: minRows }, (_, index) =>
+                <div data-slot="analytical-table-placeholder-row" key={index}>
+                  {ordered.map(column => <div key={column.id} style={{ width: column.getSize() }}><span /></div>)}
+                </div>)}
+            </div> : NoDataComponent ? <NoDataComponent {...info(noData)} noDataText={noData} noDataReason={noDataReason} /> : noData}
+          </div>
+        </div>}
+        {footer && <div {...part("footer-row", "fiori-at-footer")} role="row" style={{ width: totalWidth }}>
+          {renderedColumns.map(item => {
+            const header = headersById.get(ordered[item.index].id)
+            return header && <div {...part("footer-cell", "fiori-at-cell")} key={header.id} role="gridcell"
+              aria-colindex={item.index + 1} style={cellStyle(item.index)}>
+              {flexRender(definition(header.column).footer, { ...header.getContext(), ...info(null) })}
+            </div>
+          })}
+        </div>}
+      </div>
+      {loading && (rowCount > 0 || alwaysShowBusyIndicator) &&
+        <BusyIndicator active delay={loadingDelay} className={cn("fiori-at-busy", classNames?.loading)} aria-label={texts.busy} />}
+      {visibleRowCountMode === "Interactive" && <div {...part("vertical-resizer", "fiori-at-vertical-resizer")}
+        role="separator" aria-hidden="true" title={texts.dragToResize} onPointerDown={event => {
+          if (!event.isPrimary || event.button !== 0) return
+          const node = event.currentTarget
+          const start = event.clientY
+          node.setPointerCapture(event.pointerId)
+          node.onpointermove = move => node.style.setProperty("--at-row-delta", `${move.clientY - start}px`)
+          const finish = (end?: number) => {
+            node.onpointermove = node.onpointerup = node.onpointercancel = node.onlostpointercapture = null
+            node.style.removeProperty("--at-row-delta")
+            if (end !== undefined) setVisibleRows(Math.max(1, Math.floor((bodyHeight + end - start) / densityRow)))
+          }
+          node.onpointerup = end => finish(end.clientY)
+          node.onpointercancel = node.onlostpointercapture = () => finish()
+        }} />}
+    </div>
+      {/* WCR index.js mounts the descriptions alongside the grid. Keep them available for name references. */}
+      {[texts.selectRow, texts.unselectRow, texts.selectAll, texts.unselectAll, texts.expandRow, texts.collapseRow, texts.emptyCell].map((text, index) =>
+        <span {...part("hidden-text", "fiori-at-sr")} key={index} id={index === 6 ? emptyId : `${id}-hint-${index}`}>{text}</span>)}
+  </Context.Provider>
+}
+
+function keepIndexes(range: number[], keep: number[]) {
+  return [...new Set([...range, ...keep])].sort((a, b) => a - b)
+}

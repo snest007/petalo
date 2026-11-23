@@ -930,12 +930,12 @@ test("editable RangeSlider swaps endpoints and input focus like native UI5, and 
   writeFileSync(`${e5Evidence}/oracles/range-tooltip.json`, JSON.stringify(results, null, 2))
 })
 
-test("WCR smoke table uses SAP's localized empty text", async ({ page }) => {
+test("WCR AnalyticalTable uses SAP's localized empty text", async ({ page }) => {
   const translations = { "de-DE": ["Keine Daten", "ltr"], "zh-CN": ["无数据", "ltr"], "ar-EG": ["لا توجد بيانات", "rtl"] }
   for (const [locale, [message, dir]] of Object.entries(translations)) {
-    await page.goto(`/wcr.html?locale=${locale}&dir=${dir}&only=wcr-smoke-empty`)
+    await page.goto(`/wcr.html?locale=${locale}&dir=${dir}&only=analytical-table-empty`)
     await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
-    const cell = page.locator("[data-fixture=wcr-smoke-empty]")
+    const cell = page.locator("[data-fixture=analytical-table-empty]")
     await expect(cell).toHaveAttribute("dir", dir)
     await expect(cell.getByRole("gridcell", { name: message, exact: true })).toBeVisible()
   }

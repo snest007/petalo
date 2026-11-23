@@ -1,0 +1,246 @@
+/* Derived from WCR 2.28.2 AnalyticalTable.module.css, © SAP SE or an SAP affiliate
+   company and UI5 contributors. SPDX-License-Identifier: Apache-2.0 */
+.fiori-at {
+  position: relative;
+  min-inline-size: 0;
+  --at-border: var(--fiori-wcr-x-analyticaltable-headerborderwidth);
+  --at-padding: .5rem; /* WCR th/tableCell inline padding */
+}
+.fiori-at-grid {
+  position: relative;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 3rem;
+  overflow: auto;
+  scrollbar-width: none;
+  color: var(--sapList_TextColor);
+  background: var(--sapList_Background);
+  font: var(--sapFontSize) var(--sapFontFamily);
+}
+.fiori-at::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(var(--at-grid-height) - var(--at-border));
+  height: var(--at-border);
+  background: var(--sapList_HeaderBorderColor);
+  pointer-events: none;
+  z-index: 7;
+}
+.fiori-at-grid:focus-visible,
+.fiori-at-empty:focus-visible {
+  outline: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+  outline-offset: calc(-1 * var(--sapContent_FocusWidth));
+}
+.fiori-at-header-row {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 4;
+  display: flex;
+  min-inline-size: 100%;
+  block-size: var(--at-header-height);
+  box-sizing: border-box;
+}
+.fiori-at-header-row::before {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0;
+  background: var(--sapList_HeaderBackground);
+  border-block-start: var(--fiori-wcr-x-analyticaltable-outerborderblock);
+  border-block-end: var(--at-border) solid var(--sapList_HeaderBorderColor);
+  pointer-events: none;
+}
+.fiori-at-header-position {
+  inset-block-start: 0;
+  flex-shrink: 0;
+}
+.fiori-at-header-position[data-frozen] {
+  z-index: 5;
+}
+.fiori-at-header-position[data-frozen-edge]::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  width: var(--sapList_TableFixedColumnBorderWidth, .0625rem);
+  height: var(--at-content-height);
+  background: var(--sapList_TableFixedBorderColor);
+  pointer-events: none;
+  z-index: 3;
+}
+.fiori-at-header-cell {
+  position: relative;
+  box-sizing: border-box;
+  block-size: var(--at-header-height);
+  color: var(--sapList_HeaderTextColor);
+  background: var(--sapList_HeaderBackground);
+  border-block-start: var(--fiori-wcr-x-analyticaltable-outerborderblock);
+  border-block-end: var(--at-border) solid var(--sapList_HeaderBorderColor);
+  border-inline-end: 1px solid var(--sapList_BorderColor);
+  padding-inline: calc(var(--at-padding) - var(--at-border)) var(--at-padding);
+}
+.fiori-at-header-cell[data-grid-column="0"] {
+  border-inline-start: var(--fiori-wcr-x-analyticaltable-outercellborder);
+}
+.fiori-at-header-cell[data-dragging] {
+  border-inline-start: var(--at-border) solid var(--sapSelectedColor);
+  border-inline-start-width: .1875rem; /* WCR ColumnHeader dragOver indicator */
+}
+.fiori-at-header-cell:hover {
+  color: var(--fiori-wcr-x-analyticaltable-headeractivetextcolor);
+  background: var(--sapList_Hover_Background);
+}
+.fiori-at-header-cell:active {
+  color: var(--fiori-wcr-x-analyticaltable-headeractivetextcolor);
+  background: var(--sapList_Active_Background);
+}
+.fiori-at-header-content {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--fiori-wcr-x-analyticaltable-headerfontfamily);
+}
+.fiori-at-header-text, .fiori-at-ellipsis {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-inline-size: 100%;
+}
+.fiori-at-header-text { inline-size: 100%; }
+.fiori-at-header-icons { position: absolute; inset-inline-end: var(--at-padding); display: flex; }
+.fiori-at-body-content, .fiori-at-footer { position: relative; }
+.fiori-at-body:focus { outline: none; }
+.fiori-at-header-cell[aria-haspopup] { cursor: pointer; }
+.fiori-at-menu-anchor { position: absolute; inset: 0; pointer-events: none; visibility: hidden; }
+.fiori-at-sr { font-size: 0; inset: 0 auto auto 0; position: absolute; user-select: none; }
+.fiori-at-row {
+  position: absolute;
+  inset-inline-start: 0;
+  inline-size: 100%;
+  box-sizing: border-box;
+  display: flex;
+  border-block-end: 1px solid var(--sapList_BorderColor);
+}
+.fiori-at-row[data-alternate] {
+  background: var(--sapList_AlternatingBackground);
+}
+.fiori-at-cell {
+  inset-block-start: 0;
+  box-sizing: border-box;
+  block-size: var(--at-row-height);
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding-inline: var(--at-padding);
+  overflow: hidden;
+  white-space: nowrap;
+  border-inline-end: 1px solid var(--sapList_BorderColor);
+}
+.fiori-at-cell:first-child { border-inline-start: var(--fiori-wcr-x-analyticaltable-outercellborder); }
+.fiori-at-grid[data-fills-width] :is(.fiori-at-header-position:last-child > .fiori-at-header-cell, .fiori-at-cell:last-child) {
+  border-inline-end: var(--fiori-wcr-x-analyticaltable-outercellborder);
+}
+.fiori-at-cell[data-frozen] {
+  z-index: 2;
+  background: var(--sapList_Background);
+  box-shadow: inset 0 -1px 0 0 var(--sapList_BorderColor);
+}
+.fiori-at-row[data-alternate] .fiori-at-cell[data-frozen] { background: var(--sapList_AlternatingBackground); }
+.fiori-at-cell[data-frozen]:last-child { border-inline-end: var(--fiori-wcr-x-analyticaltable-outercellborder); }
+.fiori-at-header-cell:focus-visible, .fiori-at-cell:focus-visible { outline: none; }
+:is(.fiori-at-header-cell, .fiori-at-cell):focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  pointer-events: none;
+  border: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+}
+.fiori-at-resizer {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: -2px;
+  width: 5px;
+  height: var(--at-content-height);
+  cursor: col-resize;
+  touch-action: none;
+  z-index: 6;
+}
+.fiori-at-resizer[data-last] { inset-inline-end: 1px; }
+.fiori-at-resizer:hover {
+  background: var(--sapContent_DragAndDropActiveColor);
+  opacity: .5;
+}
+.fiori-at-resizer[data-dragging] {
+  background: var(--sapContent_DragAndDropActiveColor);
+  opacity: 1;
+}
+.fiori-at-no-data {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  block-size: 100%;
+  box-sizing: border-box;
+  border-block-end: 1px solid var(--sapList_BorderColor);
+}
+.fiori-at-footer { block-size: var(--at-row-height); }
+.fiori-at-placeholder { background: var(--sapList_Background); }
+.fiori-at-placeholder [data-slot="analytical-table-placeholder-row"] {
+  display: flex;
+  align-items: center;
+  height: var(--at-row-height);
+}
+.fiori-at-placeholder [data-slot="analytical-table-placeholder-row"] > div {
+  display: flex;
+  box-sizing: border-box;
+  padding-inline: .25rem;
+}
+.fiori-at-placeholder [data-slot="analytical-table-placeholder-row"] span {
+  width: 60%;
+  height: var(--sapFontSize);
+  border-radius: var(--sapElement_BorderCornerRadius);
+  background-image: var(--sapContent_Placeholderloading_Gradient);
+  background-repeat: no-repeat;
+  background-size: 1000px 104px;
+  animation: fiori-at-shimmer 2s linear infinite forwards;
+}
+@keyframes fiori-at-shimmer {
+  from { background-position-x: 100%; }
+  to { background-position-x: 0; }
+}
+.fiori-at .fiori-at-busy {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+}
+.fiori-at:has(> .fiori-at-busy [role="progressbar"]) .fiori-at-grid {
+  opacity: var(--sapContent_DisabledOpacity);
+}
+.fiori-at-vertical-resizer {
+  position: relative;
+  height: 5px;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+  cursor: row-resize;
+}
+.fiori-at-vertical-resizer::before {
+  content: "⦁⦁⦁⦁";
+  font: 10px/5px var(--sapFontFamily);
+}
+.fiori-at-vertical-resizer:hover {
+  background-color: var(--sapContent_DragAndDropActiveColor);
+  color: var(--sapHighlightTextColor);
+}
+.fiori-at-vertical-resizer[style*="--at-row-delta"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateY(var(--at-row-delta));
+  background: var(--sapContent_DragAndDropActiveColor);
+  opacity: .5;
+  pointer-events: none;
+}
