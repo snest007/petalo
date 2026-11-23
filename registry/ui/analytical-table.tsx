@@ -821,10 +821,10 @@ export function AnalyticalTable<T extends RowData>({
                 ...(canFreeze(column) ? [{ id: "freeze", icon: configuredPin ? pushpinOff : pushpinOn,
                   text: configuredPin ? texts.unfreezeColumn : texts.freezeColumn, run: () => { freeze(); close() } }] : []),
               ]}
+              // UI5 ListItemTemplate.js gives the .ui5-li-content div an ID. Keeping an ID on
+              // the matching layout box lets Chromium expose it around the WCR ColumnHeaderModal FlexBox.
               filter={filterableHeader ? { text: texts.filter, content:
-                <div {...part("header-filter", "fiori-at-header-filter")}>
-                  {/* WCR ColumnHeaderModal places the title and editor together in ListItemCustom's
-                      .ui5-li-content. The title from ui5-text has its own text wrapper. */}
+                <div {...part("header-filter", "fiori-li__content fiori-at-header-filter")} id={`${filterId}-content`}>
                   <div className="fiori-at-filter-content">
                     <Icon icon={filterIcon} />
                     <div className="fiori-at-filter-label" id={filterId}><span>{texts.filter}</span></div>

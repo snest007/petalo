@@ -309,6 +309,7 @@ H6/H6b/H6c wait for P2a.
 - [x] [H1b AnalyticalTable: finish foundation acceptance](tasks/done/H1b-analytical-table-acceptance.md) — S (continue the [H1 return](returns/done/H1.md) before H2)
 - [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
 - [ ] [H2b AnalyticalTable: finish sort and filter acceptance](tasks/H2b-analytical-table-acceptance.md) — S (continue the [H2 return](returns/H2.md) before H3)
+- [ ] [H2c AnalyticalTable: match the filter-item tree](tasks/H2c-filter-item-tree.md) — S (after H2b, before H3)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2 and H2b)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)
 - [ ] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4)

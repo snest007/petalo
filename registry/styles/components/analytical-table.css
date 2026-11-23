@@ -256,7 +256,10 @@
 .fiori-at-header-icons { color: var(--sapContent_IconColor); gap: .125rem; }
 .fiori-at-header-icons > svg { width: .8125rem; height: .8125rem; }
 .fiori-at-sort-popup { font-weight: 400; cursor: auto; }
-.fiori-at-header-filter { display: inline-block; }
+.fiori-at-header-filter {
+  box-sizing: content-box;
+  min-width: auto;
+}
 .fiori-at-filter-content {
   display: flex;
   align-items: center;
