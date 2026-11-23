@@ -1,0 +1,14 @@
+{
+  "title": "DynamicDateRange",
+  "description": "Select a date expression using presets, relative periods, or absolute dates and times.",
+  "registryDependencies": ["@petalo/button", "@petalo/calendar", "@petalo/date-time-picker", "@petalo/icons", "@petalo/input", "@petalo/label", "@petalo/list", "@petalo/locale", "@petalo/responsive-popover", "@petalo/select", "@petalo/step-input", "@petalo/title", "@petalo/use-is-phone"],
+  "usage": {
+    "summary": "Choose a date filter that can resolve relative to when it is run.",
+    "useWhen": ["Offer presets such as Today, Last 7 Days and Next 2 Months in a report filter.", "Allow relative and absolute periods in the same field."],
+    "avoidWhen": [
+      { "when": "Enter one fixed calendar date.", "use": ["date-picker"] },
+      { "when": "Enter only a fixed start and end date.", "use": ["date-range-picker"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

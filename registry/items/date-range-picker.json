@@ -26,6 +26,7 @@
       "Set formatPattern, delimiter, minDate and maxDate to match the valid interval format and bounds."
     ],
     "avoidWhen": [
+      { "when": "Offer relative periods such as Today or Last 7 Days alongside absolute dates.", "use": ["dynamic-date-range"] },
       {
         "when": "Choose only one date.",
         "use": [

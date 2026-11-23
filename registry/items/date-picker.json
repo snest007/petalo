@@ -23,6 +23,7 @@
       "Set formatPattern, minDate and maxDate to show the expected format and enforce valid dates."
     ],
     "avoidWhen": [
+      { "when": "Offer relative periods such as Today or Last 7 Days alongside absolute dates.", "use": ["dynamic-date-range"] },
       {
         "when": "Enter a start and end date as one interval.",
         "use": [
