@@ -67,7 +67,9 @@ is the milestone/CI. Existing card requirements saying "main ×2, Storybook ×2"
 shared-file rule; do not rewrite old cards. Follow any additional card-specific acceptance checks and tighter budget.
 `test:changed` ignores only bookkeeping in `docs/plan/README.md`, `docs/plan/tasks/**`, `docs/plan/returns/**`,
 and `docs/plan/handoff/**`; bookkeeping-only branches print "bookkeeping only: no tests needed" and exit 0.
-All other `docs/plan/` files stay shared, including the Storybook-read `a11y-audit.md` and `i18n-audit.md`.
+New components and the shared inventories they register in (AGENTS.md "Definition of done" → New components)
+run the inventory specs in the scoped run instead of forcing the full suite (owner's decision 2026-11-23). Cards
+and prompts don't need to repeat the registration steps. Other `docs/plan/` files stay shared.
 
 One card per branch. Cards in the same wave touch disjoint files and can run in parallel (separate worktrees/branches);
 later waves depend on earlier ones. Optional orchestration: [RUN.md](RUN.md) (one Codex session with sub-agents) or

@@ -188,7 +188,9 @@ components comes before polish. Users run Windows and macOS (no Linux users); th
      `--runs=2` is available for a release. Targets: about 20 minutes local / 12 minutes CI.
    `test:changed` ignores only bookkeeping: `docs/plan/README.md`, `docs/plan/tasks/**`, `docs/plan/returns/**`,
    and `docs/plan/handoff/**`. Bookkeeping-only branches print "bookkeeping only: no tests needed" and exit 0.
-   Other `docs/plan/` files stay shared (for example `a11y-audit.md` and `i18n-audit.md`, read by Storybook).
+   Inventory files (`scripts/changed-scope.mjs` `isInventory`: the a11y/i18n baselines and audit generators, the
+   generated audits, locale packs and skill, `docs/src/fixtures/index.ts`, README) are not shared files: they and
+   any new component add the inventory specs to the scoped run. Other `docs/plan/` files stay shared.
    When a card adds many tests, check the CI timing warning and add a shard in the same card.
 4. **Compact output.** Never print a whole Playwright or CI log into the conversation. Use `pnpm test:summary`
    or grep for summary and failing lines, at most about 50 lines. For CI, use `gh run watch` once (no polling loops),
@@ -220,6 +222,14 @@ components comes before polish. Users run Windows and macOS (no Linux users); th
 - Accessibility (rule 9): new or changed states have fixtures on both sides so `tests/a11y-tree.spec.ts` compares them;
   axe stays clean; new keyboard paths and announcements have behaviour tests; the accessibility baseline doesn't grow
   (and shrinks by exactly the entries your card fixed).
+- **New components** (owner's decision 2026-11-23, after H8 needed a second card): register in the shared
+  inventories in the same card, before the final runs. Owner card in `tests/a11y-tree-baseline.ts` `groups` (and
+  the RTL list in `tests/a11y-tree.spec.ts` when the component is directional); customization proofs in
+  `tests/a11y-tree-customizations.spec.ts`; verified members/texts in `scripts/a11y-audit.mjs`; reachable and
+  unrendered native keys in `scripts/i18n-audit.mjs`, including keys an existing component gains through a new
+  slot. Then `pnpm generate && pnpm registry:build` regenerates the audits, locale packs and `skills/petalo/`.
+  No new baseline entries; no gap count rises. `pnpm test:changed` runs the inventory specs whenever a new
+  `registry/ui|items` file or an inventory file changes, so a missing registration fails in tier 1.
 - Extensibility (rule 11): new extension points meet the contract (example, ownership tests, Customise docs, story).
 - Localization (rule 10): every new user-visible or announced string is in `texts` with its UI5 key named; new formatted
   values use `Intl` with the resolved locale; new states have an RTL fixture; the i18n audit baseline doesn't grow.

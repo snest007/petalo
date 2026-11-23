@@ -2,6 +2,7 @@
 import { execFileSync } from "node:child_process"
 import { existsSync, readFileSync } from "node:fs"
 import { ensureStorybookBuild, testSummary } from "./test-milestone.mjs"
+import { classifyChanges } from "./changed-scope.mjs"
 
 // Include tracked edits and new files for the inner loop before the first commit.
 const changedFiles = [...new Set([
@@ -13,34 +14,22 @@ if (!changedFiles.length) {
   console.log("No changes compared with main.")
   process.exit(0)
 }
-// No test or build reads these bookkeeping files.
-const files = changedFiles.filter((file) => file !== "docs/plan/README.md" && !/^docs\/plan\/(?:tasks|returns|handoff)\//.test(file))
-if (!files.length) {
+// Classification lives in changed-scope.mjs so tests/test-changed-scope.spec.ts can cover it.
+const added = execFileSync("git", ["diff", "--name-only", "--diff-filter=A", "-z", "main...HEAD"], { encoding: "utf8" }).split("\0")
+  .concat(execFileSync("git", ["ls-files", "--others", "--exclude-standard", "-z"], { encoding: "utf8" }).split("\0"))
+  .concat(execFileSync("git", ["diff", "--name-only", "--diff-filter=A", "-z", "HEAD"], { encoding: "utf8" }).split("\0"))
+  .filter(Boolean)
+const { bookkeepingOnly, names, specs, storySpecs, shared, inventory, newComponents } = classifyChanges(changedFiles, added, existsSync)
+if (bookkeepingOnly) {
   console.log("bookkeeping only: no tests needed")
   process.exit(0)
-}
-const names = new Set()
-const specs = new Set()
-const storySpecs = new Set()
-const shared = []
-for (const file of files) {
-  // AGENTS.md rule 3: all eight component-owned paths have the same basename.
-  const owned = file.match(/^registry\/(?:ui\/([^/]+)\.tsx|items\/([^/]+)\.json|styles\/components\/([^/]+)\.css)$/)
-    ?? file.match(/^docs\/src\/(?:fixtures|demos)\/([^/]+)\.(?:tsx|ui5\.ts)$/)
-    ?? file.match(/^docs\/stories\/[^/]+\/([^/]+)\.stories\.tsx$/)
-  if (owned) names.add(owned.slice(1).find(Boolean))
-  else if (/^tests\/(?!visual)[^/]+\.spec\.ts$/.test(file)) {
-    specs.add(file)
-    const name = file.slice("tests/".length, -".spec.ts".length)
-    if (existsSync(`registry/ui/${name}.tsx`)) names.add(name)
-  }
-  else if (/^tests-storybook\/[^/]+\.spec\.ts$/.test(file) && file !== "tests-storybook/storybook.spec.ts") storySpecs.add(file)
-  else shared.push(file)
 }
 if (shared.length) {
   shared.forEach((file) => console.error(`shared file changed: run the full suite (${file})`))
   process.exit(1)
 }
+if (newComponents.length) console.log(`New components: ${newComponents.join(", ")} — running the shared inventory specs (AGENTS.md "New components").`)
+else if (inventory.length) console.log(`Inventory files changed (${inventory.join(", ")}) — running the shared inventory specs.`)
 const visualSpecs = new Set()
 const interactionSource = readFileSync("tests/visual-interaction.spec.ts", "utf8")
 for (const name of names) {
