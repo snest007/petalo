@@ -1,16 +1,20 @@
 {
   "title": "Input",
+  "dependencies": ["radix-ui"],
   "registryDependencies": [
     "@petalo/icons",
-    "@petalo/locale"
+    "@petalo/locale",
+    "@petalo/button",
+    "@petalo/use-is-phone"
   ],
-  "description": "Fiori input with value states and value state message.",
+  "description": "Fiori input with value states, value state messages and optional suggestions.",
   "usage": {
     "summary": "Enter one line of text, a number or a formatted string.",
     "useWhen": [
       "Let users enter a name, number, password, URL, phone number or email address in one line.",
       "Keep a visible field label; use a placeholder only for a hint or example.",
-      "Use valueState and valueStateMessage to explain validation issues and how to resolve them."
+      "Use valueState and valueStateMessage to explain validation issues and how to resolve them.",
+      "Offer optional suggestions while allowing a free-text value with showSuggestions and SuggestionItem. On phones, edit in a full-screen dialog."
     ],
     "avoidWhen": [
       {

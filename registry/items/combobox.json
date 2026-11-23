@@ -17,13 +17,13 @@
     "summary": "Choose one suggested value by typing, with filtering and optional free-text entry.",
     "useWhen": [
       "Let users find one suggested value by typing, typically across 20\u2013200 options.",
-      "Accept a custom value alongside suggestions when the task permits free text.",
+      "Use the picker arrow to show choices before the user types. Validate the committed value when selection from the list is required.",
       "Keep selection in a field when one suggestion label is enough to identify the value.",
       "Choose filter for the supplied ComboBoxItem entries; onCommit receives text and onSelectionChange reports a matched item or null."
     ],
     "avoidWhen": [
       {
-        "when": "Choose one of 2\u201312 predefined options without typing or free text; sort alphabetically above 8. Use Input for text without suggestions.",
+        "when": "Choose one of 2\u201312 predefined options without typing or free text; sort alphabetically above 8. Use Input for free text with optional suggestions.",
         "use": [
           "select",
           "input"
