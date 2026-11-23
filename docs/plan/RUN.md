@@ -47,9 +47,9 @@ Test scripts choose free ports. Leave port numbers out of prompts.
    E10's preflight reports a missing registration in seconds.
 3. Before tier 2: merge local `main`, regenerate (`pnpm generate && pnpm registry:build`), never hand-merge generated files.
 4. Tier 2 at done, installed-consumer check for new items, tick the card in `docs/plan/README.md`.
-5. At a limit (2 hypotheses per failing check, the card's time budget): commit, write `docs/plan/returns/<ID>.md`
-   (what failed, what each attempt changed, remaining hypotheses), propose a follow-up card `<ID>b` in the return note,
-   stop. Don't start the follow-up in the same run.
+5. At a limit, commit the work in progress and write `docs/plan/returns/<ID>.md` with failing test names, what each
+   round changed and why, remaining hypotheses and the next thing to try. Propose a small `<ID>b` scoped to the
+   remaining items. Stop this run and leave the follow-up for a separate run.
 6. Close every server and browser you started.
 
 ## After a card returns
@@ -59,6 +59,12 @@ follow-up card with a "Review findings" section, commit it to local `main`, and 
 
 ## Milestones and pushing
 
-Push only at a milestone (end of a wave, about every 3–5 merged cards, or when the owner asks to publish), after
-`pnpm test:milestone` passes on macOS. Pushing `main` publishes the registry and docs. CI is a reminder, not a gate
-(AGENTS.md "Current phase"). The milestone checklist is in `docs/plan/README.md`.
+At a milestone (end of a wave, about every 3–5 merged cards, or when the owner asks to publish), the reviewer runs
+`pnpm test:milestone` once on macOS with fresh builds and both full suites. Run the stored-baseline
+`tests/a11y-tree*.spec.ts` comparisons on macOS at milestones only. A release can use `--runs=2`. Target about
+20 minutes locally and 12 minutes in CI. Follow the [milestone checklist](README.md#milestone-checklist-reviewer-at-the-end-of-a-wave-or-when-the-owner-asks-to-publish).
+
+Push `main` only at a verified milestone with owner authorization. GitHub Pages then redeploys the registry and docs.
+CI serves as a reminder and never gates a card. Linux push CI runs behaviour, live pixel comparisons and
+Storybook. Its keyboard behaviour is closer to Windows. Fix failures only if they reproduce on macOS or in a behaviour test.
+Document Linux-only failures in the milestone report without opening a card for them.

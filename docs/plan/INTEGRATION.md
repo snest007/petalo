@@ -2,7 +2,7 @@
 
 How a returned card branch is checked, merged into local `main`, or turned into a follow-up card. Agent-neutral.
 Run it in the orchestrator's checkout (a worktree on its own branch), never by editing the main checkout's working
-tree; `main` only moves by fast-forward from there. Read `/AGENTS.md` and [RUN.md](RUN.md) first.
+tree; `main` only moves by fast-forward from there. Read [AGENTS.md](../../AGENTS.md) and [RUN.md](RUN.md) first.
 
 ## 1. Verify the claims (before believing the final message)
 
@@ -20,8 +20,8 @@ On the card's branch / worktree:
 - New `a11yDiff`, `ui5FormHosts`, focus-scaffolding or other allowances in `tests/a11y-tree-normalize.ts` or fixtures:
   each must name exact paths, verify the node shape it removes, and be limited to the card's cases. Reuse of an existing
   mechanism (form hosts, pinned popup shell) is fine; a blanket "ignore" is not.
-- Tree-baseline entries: only structural differences owned by the component's P card (AGENTS.md "New-component
-  accessibility acceptance"). Any role/name/state/text difference in the baseline → return the card.
+- Tree-baseline entries can record only structural differences owned by the component's P card under
+  [AGENTS.md](../../AGENTS.md#definition-of-done-every-card). Return the card for any role/name/state/text entry.
 - Forbidden shortcuts: raised `tolerance`, `skipCompare` without a P-card reason, `retries`, `waitForTimeout`/sleeps,
   `test.skip`, hard-coded colours/sizes that have a `--sap*`/`--fiori-*` parameter
   (`grep -nE '#[0-9a-f]{3,6}\b|[0-9]+px' <changed files>`).
@@ -68,9 +68,9 @@ RUN.md. A card that keeps coming back on the same kind of problem is a signal to
    almost always appended lines in shared inventories: keep both sides, then `pnpm generate && pnpm registry:build`
    instead of hand-merging generated files. A real conflict in a component file means two cards touched it: keep both
    behaviours and run both cards' specs.
-2. Re-run what the merge could have changed: the card's specs plus the inventory specs
-   (`tests/a11y-tree*.spec.ts`, `tests/i18n.spec.ts`, `tests/usage-guidance.spec.ts`) with `pnpm test:summary`.
-   Not the full suite: that is the milestone's job.
+2. Repeat scoped Tier 2 before merging where it applies. Check what the merge could have changed by running the
+   card's specs plus the inventory specs (`tests/a11y-tree*.spec.ts`, `tests/i18n.spec.ts`,
+   `tests/usage-guidance.spec.ts`) with `pnpm test:summary`. Reserve the full-suite repeat for the milestone.
 3. `node scripts/plan-check.mjs --fix` moves ticked cards to `tasks/done/` and return notes to `returns/done/`; fix the
    relative links it then reports, update the Status table, run plan-check again (0 errors).
 4. Commit, check the main checkout is clean, `git -C <main checkout> merge --ff-only <orchestrator branch>`.
