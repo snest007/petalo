@@ -1,12 +1,11 @@
 # Decisions
 
-Owner decisions that change a rule or the way cards run. AGENTS.md holds the rule itself; this file holds why and
-when. Newest first. One entry per decision; review findings for a single card don't belong here (they go in that
-card's "Review findings" section).
+Owner decisions that change a rule or how cards run. [AGENTS.md](../../AGENTS.md) holds the core rules and this file
+records their rationale and dates, newest first. Record findings for individual cards in their Review findings sections.
 
 ## 2026-11-23 — New-component cards may record structural accessibility-tree differences
 
-**Rule:** AGENTS.md rule 9 and Definition of done → "New-component accessibility acceptance".
+See rule 9 and New-component accessibility acceptance in [AGENTS.md](../../AGENTS.md#definition-of-done-every-card).
 **Why:** in wave H nearly every new-component card produced one or two follow-up cards (H1b, H2b, H2c, H7b, H9b, H9c),
 and almost all of the remaining failures were the same kind: whether Chrome keeps or drops an unnamed layout wrapper
 in the accessibility tree, or open-popup pixels on the shared reference page. Two fix attempts rarely settle these,
@@ -15,6 +14,11 @@ and they don't change what assistive technology announces. The build-out phase n
 text and relationship UI5 exposes. Only purely structural differences and open-popup pixel cells may be recorded, owned
 by the component's P card, which removes them later (the baseline still only shrinks after that).
 **Tooling:** E11 adds the command that records them and the check that both sides carry the same semantic content.
+
+## 2026-11-23 — Register new components before acceptance
+
+H8 needed a second card after inventory gaps surfaced late. Register new components in the same card before final
+runs. E10 preflights the registrations before Playwright so an omission surfaces quickly.
 
 ## 2026-11-23 — Ports are the scripts' job, not the prompt's
 
@@ -32,19 +36,29 @@ prompt to continue a card is one line (see RUN.md).
 
 **Why:** the owner runs one agent session per card plus one orchestrating/reviewing session (Claude or Codex,
 interchangeably). The earlier "one session spawns sub-agents" orchestration was retired. RUN.md and INTEGRATION.md
-describe the current flow and are agent-neutral.
+describe the current flow and are agent-neutral. Keep the main checkout separate because an earlier card left an
+uncommitted draft and stray branch there.
 
 ## 2026-11-20 — Build out components first; CI is a reminder; tiered verification
 
-See AGENTS.md "Verification budget" → "Current phase" and E8. New components (wave H) come before polish (P, X, S5).
-Users run Windows and macOS. Push CI (Linux) is a second platform, not a gate. Cards run tier 1 while working and
-tier 2 at done; full suites run at milestones.
+New components (wave H) come before polish (P, X, S5) while the library is young. Users run Windows and macOS,
+and the owner and agents develop on macOS. Linux CI supplies a second platform with keyboard behaviour closer
+to Windows. E8 set up tier 1 for the working loop, tier 2 for card acceptance and tier 3 for milestones.
+[RUN.md](RUN.md#milestones-and-pushing) holds the CI and publishing rules.
 
 ## 2026-11-18 — Browsers stay out of the owner's way
 
-Playwright and probes run headless; manual review uses a background browser; close everything you started.
+The owner works on the same machine. Visible windows interrupt their work by appearing in front, taking focus
+or staying open. Playwright and probes run headless, and manual reviews use a background browser.
+Screenshots, traces and error contexts provide evidence without taking focus.
 
 ## 2026-11-17 — Extensibility is a library contract
 
-`docs/extension-contract.md` (X0). Parity and documentation cards don't owe T1; it arrives with each component's
-X rollout card.
+The owner approved the [extension contract](../extension-contract.md) through X0. The same day, parity and
+documentation cards (E4, E5, P1–P6 including P2a, and S story cards) received an exception from full T1 until
+the X rollout after the owning P card.
+
+## 2026-11-02 — Calendars stay Gregorian-only
+
+Wave F recorded the Gregorian-only decision in the README and backlog when it added the OpenUI5 reference harness.
+Calendar and date pickers still follow the rest of the localization rules.
