@@ -127,7 +127,7 @@ Choose one suggested value by typing, with filtering and optional free-text entr
 
 - Choose one of 2–12 predefined options without typing or free text; sort alphabetically above 8. Use Input for text without suggestions. → [select](forms.md#select), [input](forms.md#input)
 - Collect several values: fewer than 200 predefined options need MultiComboBox; free-form, caller-validated entries or datasets above 200 need MultiInput. → [multi-combobox](forms.md#multi-combobox), [multi-input](forms.md#multi-input)
-- Find a value above 200 entries, search several attributes, or define conditions in a separate search task. → [value-help-dialog](overlays.md#value-help-dialog)
+- Open SelectDialog to choose from a searchable list. Use ValueHelpDialog for more than 200 entries, several searchable attributes, or conditions. → [value-help-dialog](overlays.md#value-help-dialog), [select-dialog](overlays.md#select-dialog)
 - Browse business items with List or expand a hierarchy with Tree rather than choose a field value. → [list](data.md#list), [tree](data.md#tree)
 - Submit a content-search query with optional scopes rather than choose a field value. → [search](navigation.md#search)
 

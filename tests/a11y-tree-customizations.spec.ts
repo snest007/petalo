@@ -8,6 +8,13 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "DynamicDateRange.className": "dynamic-date-range",
+  "SelectDialog.className": "select-dialog",
+  "SelectDialog.renderItem": "select-dialog",
+  "SplitterLayout.className": "splitter-layout",
+  "SplitterLayout.children": "splitter-layout",
+  "SplitterElement.className": "splitter-layout",
+  "SplitterElement.children": "splitter-layout",
   "ToolbarButton.badge": "h8-badge-custom",
   "ToggleButton.badge": "h8-badge-custom",
   "SplitButton.menu": "split-button",
