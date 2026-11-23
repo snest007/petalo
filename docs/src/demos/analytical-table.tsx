@@ -2,6 +2,7 @@ import * as React from "react"
 import {
   AnalyticalTable, useAnalyticalTable, type AnalyticalTableBodyProps,
   type AnalyticalTableColumnDef, type AnalyticalTableInstance, type AnalyticalTableProps,
+  type ColumnFiltersState, type SortingState,
 } from "@/components/ui/analytical-table"
 import { FioriLocaleProvider } from "@/lib/fiori-locale"
 import { defineDemo } from "./types"
@@ -19,9 +20,20 @@ export const columns: AnalyticalTableColumnDef<Inventory>[] = [
 ]
 
 const customColumns: AnalyticalTableColumnDef<Inventory>[] = [
-  columns[0], columns[1],
-  {
-    ...columns[2], meta: { className: "analytical-table-stock", headerClassName: "analytical-table-stock-header" },
+  columns[0], {
+    ...columns[1],
+    filterable: true,
+    filter: (rows, [columnId], value) => rows.filter(row => row.getValue(columnId) === value),
+    Filter: ({ value, setFilter, accessibleNameRef }) => (
+      <select value={String(value ?? "")} aria-labelledby={accessibleNameRef}
+        onChange={event => setFilter(event.target.value || undefined)}>
+        <option value="">All categories</option>
+        {["Shelter", "Cooking", "Lighting", "Packs"].map(category => <option key={category}>{category}</option>)}
+      </select>
+    ),
+  }, {
+    ...columns[2], sortable: true,
+    sortType: (a, b) => a.original.stock % 10 - b.original.stock % 10 || a.original.stock - b.original.stock, meta: { className: "analytical-table-stock", headerClassName: "analytical-table-stock-header" },
     cell: ({ value, defaultContent }) => <span className="flex items-center gap-2">
       <span aria-hidden="true" className="inline-block h-2 w-12 rounded bg-(--sapList_BorderColor)">
         <span className="block h-full rounded bg-(--sapChart_OrderedColor_1)" style={{ width: `${value}%` }} />
@@ -39,6 +51,8 @@ function InventoryBody({ children }: AnalyticalTableBodyProps) {
 
 export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }) {
   const tableRef = React.useRef<AnalyticalTableInstance<Inventory>>(null)
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [filters, setFilters] = React.useState<ColumnFiltersState>([])
   const [visibility, setVisibility] = React.useState<Record<string, boolean>>({})
   const [order, setOrder] = React.useState<string[]>([])
   const [sizing, setSizing] = React.useState<Record<string, number>>({})
@@ -58,6 +72,9 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
     <FioriLocaleProvider locale="en-US" texts={{ "wcr:LIST_NO_DATA": "Inventory is empty" }}>
       <AnalyticalTable data={empty ? [] : inventory} columns={customColumns} aria-label="Custom inventory"
         tableRef={tableRef} tableOptions={{ getRowId: (_, index) => `product-${index}`, meta: { source: "inventory" } }}
+        sorting={sorting} onSortingChange={setSorting} columnFilters={filters} onColumnFiltersChange={setFilters}
+        onSort={({ sortDirection }) => setFeedback(sortDirection)}
+        onFilter={({ value }) => setFeedback(String(value ?? ""))}
         columnVisibility={visibility} onColumnVisibilityChange={setVisibility}
         columnOrder={order} onColumnOrderChange={setOrder} columnSizing={sizing} onColumnSizingChange={setSizing}
         columnPinning={pinning} onColumnPinningChange={setPinning}
@@ -93,13 +110,46 @@ export function AnalyticalTableColumnDemo({ dir, tableRef }: Pick<AnalyticalTabl
   </div>
 }
 
+const localizedInventory: Inventory[] = [
+  { product: "Zebra", category: "Lighting", stock: 19 },
+  { product: "Äland", category: "Lighting", stock: 40 },
+  { product: "Berlin", category: "Lighting", stock: 14 },
+  { product: "Alban", category: "Shelter", stock: 24 },
+  { product: "Aland", category: "Shelter", stock: 24 },
+]
+
+export function AnalyticalTableSortFilterDemo({ dir }: Pick<AnalyticalTableProps<Inventory>, "dir">) {
+  const [locale, setLocale] = React.useState("de-DE")
+  const [query, setQuery] = React.useState("")
+  const [disableGlobalFilter, setDisabled] = React.useState(false)
+  const [feedback, setFeedback] = React.useState("")
+  return <div id={`analytical-table-sort-filter-${dir ?? "ltr"}`} className="grid w-full max-w-xl gap-2">
+    <div className="flex flex-wrap gap-3">
+      <label>Locale <select value={locale} onChange={event => setLocale(event.target.value)}>
+        <option value="de-DE">German</option><option value="sv-SE">Swedish</option>
+      </select></label>
+      <label>Search inventory <input value={query} onChange={event => setQuery(event.target.value)} /></label>
+      <label><input type="checkbox" checked={disableGlobalFilter} onChange={event => setDisabled(event.target.checked)} /> Disable search</label>
+    </div>
+    <AnalyticalTable data={localizedInventory} columns={columns} aria-label="Sort and filter inventory"
+      locale={locale} dir={dir} enableMultiSort sortPriority={["product", "stock"]}
+      sortable filterable globalFilter={query} onGlobalFilterChange={setQuery} disableGlobalFilter={disableGlobalFilter}
+      visibleRows={5} minRows={3}
+      onSort={({ sorting }) => setFeedback(sorting.map(({id, desc}) => `${id} ${desc ? "desc" : "asc"}`).join(", "))}
+      onFilter={({ columnId, value }) => setFeedback(`${columnId} ${String(value ?? "")}`.trim())} />
+    <output aria-label="Last sort or filter">{feedback}</output>
+  </div>
+}
+
 export default defineDemo({
   category: "Data", title: "AnalyticalTable", order: 55,
   docs: [{
     name: "analytical-table",
-    description: "A virtualized Fiori grid with resizable, reorderable, hideable and freezable columns.",
+    description: "A virtualized Fiori grid with resizable, reorderable, hideable and freezable columns, plus sorting and filtering.",
     props: [
       { name: "columnSizing / columnOrder / columnVisibility / columnPinning", type: "TanStack v9 state", description: "Each slice has a matching default and onChange prop. Pins use the logical start edge." },
+      { name: "sorting / columnFilters / globalFilter", type: "Controlled or uncontrolled state", description: "Use the matching defaults and change callbacks. The global query matches across eligible columns." },
+      { name: "sortable / filterable / sortPriority", type: "boolean / boolean / string[]", description: "Offer header actions and order active multi-sort columns. Columns can opt in or out individually." },
       { name: "scaleWidthMode", type: "Default | Smart | Grow", description: "Allocate widths evenly, prioritize typical content, or fit the longest sampled values." },
       { name: "visibleRowCountMode", type: "Fixed | Auto | AutoWithEmptyRows | Interactive", description: "Set viewport height from rows, available space, or the pointer resizer." },
       { name: "tableOptions / tableRef", type: "Partial<TableOptions> / Ref<AnalyticalTableInstance>", description: "Add engine options, scroll to a row or column, focus a cell, or reset sizing." },
@@ -109,11 +159,14 @@ export default defineDemo({
   Demo: () => <div className="grid gap-6">
     <AnalyticalTableColumnDemo />
     <AnalyticalTableColumnDemo dir="rtl" />
+    <AnalyticalTableSortFilterDemo />
+    <AnalyticalTableSortFilterDemo dir="rtl" />
     <section className="grid gap-2">
       <h3>Customise</h3>
       <p>Use <code>classNames</code> with the typed slot names or the <code>analytical-table-*</code> data attributes. Pinned and dragged columns expose <code>data-frozen</code> and <code>data-dragging</code>. ARIA names and descriptions target the inner grid.</p>
       <p>The experimental <code>components.Body</code> receives the virtual rows as children. Arrange those children in an inert layout. Use <code>useAnalyticalTable()</code> for the model, actions and protected row, header and cell getters. Render row and cell content within the supplied hosts. F2 moves focus into and out of a custom cell.</p>
       <p>Copy the Custom example into an app after installing <code>@petalo/analytical-table</code>. Import its parts and types from <code>components/ui/analytical-table</code>. Keep the replacement at the Body boundary when updating the registry item.</p>
+      <p>The experimental column <code>Filter</code> slot receives the current value, a setter, the default editor and the label reference. The Custom example supplies a category selector and sorts stock by its final digit.</p>
       <h4>Custom</h4>
       <CustomAnalyticalTable />
     </section>

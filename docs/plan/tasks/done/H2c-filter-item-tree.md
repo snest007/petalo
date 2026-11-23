@@ -1,6 +1,6 @@
 # H2c — Match the AnalyticalTable filter-item tree
 
-Continue on `codex/H2` in `.worktrees/H2`. Scope is the open sort/filter menu and the remaining acceptance for H2 and H2b. See the [H2 return](../returns/H2.md).
+Continue on `codex/H2` in `.worktrees/H2`. Scope is the open sort/filter menu and the remaining acceptance for H2 and H2b. See the [H2 return](../../returns/done/H2.md).
 
 - Compare the computed layout of the filter wrappers in the settled fixture, the matching probe, and WCR's `.ui5-li-content` and FlexBox. Match the grouping of the Filter label and editor in the WCR accessibility tree in LTR and RTL.
 - Keep the existing pixel tolerance and passing behavior and axe checks. Add no accessibility-tree allowances or baseline entries.

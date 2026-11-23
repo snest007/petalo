@@ -1,5 +1,9 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator } from "@playwright/test"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { build } from "vite"
+import { aliases } from "../vite.aliases"
 
 const cell = (grid: Locator, row: number, column: number) => grid.locator(`[data-grid-row="${row}"][data-grid-column="${column}"]`)
 const resizer = (grid: Locator, id: string) => grid.locator(`[data-slot="analytical-table-resizer"][data-column="${id}"]`)
@@ -141,11 +145,211 @@ test("fixtures keep absolute indices, empty announcements and localized text", a
 })
 
 for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]) {
-  test(`fixtures axe in ${theme}`, async ({ page }) => {
-    await page.goto(`/index.html?fixtures&ref=wcr&theme=${theme}`)
-    await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
-    const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
-    expect(result.violations).toEqual([])
-  })
+  for (const dir of ["ltr", "rtl"]) {
+    test(`fixtures axe in ${theme} ${dir}`, async ({ page }) => {
+      const query = `theme=${theme}&dir=${dir}`
+      for (const path of [`/index.html?fixtures&ref=wcr&${query}`, `/wcr.html?${query}`]) {
+        await page.goto(path)
+        await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
+        const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
+          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
+        expect(result.violations, path).toEqual([])
+      }
+    })
+  }
 }
+
+const sortDemo = (page: import("@playwright/test").Page, dir = "ltr") => page.locator(`#analytical-table-sort-filter-${dir}`)
+const productCells = (grid: Locator) => grid.locator('[role="gridcell"][data-column-id="product"]')
+
+test("sort and filter through the header menu with mouse and keyboard", async ({ page }) => {
+  const demo = sortDemo(page)
+  const grid = demo.getByRole("grid")
+  const heading = grid.locator('[role="columnheader"][data-column-id="product"]')
+  await heading.focus()
+  await page.keyboard.press("Enter")
+  const menu = grid.getByRole("menu")
+  const ascending = menu.getByRole("menuitem", { name: /^Sort Ascending/ })
+  await expect(ascending).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(heading).toBeFocused()
+  await expect(heading).toHaveAttribute("aria-sort", "ascending")
+  await expect(productCells(grid)).toHaveText(["Aland", "Äland", "Alban", "Berlin", "Zebra"])
+  await heading.click()
+  await menu.getByRole("menuitem", { name: /^Sort Descending/ }).click()
+  await expect(heading).toHaveAttribute("aria-sort", "descending")
+  await expect(productCells(grid).first()).toHaveText("Zebra")
+  await heading.press("Space")
+  await expect(menu.getByRole("menuitem", { name: /^Sort Ascending/ })).toBeFocused()
+  await page.keyboard.press("ArrowDown")
+  await expect(menu.getByRole("menuitem", { name: /^Clear Sorting/ })).toBeFocused()
+  await page.keyboard.press("Enter")
+  await expect(heading).not.toHaveAttribute("aria-sort")
+  await heading.press("Enter")
+  const filter = menu.getByRole("textbox", { name: "Filter" })
+  await filter.fill("aland")
+  await expect(heading).toHaveAccessibleName("Product Filtered")
+  await expect(productCells(grid)).toHaveText(["Äland", "Aland"])
+  await expect(demo.locator("output")).toHaveText("product aland")
+  await filter.press("Enter")
+  await expect(menu).toHaveCount(0)
+  await expect(heading).toBeFocused()
+  await heading.press("Enter")
+  await menu.getByRole("button", { name: "Clear" }).click()
+  await expect(filter).toHaveValue("")
+  await expect(heading).toHaveAccessibleName("Product")
+  await filter.press("Escape")
+  await expect(heading).toBeFocused()
+  await expect(productCells(grid)).toHaveCount(5)
+})
+
+test("multi-sort applies declared priority and Swedish and German collation", async ({ page }) => {
+  const demo = sortDemo(page)
+  const grid = demo.getByRole("grid")
+  for (const [column, action] of [["Stock", "Sort Descending"], ["Product", "Sort Ascending"]]) {
+    await grid.getByRole("columnheader", { name: column, exact: true }).click()
+    await grid.getByRole("menuitem", { name: new RegExp(`^${action}`) }).click()
+  }
+  await expect(demo.locator("output")).toHaveText("product asc, stock desc")
+  await expect(grid.locator('[aria-sort="ascending"]')).toHaveText("Product")
+  await expect(grid.locator('[aria-sort="descending"]')).toHaveText("Stock")
+  await expect(productCells(grid)).toHaveText(["Aland", "Äland", "Alban", "Berlin", "Zebra"])
+  await demo.getByRole("combobox", { name: "Locale" }).selectOption("sv-SE")
+  await expect(productCells(grid)).toHaveText(["Aland", "Alban", "Berlin", "Zebra", "Äland"])
+  const global = demo.getByRole("textbox", { name: "Search inventory" })
+  await global.fill("aland")
+  await expect(productCells(grid)).toHaveText(["Aland"])
+  await demo.getByRole("combobox", { name: "Locale" }).selectOption("de-DE")
+  await expect(productCells(grid)).toHaveText(["Aland", "Äland"])
+  await global.fill("missing")
+  await expect(grid.getByRole("gridcell")).toHaveText("No data found. Try adjusting the filter settings.")
+  await demo.getByRole("checkbox", { name: "Disable search" }).check()
+  await expect(productCells(grid)).toHaveCount(5)
+  await demo.getByRole("checkbox", { name: "Disable search" }).uncheck()
+  await expect(grid.getByRole("gridcell")).toHaveText("No data found. Try adjusting the filter settings.")
+})
+
+test("RTL filter popup restores the grid's roving focus", async ({ page }) => {
+  const grid = sortDemo(page, "rtl").getByRole("grid")
+  const heading = grid.getByRole("columnheader", { name: "Product", exact: true })
+  await heading.focus()
+  await page.keyboard.press("Enter")
+  const menu = grid.getByRole("menu")
+  const filterItem = menu.getByRole("menuitem", { name: /^Filter/ })
+  await expect(menu.getByRole("menuitem", { name: /^Sort Ascending/ })).toBeFocused()
+  await page.keyboard.press("ArrowDown")
+  await expect(menu.getByRole("menuitem", { name: /^Sort Descending/ })).toBeFocused()
+  await page.keyboard.press("ArrowDown")
+  await expect(filterItem).toBeFocused()
+  await page.keyboard.press("Tab")
+  await expect(filterItem.getByRole("textbox", { name: "Filter" })).toBeFocused()
+  await page.keyboard.press("Escape")
+  await expect(heading).toBeFocused()
+  await page.keyboard.press("ArrowLeft")
+  await expect(grid.getByRole("columnheader", { name: "Category", exact: true })).toBeFocused()
+})
+
+test("controlled sorting and the custom Filter renderer keep the owned menu and header", async ({ page }) => {
+  const demo = page.locator("#analytical-table-custom")
+  const grid = demo.getByRole("grid")
+  const category = grid.locator('[role="columnheader"][data-column-id="category"]')
+  await category.click()
+  const row = grid.getByRole("menuitem", { name: /^Filter/ })
+  await expect(row).toBeVisible()
+  await row.getByRole("combobox", { name: "Filter" }).selectOption("Packs")
+  await expect(category).toHaveAccessibleName("Category Filtered")
+  await expect(grid.locator('[role="gridcell"][data-column-id="category"]').first()).toHaveText("Packs")
+  await expect(demo.locator("output")).toHaveText("Packs")
+  await page.keyboard.press("Escape")
+  await expect(category).toBeFocused()
+  const stock = grid.getByRole("columnheader", { name: "Stock", exact: true })
+  await stock.click()
+  await grid.getByRole("menuitem", { name: /^Sort Ascending/ }).click()
+  await expect(stock).toHaveAttribute("aria-sort", "ascending")
+  await expect(demo.locator("output")).toHaveText("asc")
+  const values = await grid.locator('[role="gridcell"][data-column-id="stock"]').allTextContents()
+  const digits = values.map(value => Number(value) % 10)
+  expect(digits).toEqual([...digits].sort((a, b) => a - b))
+})
+
+test("fixtures: built-in filters accept string cells from controlled state and custom editors", async ({ page }) => {
+  const entry = resolve("analytical-table-filter-test.js")
+  const virtual = "\0analytical-table-filter-test"
+  const source = `
+    import { createElement as h, useState } from "react";
+    import { createRoot } from "react-dom/client";
+    import { AnalyticalTable } from "@/components/ui/analytical-table";
+
+    const { values, filter, query, locale } = window.filterCase;
+    const data = values.map(value => ({ value }));
+    const columns = [{
+      accessorKey: "value", header: "Value", width: 180, filter,
+      cell: ({ value }) => String(value),
+      Filter: ({ value, setFilter, accessibleNameRef }) => h("select", {
+        value: value === undefined ? "" : "match", "aria-labelledby": accessibleNameRef,
+        onChange: event => setFilter(event.target.value ? query : undefined)
+      }, h("option", { value: "" }, "Show all"), h("option", { value: "match" }, "Apply filter"))
+    }];
+
+    function FilterExample() {
+      const [filters, setFilters] = useState([{ id: "value", value: query }]);
+      return h(AnalyticalTable, {
+        columns, data, filterable: true, locale, columnFilters: filters, onColumnFiltersChange: setFilters,
+        "aria-label": "Filtered values", visibleRows: values.length, minRows: 1
+      });
+    }
+
+    createRoot(document.getElementById("filter-example")).render(h(FilterExample));
+  `
+  const bundle = await build({
+    configFile: false, publicDir: false, logLevel: "silent", resolve: { alias: aliases },
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    plugins: [{ name: "analytical-table-filter-test", resolveId: id => id === entry ? virtual : undefined,
+      load: id => id === virtual ? source : undefined }],
+    build: { write: false, lib: { entry, formats: ["iife"], name: "AnalyticalTableFilterTest" } },
+  })
+  const output = Array.isArray(bundle) ? bundle[0] : bundle
+  const script = "output" in output && output.output.find(file => file.type === "chunk")?.code
+  if (!script) throw new Error("Missing AnalyticalTable filter test bundle")
+  const css = readFileSync("dist/index.html", "utf8").match(/href="([^"]+\.css)"/)?.[1]
+  if (!css) throw new Error("Missing AnalyticalTable fixture stylesheet")
+
+  const errors: string[] = []
+  page.on("pageerror", error => errors.push(error.message))
+  const textValues = ["SAP Fiori", "SAP Analytics", "Other"]
+  const cases = [
+    // Reference values from WCR AnalyticalTable/react-table/filterTypes.js.
+    { filter: "includesAll", values: textValues, query: ["SAP", "Fiori"], matches: ["SAP Fiori"] },
+    { filter: "includesSome", values: textValues, query: ["Fiori", "Other"], matches: ["SAP Fiori", "Other"] },
+    { filter: "between", values: ["2", "10", "20"], query: [1, 12], matches: ["2", "10"] },
+    { filter: "includesAll", values: ["Äland Süd", "Aland Nord"], query: ["aland", "sud"], matches: ["Äland Süd"], locale: "de-DE" },
+    { filter: "includesSome", values: [["SAP", "Fiori"], ["SAP", "Analytics"], ["Other"]], query: ["Fiori", "Other"], matches: ["SAP,Fiori", "Other"] },
+    { filter: "between", values: ["2,5", "10,5", "20,5"], query: [12, 1], matches: ["2,5", "10,5"], locale: "de-DE" },
+  ]
+  for (const filterCase of cases) {
+    await test.step(`${filterCase.filter}: ${filterCase.values.join(" / ")}`, async () => {
+      const path = "/analytical-table-filter-test.html"
+      await page.route("**" + path, route => route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html>
+        <html lang="en" data-theme="sap_horizon"><head><link rel="stylesheet" href="${css}"></head>
+        <body><main id="filter-example"></main><script>window.filterCase = ${JSON.stringify(filterCase)};</script>
+        <script>${script.replaceAll("</script", "<\\/script")}</script></body></html>` }))
+      await page.goto(path)
+      const grid = page.getByRole("grid", { name: "Filtered values" })
+      const values = grid.getByRole("gridcell")
+      await expect(grid, errors.join("\n")).toBeVisible()
+      await expect(values).toHaveText(filterCase.matches)
+      const header = grid.getByRole("columnheader")
+      await expect(header).toHaveAccessibleName("Value Filtered")
+      await header.press("Enter")
+      const editor = grid.getByRole("combobox", { name: "Filter" })
+      await editor.selectOption("")
+      await expect(values).toHaveText(filterCase.values.map(String))
+      await expect(header).toHaveAccessibleName("Value")
+      await editor.selectOption("match")
+      await expect(values).toHaveText(filterCase.matches)
+      await expect(header).toHaveAccessibleName("Value Filtered")
+      await page.unroute("**" + path)
+    })
+  }
+  expect(errors).toEqual([])
+})

@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b), H9 (+H9b, H9d) | H2–H7, H9c, H9e, H10 and follow-ups | **H2d, H9c and H9e are eligible.** H3 follows H2d. H7b continues on H7. |
+| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H8 (+H8b), H9 (+H9b, H9d) | H3–H7, H9c, H9e, H10 and follow-ups | **H3, H9c and H9e are eligible.** H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -310,10 +310,10 @@ H6/H6b/H6c wait for P2a.
 - [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
 - [x] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/done/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
 - [x] [H1b AnalyticalTable: finish foundation acceptance](tasks/done/H1b-analytical-table-acceptance.md) — S (continue the [H1 return](returns/done/H1.md) before H2)
-- [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
-- [ ] [H2b AnalyticalTable: finish sort and filter acceptance](tasks/H2b-analytical-table-acceptance.md) — S (continue the [H2 return](returns/H2.md) before H3)
-- [ ] [H2c AnalyticalTable: match the filter-item tree](tasks/H2c-filter-item-tree.md) — S (after H2b, before H3)
-- [ ] [H2d AnalyticalTable: restore built-in filter parity](tasks/H2d-analytical-table-filter-parity.md) — S (same branch as H2; after E11)
+- [x] [H2 AnalyticalTable: sorting and filtering](tasks/done/H2-analytical-table-sort-filter.md) — L (after H1)
+- [x] [H2b AnalyticalTable: finish sort and filter acceptance](tasks/done/H2b-analytical-table-acceptance.md) — S (continue the [H2 return](returns/done/H2.md) before H3)
+- [x] [H2c AnalyticalTable: match the filter-item tree](tasks/done/H2c-filter-item-tree.md) — S (after H2b, before H3)
+- [x] [H2d AnalyticalTable: restore built-in filter parity](tasks/done/H2d-analytical-table-filter-parity.md) — S (same branch as H2; after E11)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2–H2d merge)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)
 - [ ] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4)

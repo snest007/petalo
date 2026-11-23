@@ -322,7 +322,6 @@ unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STA
   'NumericInputTemplate forwards a slot element to the inner Input; Input.valueStateLinks inspects element children, not assigned nodes of that slot.')
 
 for (const [card, keys] of [
-  ['H2 sorting and filters', ['CLEAR_SORTING', 'FILTER', 'FILTERED', 'SORT_ASCENDING', 'SORT_DESCENDING']],
   ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
   ['H4 tree, selection and row states', [
     'ALL_ROWS_DESELECTED', 'ALL_ROWS_DESELECTED_FILTERED', 'ALL_ROWS_SELECTED', 'ALL_ROWS_SELECTED_FILTERED',

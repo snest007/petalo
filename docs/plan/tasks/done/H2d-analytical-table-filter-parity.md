@@ -1,7 +1,7 @@
 # H2d — Restore AnalyticalTable built-in filter parity
 
 Continue on `codex/H2` in `.worktrees/H2` after E11. Merge local main first and keep its H2d card and H3 dependency.
-Budget is two hypotheses per failing check, about one hour, and zero pushes. See the [H2 return](../returns/H2.md).
+Budget is two hypotheses per failing check, about one hour, and zero pushes. See the [H2 return](../../returns/done/H2.md).
 
 ## Review findings
 
@@ -15,7 +15,7 @@ Budget is two hypotheses per failing check, about one hour, and zero pushes. See
    membership and numeric comparison. Keep the localized text matching required by H2 and test both controlled
    filters and updates through the custom Filter slot.
 3. The H2 main run failed at the ColorPalettePopover outside-pointer focus assertion. The reviewer reproduced
-   that failure on clean main and recorded it in [P2](P2-parity-value-pickers.md#review-finding).
+   that failure on clean main and recorded it in [P2](../P2-parity-value-pickers.md#review-finding).
 
 ## Acceptance
 
