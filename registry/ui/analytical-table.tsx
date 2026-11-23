@@ -823,10 +823,14 @@ export function AnalyticalTable<T extends RowData>({
               ]}
               filter={filterableHeader ? { text: texts.filter, content:
                 <div {...part("header-filter", "fiori-at-header-filter")}>
-                  <Icon icon={filterIcon} />
-                  <span id={filterId}>{texts.filter}</span>
-                  {def.Filter ? flexRender(def.Filter, { ...info(defaultFilter), column, value: filterText,
-                    setFilter: value => updateFilter(column, value), accessibleNameRef: filterId }) : defaultFilter}
+                  {/* WCR ColumnHeaderModal places the title and editor together in ListItemCustom's
+                      .ui5-li-content. The title from ui5-text has its own text wrapper. */}
+                  <div className="fiori-at-filter-content">
+                    <Icon icon={filterIcon} />
+                    <div className="fiori-at-filter-label" id={filterId}><span>{texts.filter}</span></div>
+                    {def.Filter ? flexRender(def.Filter, { ...info(defaultFilter), column, value: filterText,
+                      setFilter: value => updateFilter(column, value), accessibleNameRef: filterId }) : defaultFilter}
+                  </div>
                 </div>,
               } : undefined} /> : null
             const host = <div {...context.getHeaderProps(header)}>

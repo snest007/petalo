@@ -144,13 +144,13 @@ export function AnalyticalHeaderMenu({ id, anchorId, rtl, align, className, befo
     onClick={event => event.stopPropagation()}>
     {/* PopupTemplate.js wraps the list in a section with focus sentinels.
         ListTemplate.js nests .ui5-list-root, BusyIndicator and .ui5-list-container
-        around the menu and its focus areas. */}
+        around the menu and its focus areas with plain layout elements. */}
     <section>
       {guard}
-      <div role="generic" className="fiori-at-menu-container">
-        <div role="generic" className="fiori-at-menu-container">
-          <div role="generic" className="fiori-at-menu-container">
-            <div role="generic" className="fiori-at-menu-container">
+      <div className="fiori-at-menu-container">
+        <div className="fiori-at-menu-container">
+          <div className="fiori-at-menu-container">
+            <div className="fiori-at-menu-container">
               {guard}
               <ul role="menu">
                 {beforeFilter.map(renderAction)}

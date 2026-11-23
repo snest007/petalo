@@ -141,13 +141,18 @@ test("fixtures keep absolute indices, empty announcements and localized text", a
 })
 
 for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]) {
-  test(`fixtures axe in ${theme}`, async ({ page }) => {
-    await page.goto(`/index.html?fixtures&ref=wcr&theme=${theme}`)
-    await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
-    const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
-    expect(result.violations).toEqual([])
-  })
+  for (const dir of ["ltr", "rtl"]) {
+    test(`fixtures axe in ${theme} ${dir}`, async ({ page }) => {
+      const query = `theme=${theme}&dir=${dir}`
+      for (const path of [`/index.html?fixtures&ref=wcr&${query}`, `/wcr.html?${query}`]) {
+        await page.goto(path)
+        await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
+        const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
+          .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
+        expect(result.violations, path).toEqual([])
+      }
+    })
+  }
 }
 
 const sortDemo = (page: import("@playwright/test").Page, dir = "ltr") => page.locator(`#analytical-table-sort-filter-${dir}`)

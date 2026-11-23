@@ -25,6 +25,9 @@ function OpenColumnMenu({ children }: { children: React.ReactNode }) {
       // Pin the actual modal within the capture cell, independent of the opener's viewport position.
       pinWcrPopup(popup)
       popup.style.setProperty("position", "absolute", "important")
+      // The live popover escapes the transformed header's stacking context in the top layer.
+      // Raise that header container for the in-place capture so body cells paint below it.
+      popup.closest('[role="columnheader"]')?.parentElement?.style.setProperty("z-index", "1")
       popup.style.setProperty("inset-inline-start", "0", "important")
       popup.style.setProperty("inset-block-start", "100%", "important")
     }
@@ -61,7 +64,8 @@ export default defineFixtures({
   react: (props) => {
     const table = <AnalyticalTable accessibleName="Inventory" data={props.filtered ? [] : props.data ?? inventory}
         columns={headersFor(props.longHeader).map(({ key, label }, index) => ({
-          accessor: key, Header: label, width: props.widths?.[index],
+          accessor: key, Header: label,
+          ...(props.widths?.[index] === undefined ? {} : { width: props.widths[index] }),
           sticky: props.frozen && index === 0 ? "start" : undefined,
           ...(props.openHeaderMenu ? { Popover: (instance: Parameters<typeof ColumnHeaderModal>[0]) => (
             <ColumnHeaderModal {...instance} popoverProps={{ ...instance.popoverProps, openerRef: { current: null! }, openerId: "" }} />

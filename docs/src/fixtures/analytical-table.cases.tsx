@@ -47,7 +47,8 @@ const cases: [string, Case][] = [
   ["fixed", { data: inventory.slice(0, 2), countMode: "Fixed" }],
   ["auto-empty-rows", { data: inventory.slice(0, 2), countMode: "AutoWithEmptyRows", height: 205 }],
   ["interactive", { countMode: "Interactive" }],
-  ["loading", { data: [], loading: true }],
+  // WCR TablePlaceholder needs concrete widths before the grid has measured its columns.
+  ["loading", { data: [], loading: true, widths: [160, 160, 160] }],
   ["empty", { data: [] }],
   ["filtered", { filtered: true }],
   ["rtl", { rtl: true, frozen: true, widths: [140, 180, 220] }],
