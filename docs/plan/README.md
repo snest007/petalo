@@ -9,7 +9,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | E11, E11b, E12 | **E11b next** (merge review follow-up). E12 is independent. E9 cancelled 2026-11-20. |
+| E (quality infrastructure) | E1–E8, E4b, E5b, E10, E12 | E11, E11b | **E11b next** (merge review follow-up). E9 cancelled 2026-11-20. |
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
@@ -18,7 +18,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
 order → **H10**; **P2a** only right before **H6/H6b/H6c**. The remaining P cards, X cards and S5 follow once the new
-components are in. CI is a reminder, not a gate; see AGENTS.md "Verification budget" → "Current phase".
+components are in. CI serves as a reminder. See the [milestone and CI rules](RUN.md#milestones-and-pushing).
 Cancelled cards are kept in `tasks/cancelled/` with the reason.
 
 Returned cards keep their branch and worktree; their notes are in [`returns/`](returns/). Component defects found
@@ -134,7 +134,7 @@ F1 and F2 can run in parallel after F0.
 - [x] [E10 A missing registration fails in seconds, with one clear message](tasks/done/E10-fast-registration-failure.md) — S (any time; found 2026-11-23 reviewing H8: an unregistered new component took 40 min of noisy failures)
 - [ ] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/E11-ports-structural-diffs-popup-cells.md) — M (next; shared-file card; see [decisions](decisions.md) 2026-11-23)
 - [ ] [E11b Close the E11 review gaps](tasks/E11b-close-review-gaps.md) — S (same branch as E11)
-- [ ] [E12 Slim AGENTS.md without losing a rule](tasks/E12-slim-agents-md.md) — S (text only; any time, not in parallel with another card that edits AGENTS.md)
+- [x] [E12 Slim AGENTS.md without losing a rule](tasks/done/E12-slim-agents-md.md) — S (text only; any time, not in parallel with another card that edits AGENTS.md)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 
