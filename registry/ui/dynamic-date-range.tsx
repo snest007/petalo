@@ -242,13 +242,17 @@ function DynamicDateRangeField({
 
   function changeOpen(next: boolean) {
     if (open === undefined) setOpen(next)
-    if (!next) {
-      setActiveOperator(undefined)
-      setDraft(undefined)
-      returnTo.current = undefined
-    }
     onOpenChange?.(next)
   }
+
+  // Discard unsubmitted edits after the popup actually closes. A controlled
+  // opener can keep the surface open after an outside interaction.
+  React.useEffect(() => {
+    if (expanded) return
+    setActiveOperator(undefined)
+    setDraft(undefined)
+    returnTo.current = undefined
+  }, [expanded])
 
   function commit(next: DynamicDateRangeValue | null) {
     setRaw(undefined)
@@ -302,18 +306,18 @@ function DynamicDateRangeField({
   const preview = relative && selectedDates.length
     ? selectedDates.map(date => formatDate(date, resolvePattern("medium", locale, "date"), locale)).filter((date, i, dates) => i === 0 || date !== dates[i - 1]).join(interval)
     : draftText
-  const header = activeOperator && <div data-slot="dynamic-date-range-header" className={cn("fiori-ddr__header", classNames?.header)}>
+  const header = activeOperator && <header data-slot="dynamic-date-range-header" className={cn("fiori-ddr__header", classNames?.header)}>
     <Button type="button" variant="transparent" aria-label={texts.back} title={texts.back} data-ddr-back=""
       className={classNames?.back} onClick={() => { setActiveOperator(undefined); setDraft(undefined) }}><Icon icon={slimArrowLeft} /></Button>
     <Title>{rowLabel(activeOperator)}</Title>
-  </div>
-  const footer = activeOperator && <div role={phone ? "region" : undefined} aria-label={phone ? texts.phoneFooter : undefined} data-slot="dynamic-date-range-footer" className={cn("fiori-ddr__footer", classNames?.footer)}>
+  </header>
+  const footer = activeOperator && <footer role={phone ? "region" : undefined} aria-label={phone ? texts.phoneFooter : undefined} data-slot="dynamic-date-range-footer" className={cn("fiori-ddr__footer", classNames?.footer)}>
     <Button type="button" variant="emphasized" className={classNames?.submit} onClick={() => {
       if (draft && draftText && parseValue(draft.operator, draftText, context, activeCustom)) commit(draft)
       changeOpen(false)
     }}>{texts.submit}</Button>
     <Button type="button" variant="transparent" className={classNames?.close} onClick={() => changeOpen(false)}>{texts.close}</Button>
-  </div>
+  </footer>
   function toggleKey(event: React.KeyboardEvent, inside: boolean) {
     if (event.defaultPrevented || event.shiftKey || event.ctrlKey || event.metaKey) return
     const f4 = event.key === "F4" && !event.altKey
@@ -324,7 +328,7 @@ function DynamicDateRangeField({
     if (!expanded || inside || altArrow) changeOpen(!expanded)
   }
 
-  return <ResponsivePopover open={expanded} onOpenChange={changeOpen} dir={effectiveDir === "rtl" ? "rtl" : undefined}>
+  return <ResponsivePopover open={expanded} modal={portal} onOpenChange={changeOpen} dir={effectiveDir === "rtl" ? "rtl" : undefined}>
     <ResponsivePopoverAnchor asChild>
       <div dir={effectiveDir} data-slot="dynamic-date-range" data-open={expanded || undefined} className={cn("fiori-ddr", className, classNames?.root)}>
         <Input {...props} className={classNames?.field} ref={input} value={raw ?? formatted} disabled={disabled} readOnly={readOnly}
@@ -336,12 +340,18 @@ function DynamicDateRangeField({
             if (event.key === "Enter") commitInput()
           }}
           wrapperClassName="w-full" icon={<InputIcon data-slot="dynamic-date-range-trigger" data-pressed={expanded || undefined}
-            className={classNames?.trigger} role={phone ? "button" : undefined} aria-label={phone ? texts.popoverName : undefined} aria-roledescription={phone ? texts.iconRole : undefined} tabIndex={-1}
-            onMouseDown={event => event.preventDefault()} onClick={() => { if (!disabled && !readOnly) changeOpen(!expanded) }}><Icon icon={appointment2} /></InputIcon>} />
+            className={classNames?.trigger} tabIndex={-1}
+            onMouseDown={event => event.preventDefault()} onClick={() => { if (!disabled && !readOnly) changeOpen(!expanded) }}>
+            {/* InputTemplate.js wraps the slotted DynamicDateRangeInputTemplate icon.
+                Both hosts use tabindex=-1. F4/Alt+Arrow open the field from the textbox. */}
+            <span tabIndex={-1} role={phone ? "button" : undefined} aria-label={phone ? texts.popoverName : undefined}
+              aria-roledescription={phone ? texts.iconRole : undefined}><Icon icon={appointment2} /></span>
+          </InputIcon>} />
       </div>
     </ResponsivePopoverAnchor>
-    <ResponsivePopoverContent portal={portal} aria-label={texts.popoverName} aria-labelledby={undefined} side="bottom" align="start" hideArrow
+    <ResponsivePopoverContent portal={portal} aria-modal={true} aria-label={texts.popoverName} aria-labelledby={undefined} side="bottom" align="start" hideArrow
       dir={effectiveDir} ref={popup} className={cn("fiori-ddr__popover", classNames?.popover)} data-in-place={portal ? undefined : ""} phoneField phoneHeader={header || <></>} phoneFooter={footer}
+      onInteractOutside={event => { if (!portal) event.preventDefault() }}
       onOpenAutoFocus={event => { event.preventDefault(); if (portal) focusList() }}
       onCloseAutoFocus={event => { event.preventDefault(); if (portal) input.current?.focus() }}
       onKeyDown={event => { if (!(event.target as HTMLElement).closest("[data-slot=calendar]")) toggleKey(event, true) }}>
@@ -387,7 +397,7 @@ function DynamicDateRangeField({
         value={current ? listRows.filter(operator => operator === current.operator || (relativeOperators.has(operator) &&
           relativeOperators.get(operator)?.direction === relativeOperators.get(current.operator)?.direction)) : []}
         onItemClick={selectOption}>
-        {listRows.map(operator => <ListItemStandard key={operator} data-ddr-option={operator} value={operator} className={classNames?.option}
+        {listRows.map(operator => <ListItemStandard key={operator} data-ddr-option={operator} value={operator} className={cn("fiori-ddr__option", classNames?.option)}
           icon={Object.hasOwn(absolute, operator) ? appointment2 : undefined} iconEnd
           type={relativeOperators.has(operator) || Object.hasOwn(absolute, operator) || lookup(operator)?.renderEditor ? "navigation" : "active"}>
           {rowLabel(operator)}

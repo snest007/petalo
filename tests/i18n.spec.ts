@@ -15,7 +15,7 @@ import { auditFailure } from "../scripts/changed-scope.mjs"
 
 const de = JSON.parse(readFileSync("registry/i18n/de.json", "utf8"))
 const locales = ["de-DE", "zh-CN", "ar-EG"]
-const components = ["calendar", "date-picker", "date-time-picker", "time-picker", "step-input", "slider"]
+const components = ["calendar", "dynamic-date-range", "date-picker", "date-time-picker", "time-picker", "step-input", "slider"]
 const e5Evidence = process.env.E5_EVIDENCE ?? "test-results/i18n"
 
 interface AuditGroup { component: string; owner: string; reference?: "wcr"; rows: { key: string; source: string; status: string; english: string; englishSource: string; triage?: string }[] }

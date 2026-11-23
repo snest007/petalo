@@ -1,7 +1,7 @@
 {
   "title": "SelectDialog",
   "description": "Search a list in a dialog and confirm one or several choices.",
-  "registryDependencies": ["@petalo/button", "@petalo/dialog", "@petalo/list", "@petalo/locale", "@petalo/search"],
+  "registryDependencies": ["@petalo/button", "@petalo/dialog", "@petalo/icons", "@petalo/input", "@petalo/list", "@petalo/locale"],
   "usage": {
     "summary": "Search and select from a list with its own dialog and confirmation flow.",
     "useWhen": ["Choose one list item immediately or confirm several choices together.", "Show a focused list of suggestions with a separate search task."],

@@ -6,7 +6,9 @@ import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogBody, DialogContent, DialogFooter, DialogHeader, DialogTitle, type DialogContentProps } from "@/components/ui/dialog"
 import { List, ListItemStandard, type ListProps } from "@/components/ui/list"
-import { Search } from "@/components/ui/search"
+import { Icon } from "@/components/ui/icon"
+import { Input, InputIcon } from "@/components/ui/input"
+import { decline, search } from "@/lib/fiori-icons"
 import { collatorIncludes, useFioriLocale, useFioriTexts } from "@/lib/fiori-locale"
 import { cn } from "@/lib/utils"
 
@@ -103,6 +105,7 @@ function SelectDialog({
   const [searchState, setSearch] = React.useState(defaultSearchValue)
   const [announcement, setAnnouncement] = React.useState({ count: 0, sequence: 0 })
   const surface = React.useRef<HTMLDivElement>(null)
+  const searchField = React.useRef<HTMLInputElement>(null)
   const opener = React.useRef<HTMLElement | null>(null)
   const effectiveOpen = open ?? openState
   const selected = value ?? valueState
@@ -165,15 +168,31 @@ function SelectDialog({
           <DialogTitle className={cn("fiori-select-dialog__title", classNames?.title)}>{headerText}</DialogTitle>
           {showClearButton && <Button variant="transparent" className={cn("fiori-select-dialog__clear", classNames?.clear)}
             onClick={() => { onClear?.(selected); updateValue([]); setAnnouncement({ count: 0, sequence: 0 }) }}>{texts.clear}</Button>}
-          <Search locale={locale} className={cn("fiori-select-dialog__search", classNames?.search)}
-            value={query} open={false} noTypeahead showClearIcon placeholder={searchPlaceholder ?? texts.search}
-            accessibleName={searchPlaceholder ?? texts.search} texts={{ search: texts.search, clear: texts.clearSearch }}
-            onValueChange={next => {
-              if (!next && query) onSearchReset?.(query)
-              updateQuery(next)
-            }}
-            onSearch={({ value: term }) => onSearch?.(term)}
-          />
+          {/* WCR SelectDialog/index.js uses a Search-type Input. Its search glyph
+              responds to clicks and the field submits with Enter. */}
+          <div data-slot="search" className={cn("fiori-select-dialog__search", classNames?.search)}>
+            <Input ref={searchField} type="search" autoComplete="off"
+              value={query} placeholder={searchPlaceholder ?? texts.search}
+              aria-label={searchPlaceholder ?? texts.search}
+              onChange={event => {
+                const next = event.currentTarget.value
+                if (!next && query) onSearchReset?.(query)
+                updateQuery(next)
+              }}
+              onKeyDown={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) event.preventDefault() }}
+              onKeyUp={event => { if (event.key === "Enter" && !event.nativeEvent.isComposing) onSearch?.(event.currentTarget.value) }}
+              icon={<>
+                {query && <InputIcon role="button" tabIndex={-1} title={texts.clearSearch} aria-label={texts.clearSearch}
+                  onMouseDown={event => event.preventDefault()}
+                  onClick={() => { onSearchReset?.(query); updateQuery(""); searchField.current?.focus() }}
+                  onKeyDown={event => {
+                    if (event.key === "Enter" || event.key === " ") { event.preventDefault(); event.currentTarget.click() }
+                  }}><Icon icon={decline} /></InputIcon>}
+                <InputIcon tabIndex={-1} onMouseDown={event => event.preventDefault()}
+                  onClick={() => onSearch?.(query)}><span title={texts.search}><Icon icon={search} /></span></InputIcon>
+              </>}
+            />
+          </div>
         </div>
       </DialogHeader>
       <DialogBody role="region" aria-label={texts.body} className={cn("fiori-select-dialog__body", classNames?.body)}>
