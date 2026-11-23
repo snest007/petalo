@@ -29,6 +29,9 @@ export function caseOwner(caseId: string): string {
   if (!component) throw new Error(`No P-card owner for case ${caseId}`)
   return componentOwner(component)
 }
+// The test server's origin carries PORT (any free port per AGENTS.md), so link `url` mismatches would change
+// fingerprint with the port. Hash a port-independent line.
+export const portableLine = (line: string) => line.replace(/https?:\/\/(?:localhost|127\.0\.0\.1):\d+/g, "<origin>")
 export const entryKey = (entry: BaselineEntry) => JSON.stringify([entry.matrix, entry.caseId, entry.path, entry.kind])
 export function differenceEntry(key: string, line: string): BaselineEntry {
   const [engine, direction, ...id] = key.split("/")
@@ -48,7 +51,7 @@ export function differenceEntry(key: string, line: string): BaselineEntry {
   else if (details.startsWith("ours undefined; UI5 ") && /UI5 [\[{]/.test(details)) kind = "missing-node"
   else if (details.endsWith("; UI5 undefined") && /ours [\[{]/.test(details)) kind = "extra-node"
   else kind = "structure"
-  return { matrix: `${engine}/${direction}`, caseId, path, kind, owner: caseOwner(caseId), fingerprint: createHash("sha256").update(line).digest("hex") }
+  return { matrix: `${engine}/${direction}`, caseId, path, kind, owner: caseOwner(caseId), fingerprint: createHash("sha256").update(portableLine(line)).digest("hex") }
 }
 export function reportEntries(report: Record<string, any>): BaselineEntry[] {
   const entries: BaselineEntry[] = []

@@ -245,6 +245,9 @@ test("ratchet identities preserve semantic channels and reject capture errors", 
   expect(ratchetCase("webcomponents/ltr/button-default", ['/ax/0/role: ours "button"; UI5 "checkbox"'], baseline)[0]).toContain("changed mismatch")
   expect(ratchetCase("webcomponents/ltr/button-default", [], baseline)[0]).toContain("stale — delete it")
   expect(ratchetCase("webcomponents/ltr/button-default", ['/ax/0/name: ours "A"; UI5 "B"'], baseline)[0]).toContain("unlisted")
+  const url = (port: number) => `/ax/0/properties/url: ours "http://localhost:${port}/index.html?fixtures#"; UI5 "http://localhost:${port}/ui5.html#"`
+  expect(differenceEntry("webcomponents/ltr/link-default", url(4310)).fingerprint).toBe(differenceEntry("webcomponents/ltr/link-default", url(4350)).fingerprint)
+  expect(differenceEntry("webcomponents/ltr/link-default", url(4310)).fingerprint).not.toBe(differenceEntry("webcomponents/ltr/link-default", url(4310).replace("ui5.html", "other.html")).fingerprint)
   expect(() => reportEntries({ "phone/ltr/combobox-phone": { captured: false, differences: ["timeout"] } })).toThrow(/cannot be baselined/)
   expect(() => reportEntries({ "phone/ltr/combobox-phone": { captured: true, allowanceError: "invalid wrapper", differences: [] } })).toThrow(/cannot be baselined/)
 })
