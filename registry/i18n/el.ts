@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Αύξουσα",
   "wcr:OK": "ΟΚ",
   "wcr:PLEASE_WAIT": "Περιμένετε",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Πατήστε τα πλήκτρα ΒΕΛΟΥΣ για μετακίνηση",
   "wcr:RETRY": "Επαναληψη",
   "wcr:ROW_COLLAPSED": "Σειρά συνεπτύχθη",
   "wcr:ROW_DESELECTED": "Η σειρά αποεπιλέχθηκε",

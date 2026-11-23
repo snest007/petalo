@@ -16,7 +16,7 @@ export const groups: Record<string, string[]> = {
   P3: "table data-table list tree timeline upload-collection object-status object-number object-identifier".split(" "),
   P4: "dialog popover responsive-popover menu toast user-menu value-help-dialog view-settings-dialog adapt-filters-dialog".split(" "),
   P5: "avatar busy-indicator card carousel expandable-text hero-banner illustrated-message link media-gallery message-strip panel progress-indicator tag text title".split(" "),
-  P6: "bar breadcrumbs filter-bar notification-list product-switch search shell-bar side-navigation tabs toolbar variant-management wizard dynamic-page dynamic-side-content flexible-column-layout navigation-layout object-page page f6-navigation variants".split(" "),
+  P6: "bar breadcrumbs filter-bar notification-list product-switch search shell-bar side-navigation tabs toolbar variant-management wizard dynamic-page dynamic-side-content flexible-column-layout navigation-layout object-page page f6-navigation variants splitter-layout".split(" "),
 }
 export function componentOwner(component: string): string {
   const aliases: Record<string, string> = { shellbar: "shell-bar", "shellbar-search": "shell-bar", "calendar-legend": "calendar", "time-selection-inputs": "time-picker", icon: "text", icons: "text" }

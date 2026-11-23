@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Augošā secībā",
   "wcr:OK": "Labi",
   "wcr:PLEASE_WAIT": "Lūdzu, uzgaidiet",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Lai pārvietotu, nospiediet bulttaustiņus",
   "wcr:RETRY": "Mēģināt vēlreiz",
   "wcr:ROW_COLLAPSED": "Rinda sakļauta",
   "wcr:ROW_DESELECTED": "Rindas atlase noņemta",

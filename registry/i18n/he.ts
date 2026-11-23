@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "סדר עולה",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "יש להמתין",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "לחץ על מקשי החצים כדי להזיז",
   "wcr:RETRY": "נסה שוב",
   "wcr:ROW_COLLAPSED": "השורה צומצמה",
   "wcr:ROW_DESELECTED": "בוטלה בחירת שורה",

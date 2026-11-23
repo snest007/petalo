@@ -8,6 +8,7 @@
 | [navigation-layout](#navigation-layout) | Compose a full-screen header, vertical navigation and page content with responsive navigation visibility. |
 | [object-page](#object-page) | Compose one object’s categorized details with a dynamic header and anchor or tab navigation. |
 | [page](#page) | Hold one application screen with a header bar, scrolling content and optional floating or fixed footer. |
+| [splitter-layout](#splitter-layout) | Give users control over the space shared by adjacent content panes. |
 
 ## dynamic-page
 
@@ -66,6 +67,7 @@ Show up to three related pages in responsive list, detail and sub-detail columns
 
 ### Don't use when
 
+- Resize adjacent content panes without coordinating list and detail navigation. → [splitter-layout](layout.md#splitter-layout)
 - Show noncritical supporting context beside or below one task instead of navigating between related pages. → [dynamic-side-content](layout.md#dynamic-side-content)
 - Start from a complete searchable list, selected detail and sub-detail example. → [master-detail](floorplans.md#master-detail)
 - Read or edit one object across sections without a list-detail navigation hierarchy. → [object-page](layout.md#object-page)
@@ -145,4 +147,23 @@ Main exports: `Page`.
 
 ```bash
 npx shadcn add @petalo/page
+```
+
+## splitter-layout
+
+Give users control over the space shared by adjacent content panes.
+
+### Use when
+
+- Resize a preview beside an editor or above a related panel.
+- Set a minimum size on panes that need to remain usable while resizing.
+
+### Don't use when
+
+- Navigate among responsive list, detail and sub-detail pages. → [flexible-column-layout](layout.md#flexible-column-layout)
+
+Main exports: `SplitterElement`, `SplitterLayout`.
+
+```bash
+npx shadcn add @petalo/splitter-layout
 ```

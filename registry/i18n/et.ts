@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Kasvav",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Palun oodake",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Liikumiseks vajutage nooleklahve",
   "wcr:RETRY": "Proovi uuesti",
   "wcr:ROW_COLLAPSED": "Rida on ahendatud",
   "wcr:ROW_DESELECTED": "Rida on valikust eemaldatud",

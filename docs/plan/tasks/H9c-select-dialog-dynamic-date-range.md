@@ -2,7 +2,7 @@
 
 Continue on `codex/H9c` in `.worktrees/H9c` after H9, H9b and H9d merge. The branch preserves H9b's tip
 `966e1a4`. After merging local main, recover the SelectDialog-owned sources, registrations and usage routing
-from that tip. The original [H9 return](../returns/H9.md) records both components' checkpoint history.
+from that tip. The original [H9 return](../returns/done/H9.md) records both components' checkpoint history.
 
 ## Review findings
 

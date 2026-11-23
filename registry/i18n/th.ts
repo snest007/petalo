@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "จากน้อยไปหามาก",
   "wcr:OK": "ตกลง",
   "wcr:PLEASE_WAIT": "กรุณารอสักครู่",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "กดแป้นลูกศรเพื่อย้าย",
   "wcr:RETRY": "ลองใหม่",
   "wcr:ROW_COLLAPSED": "ย่อรวมแถวแล้ว",
   "wcr:ROW_DESELECTED": "ยกเลิกการเลือกแถวแล้ว",

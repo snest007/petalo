@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Растечко",
   "wcr:OK": "Во ред",
   "wcr:PLEASE_WAIT": "Почекајте",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Користете ги копчињата со СТРЕЛКИ за движење",
   "wcr:RETRY": "Обиди се повторно",
   "wcr:ROW_COLLAPSED": "Редот е скриен",
   "wcr:ROW_DESELECTED": "Поништен е изборот на редот",

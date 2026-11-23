@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Artan",
   "wcr:OK": "Tamam",
   "wcr:PLEASE_WAIT": "Bekleyin",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Taşımak için uygun OK tuşlarına basın",
   "wcr:RETRY": "Yeniden dene",
   "wcr:ROW_COLLAPSED": "Satır daraltıldı",
   "wcr:ROW_DESELECTED": "Satırın seçimi kaldırıldı",

@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 and follow-ups | **H2d and H9d are ready to run in parallel.** H3 follows H2d. H9c and H9e follow H9d. H7b continues on H7. |
+| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b), H9 (+H9b, H9d) | H2–H7, H9c, H9e, H10 and follow-ups | **H2d, H9c and H9e are eligible.** H3 follows H2d. H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -324,10 +324,10 @@ H6/H6b/H6c wait for P2a.
 - [ ] [H7b Input suggestions full-grid acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (same branch as H7)
 - [x] [H8 SplitButton, ButtonBadge, NumericInput](tasks/done/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
 - [x] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/done/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
-- [ ] [H9 SplitterLayout and CalendarLegend check](tasks/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d
-- [ ] [H9b Finish H9 parity](tasks/H9b-finish-h9-parity.md) — see the [H9 return](returns/H9.md) for the owner split
+- [x] [H9 SplitterLayout and CalendarLegend check](tasks/done/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d
+- [x] [H9b Finish H9 parity](tasks/done/H9b-finish-h9-parity.md) — see the [H9 return](returns/done/H9.md) for the owner split
 - [ ] [H9c SelectDialog parity](tasks/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
-- [ ] [H9d SplitterLayout: automatic pane sizing](tasks/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
+- [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
 - [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
 - [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
 

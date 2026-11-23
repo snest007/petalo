@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "오름차순",
   "wcr:OK": "확인",
   "wcr:PLEASE_WAIT": "잠시 기다려 주십시오.",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "화살표 키를 눌러 이동",
   "wcr:RETRY": "재시도",
   "wcr:ROW_COLLAPSED": "행 접음",
   "wcr:ROW_DESELECTED": "행이 선택 취소됨",

@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "升冪",
   "wcr:OK": "確定",
   "wcr:PLEASE_WAIT": "請稍候",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "按箭頭鍵以移動",
   "wcr:RETRY": "重試",
   "wcr:ROW_COLLAPSED": "已收合列",
   "wcr:ROW_DESELECTED": "已取消選擇列",

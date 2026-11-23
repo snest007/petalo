@@ -148,6 +148,9 @@ for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) 
   }
 }
 
+verifiedTexts["splitter-layout.PRESS_ARROW_KEYS_TO_MOVE"] = { equivalent: "SplitterLayout.texts.keyboardHint", status: "ok",
+  proof: "tests/splitter-layout.spec.ts: SplitterLayout keyboard bounds and steps" }
+
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {
   const manifestPath = `node_modules/${pkg}/dist/custom-elements.json`
@@ -176,6 +179,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/TableCustomAnnouncement.js", "table"],
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
 ]) sourceFiles.set(file, owner)
 const textRows = [], announcements = []
 for (const [file, owner] of sourceFiles) {

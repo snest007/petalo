@@ -2547,7 +2547,7 @@ Owner: H9
 
 | SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-
+| wcr:PRESS_ARROW_KEYS_TO_MOVE | Press ARROW keys to move | splitter-layout: owning t() text expression | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js:8 (WCR key import) | wcr |
 
 ## step-input
 

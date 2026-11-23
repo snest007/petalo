@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Ascendente",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Espere",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Presione las teclas de FLECHA para mover",
   "wcr:RETRY": "Reintentar",
   "wcr:ROW_COLLAPSED": "Fila contraída",
   "wcr:ROW_DESELECTED": "Fila sin seleccionar",

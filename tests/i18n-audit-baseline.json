@@ -1647,5 +1647,12 @@
       "WIZARD_STEP_ARIA_LABEL",
       "WIZARD_STEP_INACTIVE"
     ]
+  },
+  "splitter-layout": {
+    "owner": "H9",
+    "gapCount": 0,
+    "okKeys": [
+      "wcr:PRESS_ARROW_KEYS_TO_MOVE"
+    ]
   }
 }

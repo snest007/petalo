@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Tăng dần",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Vui lòng chờ",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Nhấn phím MŨI TÊN để chuyển",
   "wcr:RETRY": "Thử lại",
   "wcr:ROW_COLLAPSED": "Hàng được thu gọn",
   "wcr:ROW_DESELECTED": "Hàng được bỏ chọn",

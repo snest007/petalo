@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Stigende",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Vent",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Tryk på de relevante piletaster for at flytte",
   "wcr:RETRY": "Gentag",
   "wcr:ROW_COLLAPSED": "Række skjult",
   "wcr:ROW_DESELECTED": "Række fravalgt",

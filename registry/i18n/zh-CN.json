@@ -633,6 +633,7 @@
   "wcr:NUMERICCONTENT_DEVIATION_UP": "升序",
   "wcr:OK": "确定",
   "wcr:PLEASE_WAIT": "请稍候",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "按箭头键进行移动",
   "wcr:RETRY": "重试",
   "wcr:ROW_COLLAPSED": "行已折叠",
   "wcr:ROW_DESELECTED": "已取消选择行",

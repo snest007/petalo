@@ -1,6 +1,6 @@
 # H9 — SelectDialog, SplitterLayout, DynamicDateRange, CalendarLegend check
 
-The [owner split recorded in the H9 return](../returns/H9.md#owner-split) limits H9 and H9b to SplitterLayout and
+The [owner split recorded in the H9 return](../../returns/done/H9.md#owner-split) limits H9 and H9b to SplitterLayout and
 CalendarLegend. [H9d](H9d-splitter-layout-auto-sizing.md) carries the reviewer’s remaining findings for that delivery.
 
 **Goal:** add the components below from issue #1's list. Depends on: H0, E4 and E5 (merged). Can run in parallel with H1–H6 and with

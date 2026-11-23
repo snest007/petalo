@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Aufsteigend",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Bitte warten",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Zum Verschieben drücken Sie die entsprechenden PFEIL-Tasten",
   "wcr:RETRY": "Wiederholen",
   "wcr:ROW_COLLAPSED": "Zeile komprimiert.",
   "wcr:ROW_DESELECTED": "Zeile entmarkiert",

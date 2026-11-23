@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Rastuće",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Sačekajte",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Pritisnite STRELICE na tastaturi za kretanje",
   "wcr:RETRY": "Pokušaj ponovo",
   "wcr:ROW_COLLAPSED": "Red sažet",
   "wcr:ROW_DESELECTED": "Odabir reda poništen",

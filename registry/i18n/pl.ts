@@ -636,6 +636,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Rosnąco",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Czekaj",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Aby przesunąć, użyj klawiszy ze strzałkami",
   "wcr:RETRY": "Ponów",
   "wcr:ROW_COLLAPSED": "Zwinięto wiersz",
   "wcr:ROW_DESELECTED": "Odznaczono wiersz",

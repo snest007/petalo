@@ -2,7 +2,7 @@
 
 Continue on `codex/H9` in `.worktrees/H9` after E11. Merge local main first. Keep its H9c and H9e scopes and
 leave H9 and H9b open during verification. Budget is two hypotheses per failing check, about one hour, and zero
-pushes. See the [H9 return](../returns/H9.md) for the owner split and previous checks.
+pushes. See the [H9 return](../../returns/done/H9.md) for the owner split and previous checks.
 
 ## Review findings
 

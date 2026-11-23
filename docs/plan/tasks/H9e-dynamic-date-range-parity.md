@@ -2,7 +2,7 @@
 
 Start `codex/H9e` in `.worktrees/H9e` from local main after H9, H9b and H9d merge. Restore the DynamicDateRange
 component, fixtures, tests, stories and related inventory and usage-routing entries from preserved commit
-`966e1a4`. The [H9 return](../returns/H9.md) records the checkpoint and evidence.
+`966e1a4`. The [H9 return](../returns/done/H9.md) records the checkpoint and evidence.
 
 ## Review findings
 

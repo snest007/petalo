@@ -1,0 +1,84 @@
+/* Derived from WCR 2.28.2 Splitter.module.css, © SAP SE or an SAP affiliate
+   company and contributors. SPDX-License-Identifier: Apache-2.0. */
+
+.fiori-splitter-layout { display: flex; overflow: hidden; position: relative; }
+.fiori-splitter-layout[data-orientation="vertical"] { flex-direction: column; }
+.fiori-splitter-element { display: flex; overflow: hidden; position: relative; min-width: 0; min-height: 0; }
+
+.fiori-splitter-separator {
+  touch-action: none;
+  position: relative;
+  display: flex;
+  flex: 0 0 var(--fiori-wcr-x-splittersize);
+  min-inline-size: 0;
+  min-block-size: 0;
+  background-color: var(--sapShell_Background);
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+.fiori-splitter-separator:focus-visible {
+  outline: var(--fiori-wcr-splitter-baroutline);
+  outline-offset: -.2rem;
+}
+.fiori-splitter-separator[aria-orientation="horizontal"] {
+  flex-direction: column;
+  cursor: col-resize;
+  border-inline: var(--fiori-wcr-splitter-barborderstyle);
+}
+.fiori-splitter-separator[aria-orientation="horizontal"]:focus-visible {
+  border-block: var(--fiori-wcr-splitter-barborderhighcontrastfix);
+  border-inline: var(--fiori-wcr-splitter-barborderfocus);
+}
+.fiori-splitter-separator[aria-orientation="vertical"] {
+  cursor: row-resize;
+  border-block: var(--fiori-wcr-splitter-barborderstyle);
+}
+.fiori-splitter-separator[aria-orientation="vertical"]:focus-visible {
+  border-block: var(--fiori-wcr-splitter-barborderfocus);
+  border-inline: var(--fiori-wcr-splitter-barborderhighcontrastfix);
+}
+.fiori-splitter-separator [data-slot="splitter-line"] {
+  background-position: center;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(var(--splitter-line-direction), var(--fiori-wcr-splitter-contentbordercolor), transparent);
+}
+.fiori-splitter-separator[aria-orientation="horizontal"] [data-slot="splitter-line"] {
+  background-size: .0625rem 100%;
+  width: var(--fiori-wcr-x-splittersize);
+  height: 4rem;
+}
+.fiori-splitter-separator[aria-orientation="horizontal"] [data-side="before"] { --splitter-line-direction: to top; }
+.fiori-splitter-separator[aria-orientation="horizontal"] [data-side="after"] { --splitter-line-direction: to bottom; }
+.fiori-splitter-separator[aria-orientation="vertical"] [data-slot="splitter-line"] {
+  background-size: 100% .0625rem;
+  width: 5rem;
+  height: var(--fiori-wcr-x-splittersize);
+}
+.fiori-splitter-separator[aria-orientation="vertical"] [data-side="before"],
+.fiori-splitter-separator[aria-orientation="vertical"]:dir(rtl) [data-side="after"] { --splitter-line-direction: to left; }
+.fiori-splitter-separator[aria-orientation="vertical"] [data-side="after"],
+.fiori-splitter-separator[aria-orientation="vertical"]:dir(rtl) [data-side="before"] { --splitter-line-direction: to right; }
+.fiori-splitter-separator:hover [data-slot="splitter-line"] { flex-grow: 1; transition: all .1s ease-in; }
+.fiori-splitter-separator [data-slot="splitter-grip"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  color: var(--fiori-wcr-splitter-iconcolor);
+  pointer-events: none;
+}
+.fiori-splitter-separator[aria-orientation="horizontal"] [data-slot="splitter-grip"] { width: 1.5rem; height: 2rem; }
+.fiori-splitter-separator[aria-orientation="vertical"] [data-slot="splitter-grip"] { width: 2rem; height: 1.5rem; }
+/* WCR draws its high-contrast grip with a transparent Button. On a
+   separator the grip is decorative, so reproduce its paint without a nested tab stop. */
+:is([data-theme="sap_horizon_hcb"], [data-theme="sap_horizon_hcw"]) .fiori-splitter-separator [data-slot="splitter-grip"] > svg {
+  box-sizing: content-box;
+  border: var(--sapButton_BorderWidth) solid var(--sapButton_Lite_BorderColor);
+  border-radius: var(--sapButton_BorderCornerRadius);
+  background: var(--sapButton_Lite_Background);
+  padding: .25rem .1875rem;
+}
+:is([data-theme="sap_horizon_hcb"], [data-theme="sap_horizon_hcw"]) .fiori-splitter-separator[aria-orientation="vertical"] [data-slot="splitter-grip"] > svg {
+  padding: .1875rem .25rem;
+}

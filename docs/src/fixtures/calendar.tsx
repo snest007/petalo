@@ -17,6 +17,7 @@ export type CalendarFixture = {
   picker?: CalendarPicker
   announcementText?: string
   special?: boolean
+  legendOnly?: "defaults" | "custom"
 }
 
 /** yyyy-MM-dd -> local Date */
@@ -35,7 +36,14 @@ export const SPECIAL: { value: string; type: SpecialDate["type"] }[] = [
 // Today marker: every dated case shows March 2024, far from the real today, so neither side marks a
 // day as today. "calendar-today" has no selection: both sides show the current month (the same system
 // clock) with today marked, so the marker itself is compared too.
-const renderFixture: import("../fixture-types").FixtureSet<CalendarFixture>["react"] = ({ locale, dates = [], mode = "single", min, max, hideWeekNumbers, picker, special, announcementText }) => (
+export const CUSTOM_LEGEND = [{ type: "Type17", text: "Delivery" }, { type: "Type20", text: "Stocktake" }] as const
+
+const renderFixture: import("../fixture-types").FixtureSet<CalendarFixture>["react"] = ({ locale, dates = [], mode = "single", min, max, hideWeekNumbers, picker, special, announcementText, legendOnly }) => legendOnly ? (
+    <CalendarLegend hideToday={legendOnly === "custom"} hideSelectedDay={legendOnly === "custom"}
+      hideWorkingDay={legendOnly === "custom"} hideNonWorkingDay={legendOnly === "custom"}>
+      {legendOnly === "custom" && CUSTOM_LEGEND.map(item => <CalendarLegendItem key={item.type} {...item} />)}
+    </CalendarLegend>
+  ) : (
     <Calendar
       locale={locale}
       aria-label={locale ? "Calendar" : undefined}
@@ -193,6 +201,8 @@ export default defineFixtures<CalendarFixture>({
     { id: "calendar-multiple", props: { mode: "multiple", dates: ["2024-03-05", "2024-03-06", "2024-03-21"] } },
     { id: "calendar-min-max", props: { dates: ["2024-03-12"], min: "2024-03-08", max: "2024-03-25" } },
     { id: "calendar-no-week-numbers", props: { dates: ["2024-03-12"], hideWeekNumbers: true } },
+    { id: "calendar-legend-defaults", props: { legendOnly: "defaults" } },
+    { id: "calendar-legend-custom-only", props: { legendOnly: "custom" } },
     { id: "calendar-special", props: { dates: ["2024-03-12"], special: true } },
     { id: "calendar-month-picker", props: { dates: ["2024-03-12"], picker: "month" } },
     { id: "calendar-year-picker", props: { dates: ["2024-03-12"], picker: "year" } },
