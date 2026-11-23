@@ -1,5 +1,9 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator } from "@playwright/test"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { build } from "vite"
+import { aliases } from "../vite.aliases"
 
 const cell = (grid: Locator, row: number, column: number) => grid.locator(`[data-grid-row="${row}"][data-grid-column="${column}"]`)
 const resizer = (grid: Locator, id: string) => grid.locator(`[data-slot="analytical-table-resizer"][data-column="${id}"]`)
@@ -266,4 +270,86 @@ test("controlled sorting and the custom Filter renderer keep the owned menu and 
   const values = await grid.locator('[role="gridcell"][data-column-id="stock"]').allTextContents()
   const digits = values.map(value => Number(value) % 10)
   expect(digits).toEqual([...digits].sort((a, b) => a - b))
+})
+
+test("fixtures: built-in filters accept string cells from controlled state and custom editors", async ({ page }) => {
+  const entry = resolve("analytical-table-filter-test.js")
+  const virtual = "\0analytical-table-filter-test"
+  const source = `
+    import { createElement as h, useState } from "react";
+    import { createRoot } from "react-dom/client";
+    import { AnalyticalTable } from "@/components/ui/analytical-table";
+
+    const { values, filter, query, locale } = window.filterCase;
+    const data = values.map(value => ({ value }));
+    const columns = [{
+      accessorKey: "value", header: "Value", width: 180, filter,
+      cell: ({ value }) => String(value),
+      Filter: ({ value, setFilter, accessibleNameRef }) => h("select", {
+        value: value === undefined ? "" : "match", "aria-labelledby": accessibleNameRef,
+        onChange: event => setFilter(event.target.value ? query : undefined)
+      }, h("option", { value: "" }, "Show all"), h("option", { value: "match" }, "Apply filter"))
+    }];
+
+    function FilterExample() {
+      const [filters, setFilters] = useState([{ id: "value", value: query }]);
+      return h(AnalyticalTable, {
+        columns, data, filterable: true, locale, columnFilters: filters, onColumnFiltersChange: setFilters,
+        "aria-label": "Filtered values", visibleRows: values.length, minRows: 1
+      });
+    }
+
+    createRoot(document.getElementById("filter-example")).render(h(FilterExample));
+  `
+  const bundle = await build({
+    configFile: false, publicDir: false, logLevel: "silent", resolve: { alias: aliases },
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    plugins: [{ name: "analytical-table-filter-test", resolveId: id => id === entry ? virtual : undefined,
+      load: id => id === virtual ? source : undefined }],
+    build: { write: false, lib: { entry, formats: ["iife"], name: "AnalyticalTableFilterTest" } },
+  })
+  const output = Array.isArray(bundle) ? bundle[0] : bundle
+  const script = "output" in output && output.output.find(file => file.type === "chunk")?.code
+  if (!script) throw new Error("Missing AnalyticalTable filter test bundle")
+  const css = readFileSync("dist/index.html", "utf8").match(/href="([^"]+\.css)"/)?.[1]
+  if (!css) throw new Error("Missing AnalyticalTable fixture stylesheet")
+
+  const errors: string[] = []
+  page.on("pageerror", error => errors.push(error.message))
+  const textValues = ["SAP Fiori", "SAP Analytics", "Other"]
+  const cases = [
+    // Reference values from WCR AnalyticalTable/react-table/filterTypes.js.
+    { filter: "includesAll", values: textValues, query: ["SAP", "Fiori"], matches: ["SAP Fiori"] },
+    { filter: "includesSome", values: textValues, query: ["Fiori", "Other"], matches: ["SAP Fiori", "Other"] },
+    { filter: "between", values: ["2", "10", "20"], query: [1, 12], matches: ["2", "10"] },
+    { filter: "includesAll", values: ["Äland Süd", "Aland Nord"], query: ["aland", "sud"], matches: ["Äland Süd"], locale: "de-DE" },
+    { filter: "includesSome", values: [["SAP", "Fiori"], ["SAP", "Analytics"], ["Other"]], query: ["Fiori", "Other"], matches: ["SAP,Fiori", "Other"] },
+    { filter: "between", values: ["2,5", "10,5", "20,5"], query: [12, 1], matches: ["2,5", "10,5"], locale: "de-DE" },
+  ]
+  for (const filterCase of cases) {
+    await test.step(`${filterCase.filter}: ${filterCase.values.join(" / ")}`, async () => {
+      const path = "/analytical-table-filter-test.html"
+      await page.route("**" + path, route => route.fulfill({ contentType: "text/html; charset=utf-8", body: `<!doctype html>
+        <html lang="en" data-theme="sap_horizon"><head><link rel="stylesheet" href="${css}"></head>
+        <body><main id="filter-example"></main><script>window.filterCase = ${JSON.stringify(filterCase)};</script>
+        <script>${script.replaceAll("</script", "<\\/script")}</script></body></html>` }))
+      await page.goto(path)
+      const grid = page.getByRole("grid", { name: "Filtered values" })
+      const values = grid.getByRole("gridcell")
+      await expect(grid, errors.join("\n")).toBeVisible()
+      await expect(values).toHaveText(filterCase.matches)
+      const header = grid.getByRole("columnheader")
+      await expect(header).toHaveAccessibleName("Value Filtered")
+      await header.press("Enter")
+      const editor = grid.getByRole("combobox", { name: "Filter" })
+      await editor.selectOption("")
+      await expect(values).toHaveText(filterCase.values.map(String))
+      await expect(header).toHaveAccessibleName("Value")
+      await editor.selectOption("match")
+      await expect(values).toHaveText(filterCase.matches)
+      await expect(header).toHaveAccessibleName("Value Filtered")
+      await page.unroute("**" + path)
+    })
+  }
+  expect(errors).toEqual([])
 })

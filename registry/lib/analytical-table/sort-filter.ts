@@ -52,8 +52,15 @@ function testValue(value: unknown, query: unknown, locale: string, filter: Filte
     case "exactText": return value === undefined || new Intl.Collator(locale, { sensitivity: "base" }).compare(String(value), String(query)) === 0
     case "exactTextCase": return value === undefined || String(value) === String(query)
     case "includes": return Array.isArray(value) ? value.includes(query) : typeof value === "string" && collatorIncludes(value, String(query), locale)
-    case "includesAll": return Array.isArray(value) && Array.isArray(query) && query.every(item => value.includes(item))
-    case "includesSome": return Array.isArray(value) && Array.isArray(query) && query.some(item => value.includes(item))
+    case "includesAll":
+    case "includesSome": {
+      // WCR filterTypes.includesAll/includesSome call includes on both arrays and strings.
+      if (!Array.isArray(query) || !(typeof value === "string" || Array.isArray(value)) || !value.length) return false
+      const includes = (item: unknown) => Array.isArray(value)
+        ? value.includes(item)
+        : collatorIncludes(value, String(item), locale)
+      return filter === "includesAll" ? query.every(includes) : query.some(includes)
+    }
     case "includesValue": return Array.isArray(query) && query.includes(value)
     case "exact": return value === query
     case "equals": return value == query // WCR filterTypes.equals admits coercive equality.
@@ -62,7 +69,13 @@ function testValue(value: unknown, query: unknown, locale: string, filter: Filte
       const [a, b] = query
       const min = typeof a === "number" ? a : -Infinity
       const max = typeof b === "number" ? b : Infinity
-      return typeof value === "number" && value >= Math.min(min, max) && value <= Math.max(min, max)
+      // WCR filterTypes.between coerces numeric strings in its inclusive comparison.
+      let number = value
+      if (typeof value === "string" && value.trim()) {
+        const localized = parseNumber(value, locale)
+        number = Number.isNaN(localized) ? Number(value) : localized
+      }
+      return typeof number === "number" && number >= Math.min(min, max) && number <= Math.max(min, max)
     }
   }
 }
