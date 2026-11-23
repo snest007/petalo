@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 and follow-ups | **H2d and H9d run in parallel after E11.** H3 follows H2d. H9c and H9e follow H9d. H7 review is pending. |
+| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 and follow-ups | **H2d and H9d run in parallel after E11.** H3 follows H2d. H9c and H9e follow H9d. H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -321,6 +321,7 @@ H6/H6b/H6c wait for P2a.
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
 - [ ] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
+- [ ] [H7b Input suggestions full-grid acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (same branch as H7)
 - [x] [H8 SplitButton, ButtonBadge, NumericInput](tasks/done/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
 - [x] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/done/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
 - [ ] [H9 SplitterLayout and CalendarLegend check](tasks/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d
