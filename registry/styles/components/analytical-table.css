@@ -96,6 +96,7 @@
   background: var(--sapList_Active_Background);
 }
 .fiori-at-header-content {
+  position: relative;
   display: flex;
   align-items: center;
   height: 100%;

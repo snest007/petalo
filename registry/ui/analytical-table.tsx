@@ -650,6 +650,8 @@ export function AnalyticalTable<T extends RowData>({
             const extra = menuItems.get(column.id) ?? []
             const content = flexRender(def.header, { ...header.getContext(), ...info(typeof def.header === "string" ? def.header : column.id) }) ?? column.id
             const host = <div {...context.getHeaderProps(header)}>
+              {/* WCR ColumnHeader/index.js: classes.header contains the title renderer and
+                  classes.iconContainer as siblings inside the positioned content wrapper. */}
               <div {...part("header-content", "fiori-at-header-content")} style={{ textAlign: def.hAlign?.toLowerCase() as React.CSSProperties["textAlign"] }}>
                 <div className="fiori-at-header-text" title={def.headerTooltip ?? (typeof content === "string" ? content : undefined)}>{content}</div>
                 <div className="fiori-at-header-icons" />

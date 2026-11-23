@@ -2,6 +2,9 @@
 import type { ComponentPropsWithRef } from "react"
 import { cn } from "@/lib/utils"
 
+// Bundlers inline NODE_ENV without requiring Node types in browser projects.
+declare const process: { env: { NODE_ENV?: string } }
+
 export type HostProps = ComponentPropsWithRef<"div">
 
 // The layout and content extension surfaces use the same semantic host contract.
@@ -14,7 +17,7 @@ export function mergeHost(part: string, owned: HostProps, ...extras: (HostProps 
       if (/^(role|id|tabindex|draggable|data-slot|dangerouslysetinnerhtml)$/i.test(key) ||
         (key.startsWith("aria-") && !["aria-describedby", "aria-details"].includes(key)) ||
         (key.startsWith("data-") && key in owned)) {
-        if (import.meta.env?.DEV || (typeof process !== "undefined" && process.env.NODE_ENV !== "production")) {
+        if (process.env.NODE_ENV !== "production") {
           console.warn(`AnalyticalTable ${part}: ignored owned prop "${key}".`)
         }
       } else if (key === "aria-describedby") {
