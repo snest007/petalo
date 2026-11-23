@@ -1,0 +1,68 @@
+/* Derived from WCR 2.28.2 SelectDialog.module.css, © SAP SE or an SAP affiliate
+   company and contributors. SPDX-License-Identifier: Apache-2.0. */
+.fiori-select-dialog { width: min(30rem, calc(100vw - 2rem)); }
+.fiori-select-dialog .fiori-select-dialog__header { padding-block-end: .25rem; flex-direction: column; }
+.fiori-select-dialog__grid {
+  display: grid;
+  grid-template-columns: fit-content(100px) minmax(0, 1fr) fit-content(100px);
+  grid-template-areas: "start center clear" "search search search";
+  grid-template-rows: var(--fiori-wcr-x-dialogheaderheight) var(--fiori-wcr-x-dialogsubheaderheight);
+  width: 100%;
+  align-items: center;
+}
+.fiori-select-dialog__title {
+  grid-column: start / clear;
+  display: block;
+  height: auto;
+  line-height: normal;
+  font-size: var(--sapFontLargeSize);
+  font-family: var(--sapFontHeaderFamily);
+}
+.fiori-select-dialog__grid[data-centered] .fiori-select-dialog__title { grid-area: center; justify-self: center; }
+.fiori-select-dialog__balance { grid-area: start; visibility: hidden; }
+.fiori-select-dialog__clear { grid-area: clear; justify-self: end; }
+.fiori-select-dialog__search.fiori-search:not([data-collapsed]) {
+  grid-area: search;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: var(--fiori-input-height);
+  border: var(--sapField_BorderWidth) solid var(--sapField_BorderColor);
+  border-radius: var(--fiori-input-border-radius);
+  box-shadow: var(--sapField_Shadow);
+  background-color: var(--sapField_Background);
+}
+.fiori-select-dialog__search .fiori-search__input {
+  padding: var(--fiori-input-inner-padding-with-icon);
+  border: 0;
+  background: transparent;
+  color: var(--sapField_TextColor);
+}
+.fiori-select-dialog__search .fiori-search__input::placeholder { font-style: normal; padding: 0; }
+.fiori-select-dialog__search .fiori-search__icon {
+  width: var(--fiori-input-icon-width);
+  min-width: 0;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--fiori-input-icon-color);
+}
+.fiori-select-dialog__search .fiori-search__icon:hover { background: var(--fiori-input-icon-hover-bg); }
+.fiori-select-dialog .fiori-select-dialog__body.fiori-popup__content { padding: 0; }
+.fiori-select-dialog__count {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  box-sizing: content-box;
+  height: 2rem;
+  padding-inline-start: var(--fiori-wcr-x-checkboxpaddinginline);
+  color: var(--sapList_TextColor);
+  background: var(--sapInfobar_NonInteractive_Background);
+  border-block-end: .0625rem solid var(--sapGroup_TitleBorderColor);
+  overflow: hidden;
+}
+.fiori-select-dialog .fiori-select-dialog__footer > * { margin-inline: .5rem 0; }
