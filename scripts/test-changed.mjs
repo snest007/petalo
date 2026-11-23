@@ -4,6 +4,7 @@ import { copyFileSync, existsSync, globSync, mkdirSync, mkdtempSync, readdirSync
 import { tmpdir } from "node:os"
 import { dirname, join, resolve } from "node:path"
 import { pathToFileURL } from "node:url"
+import { checkExplicitPorts } from "./free-port.mjs"
 import { ensureStorybookBuild, testSummary } from "./test-milestone.mjs"
 import { auditFailure, classifyChanges, componentFixtureFiles, componentVisualSpecs, registrationOwnerProblems } from "./changed-scope.mjs"
 
@@ -146,6 +147,12 @@ if (!args.length && !storyNames.size && !storySpecs.size) {
   console.error("No affected specs or paired visual fixtures found: run the full suite.")
   process.exit(1)
 }
+const portNames = [
+  ...(args.length ? ["PORT", "SAPUI5_PORT"] : []),
+  ...(storyNames.size || storySpecs.size ? ["STORYBOOK_PORT"] : []),
+]
+if (!await checkExplicitPorts(process.env, portNames)) process.exit(1)
+
 const started = Date.now()
 const filter = [...names].join(",")
 const visualFilter = [...visualNames].join(",")
@@ -157,13 +164,12 @@ if (args.length) {
 }
 if (storyNames.size || storySpecs.size) {
   if (!ensureStorybookBuild()) process.exit(1)
-  const port = process.env.STORYBOOK_PORT ?? "4320"
   // Keep changed regression specs unfiltered; STORYBOOK_ONLY applies only to the generic loop.
   const storyFilter = [...storyNames].join(",")
   const selected = [...(storyNames.size ? ["tests-storybook/storybook.spec.ts"] : []), ...storySpecs]
   console.log(`Affected Storybook specs: ${selected.join(", ")}${storyFilter ? ` | STORYBOOK_ONLY=${storyFilter}` : ""}`)
   const result = testSummary(["-c", "playwright.storybook.config.ts", ...selected, ...process.argv.slice(2)], {
-    env: { ...env, PORT: port, STORYBOOK_ONLY: storyFilter || undefined },
+    env: { ...env, PORT: undefined, STORYBOOK_ONLY: storyFilter || undefined },
   })
   ok &&= result.ok
 }

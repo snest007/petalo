@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
+import { assertPopupsInCells } from "./visual-popup-cell"
 
 
 const THEMES = ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
@@ -43,6 +44,7 @@ async function shoot(page: Page, url: string, ids?: string[]): Promise<Map<strin
     await page.evaluate(() => { document.documentElement.style.direction = "ltr" })
     await expect(page.locator("[data-fixture]").first()).toHaveCSS("direction", "rtl")
   }
+  await assertPopupsInCells(page)
   const boxes: { id: string; x: number; y: number; w: number; h: number }[] = await page.locator("[data-fixture]").evaluateAll((els) =>
     els.map((e) => {
       const r = e.getBoundingClientRect()

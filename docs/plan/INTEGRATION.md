@@ -31,7 +31,8 @@ On the card's branch / worktree:
 For every failing check, find the cause before writing anything:
 
 - **Accessibility tree:** read the case's capture (`test-results/a11y-tree-wcr/<dir>-<case>.json` or
-  `test-results/a11y-tree-report.json`), group the differences by kind (role/name/state vs. wrapper/nesting), and
+  `test-results/a11y-latest/a11y-tree-report.json` when using `pnpm test:summary`), group by kind
+  (role/name/state vs. wrapper/nesting), and
   locate the reference template (`node_modules/@ui5/webcomponents*/dist/<Name>Template.js`, WCR
   `dist/components/<Name>/**`). Structural-only → may be recorded under the new-component rule. Semantic → must be fixed.
 - **Pixels:** isolated (`only=`) vs. full grid. If only the full grid fails, or unrelated components fail on the

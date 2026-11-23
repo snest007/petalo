@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
+import { assertPopupsInCells } from "./visual-popup-cell"
 
 const themes = ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
 const densities = ["cozy", "compact"]
@@ -13,6 +14,7 @@ async function loadFixtures(page: Page, path: string) {
   await page.goto(path)
   await page.waitForSelector("html[data-ready=true]", { timeout: 60_000 })
   await page.mouse.move(0, 0)
+  await assertPopupsInCells(page)
   const fixtures: CaseInfo[] = await page.evaluate(() => (window as any).__fixtures)
   const ids = await page.locator("[data-fixture]").evaluateAll((cells) => cells.map((cell) => (cell as HTMLElement).dataset.fixture))
   expect(ids).toEqual(fixtures.map((fixture) => fixture.id))

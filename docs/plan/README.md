@@ -9,11 +9,11 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b, E10, E12 | E11, E11b | **E11b next** (merge review follow-up). E9 cancelled 2026-11-20. |
+| E (quality infrastructure) | E1–E8, E4b, E5b, E10–E12, E11b | — | E9 cancelled 2026-11-20. |
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 and follow-ups | **H2d and H9d run in parallel after E11.** H3 follows H2d. H9c and H9e follow H9d. H7b continues on H7. |
+| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 and follow-ups | **H2d and H9d are ready to run in parallel.** H3 follows H2d. H9c and H9e follow H9d. H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -132,8 +132,8 @@ F1 and F2 can run in parallel after F0.
 - [x] [E7 CI back under 12 minutes: Playwright container or cached system packages, time-based shards, timing warning](tasks/done/E7-ci-speed.md) — S (done 2026-11-19: Playwright container, time-based shards, timing warning; CI ≈11 min)
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
 - [x] [E10 A missing registration fails in seconds, with one clear message](tasks/done/E10-fast-registration-failure.md) — S (any time; found 2026-11-23 reviewing H8: an unregistered new component took 40 min of noisy failures)
-- [ ] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/E11-ports-structural-diffs-popup-cells.md) — M (next; shared-file card; see [decisions](decisions.md) 2026-11-23)
-- [ ] [E11b Close the E11 review gaps](tasks/E11b-close-review-gaps.md) — S (same branch as E11)
+- [x] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/done/E11-ports-structural-diffs-popup-cells.md) — M (shared-file card; see [decisions](decisions.md) 2026-11-23)
+- [x] [E11b Close the E11 review gaps](tasks/done/E11b-close-review-gaps.md) — S (same branch as E11)
 - [x] [E12 Slim AGENTS.md without losing a rule](tasks/done/E12-slim-agents-md.md) — S (text only; any time, not in parallel with another card that edits AGENTS.md)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")

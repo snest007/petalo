@@ -23,24 +23,25 @@ run `pnpm exec playwright install chromium`. Report any sandbox block on network
 
 ## Commands
 
-Give Playwright a `PORT` other than 4173/5173 so it builds and serves its own copy. See RUN.md for port coordination.
+The verification scripts choose free ports. For direct Playwright commands, set a `PORT` other than 4173/5173
+so Playwright builds and serves its own copy.
 ```bash
 pnpm generate && pnpm typecheck && pnpm registry:build       # build inputs, check types, generate registry.json and public/r
 pnpm build                                                 # docs → dist/
 PORT=4310 pnpm exec playwright test                        # full main suite, or append tests/<name>.spec.ts
-PORT=4310 pnpm test:summary tests/<name>.spec.ts             # compact output, full log on disk
-PORT=4310 pnpm test:changed                                 # tier 1
-PORT=4310 pnpm test:changed --repeat-each=2                  # tier 2 scoped runs
+pnpm test:summary tests/<name>.spec.ts                     # compact output, full log on disk
+pnpm test:changed                                          # tier 1
+pnpm test:changed --repeat-each=2                          # tier 2 scoped runs
 pnpm test:smoke                                            # tier 2 shared-path smoke
 pnpm test:milestone                                        # tier 3, release option --runs=2
-VISUAL_ONLY=<prefix>[,<prefix>…] PORT=4310 pnpm test:summary tests/visual.spec.ts
+VISUAL_ONLY=<prefix>[,<prefix>…] pnpm test:summary tests/visual.spec.ts
 PORT=4310 pnpm exec playwright test tests/visual.spec.ts    # UI5 pixels, 4 themes × 2 densities
 scripts/ci-local.sh tests/toolbar.spec.ts                   # reproduce Linux CI in Docker
 pnpm check                                                 # full repository checks in order
 pnpm storybook                                             # http://localhost:6006
 pnpm storybook:build                                       # storybook-static/
 PORT=4320 pnpm test:storybook                              # render, globals, Controls and axe
-STORYBOOK_ONLY=toolbar PORT=4320 pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts
+STORYBOOK_ONLY=toolbar pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts
 pnpm dev                                                   # http://localhost:5173, /?fixtures, /ui5.html, /wcr.html, /block.html?name=<block>
 node scripts/smoke-install.mjs                             # fresh shadcn app, install every block, build and render
 node scripts/integrate.mjs …                               # reviewer commands
@@ -157,8 +158,8 @@ Use `node scripts/a11y-baseline.mjs --list P<n>` to inspect entries and `--prune
   for every UI5 role, name, description, state/property, text and label/description relationship. Record only
   structural differences (extra/missing unnamed state-free `generic` wrappers or the same semantic node one level
   higher/lower) and open-popup pixel cells. Use the component's existing P card via `groups`, no separate card.
-  Before E11 lands, use an exact `a11yDiff` wrapper path with reason `structural; owned by P<n>`. After E11 lands,
-  use `node scripts/a11y-baseline.mjs --record <component>`. Name the P card in popup `skipCompare` reasons. List both in the return note.
+  Record wrappers with `node scripts/a11y-baseline.mjs --record <component>` after a complete capture. Name the P card
+  in popup `skipCompare` reasons. List both in the return note.
   Semantic differences stay out of the baseline. Fix them or use an exact rule 9 `a11yDiff` where justified.
 - Final message names changed files and shared edits, copies the tier 2/test summaries, counts CI and full-suite runs,
   and explains any skipped or deferred checks.
