@@ -9,7 +9,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | E11 | **E11 next** (ports, structural-diff recording, popup cells); E9 cancelled 2026-11-20 |
+| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | E11, E12 | **E11 next** (ports, structural-diff recording, popup cells); E12 any time (text only); E9 cancelled 2026-11-20 |
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
@@ -133,6 +133,7 @@ F1 and F2 can run in parallel after F0.
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
 - [x] [E10 A missing registration fails in seconds, with one clear message](tasks/done/E10-fast-registration-failure.md) — S (any time; found 2026-11-23 reviewing H8: an unregistered new component took 40 min of noisy failures)
 - [ ] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/E11-ports-structural-diffs-popup-cells.md) — M (next; shared-file card; see [decisions](decisions.md) 2026-11-23)
+- [ ] [E12 Slim AGENTS.md without losing a rule](tasks/E12-slim-agents-md.md) — S (text only; any time, not in parallel with another card that edits AGENTS.md)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 
