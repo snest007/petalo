@@ -67,3 +67,67 @@ test("test:changed: failed audit diagnostics omit the child process stack", () =
   }
   expect(auditFailure("scripts/a11y-audit.mjs", result)).toBe("scripts/a11y-audit.mjs: Accessibility audit ratchet increased:\nbutton.gap: 1 > 0")
 })
+
+test("free ports skip an existing server and explain an explicit busy port", async () => {
+  const { createServer } = await import("node:net")
+  const { reservePort } = await import("../scripts/free-port.mjs")
+  const server = createServer()
+  await new Promise<void>((resolve, reject) => server.once("error", reject).listen(0, "127.0.0.1", resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("Missing TCP address")
+  try {
+    const reservation = await reservePort("PORT", undefined, address.port)
+    try {
+      expect(reservation.port).toBeGreaterThan(address.port)
+      const competing = await reservePort("PORT", undefined, reservation.port)
+      try { expect(competing.port).toBeGreaterThan(reservation.port) } finally { competing.release() }
+    } finally { reservation.release() }
+    await expect(reservePort("PORT", String(address.port), 4310)).rejects.toThrow(
+      new RegExp(`PORT=${address.port} is busy\\.[\\s\\S]*(?:node\\s+${process.pid}\\b|PID ${process.pid}:.*node)`, "i"))
+  } finally { await new Promise<void>((resolve) => server.close(() => resolve())) }
+})
+
+test("port recovery gives one live caller the abandoned claim", async () => {
+  const { spawn } = await import("node:child_process")
+  const { mkdtempSync, rmSync } = await import("node:fs")
+  const { tmpdir } = await import("node:os")
+  const { join } = await import("node:path")
+  const directory = mkdtempSync(join(tmpdir(), "petalo-port-recovery-"))
+  const mod = './scripts/free-port.mjs'
+  const node = (source: string) => spawn(process.execPath, ["--input-type=module", "-e", source],
+    { env: { ...process.env, TMPDIR: directory } })
+  const abandoned = node(`
+    import { reservePort } from ${JSON.stringify(mod)}
+    process.stdout.write(String((await reservePort("PORT", undefined, 49000)).port))
+    setInterval(() => {}, 1000)
+  `)
+  try {
+    const port = await new Promise<string>((resolve, reject) => {
+      abandoned.stdout.once("data", data => resolve(String(data).trim()))
+      abandoned.once("error", reject)
+      abandoned.once("exit", code => reject(new Error(`Lease child exited ${code} before acquiring a port`)))
+    })
+    const stopped = new Promise<void>(resolve => abandoned.once("close", () => resolve()))
+    abandoned.kill("SIGKILL")
+    await stopped
+    const recovery = node(`
+      import assert from "node:assert/strict"
+      import { reservePort } from ${JSON.stringify(mod)}
+      const first = await reservePort("PORT", ${JSON.stringify(port)}, 49000)
+      try {
+        assert.equal(first.port, ${Number(port)})
+        await assert.rejects(reservePort("PORT", ${JSON.stringify(port)}, 49000), /PORT=\\d+ is busy[\\s\\S]*PID/)
+      } finally { first.release() }
+    `)
+    const errors: string[] = []
+    recovery.stderr.on("data", data => errors.push(String(data)))
+    const code = await new Promise((resolve, reject) => {
+      recovery.once("error", reject)
+      recovery.once("close", resolve)
+    })
+    expect(code, errors.join("")).toBe(0)
+  } finally {
+    if (abandoned.exitCode === null && abandoned.signalCode === null) abandoned.kill("SIGKILL")
+    rmSync(directory, { recursive: true, force: true })
+  }
+})

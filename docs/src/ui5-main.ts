@@ -44,6 +44,7 @@ for (const set of activeSets) {
     const cell = document.createElement("div")
     cell.dir = opts.dir
     cell.dataset.fixture = c.id
+    if (c.popupOverflowReason) cell.dataset.fixturePopupOverflow = c.popupOverflowReason
     cell.style.cssText = `display:inline-flex;padding:${phoneMode ? "0" : "0.25rem"};line-height:normal`
     const fixture = render(c.props)
     cell.append(fixture)

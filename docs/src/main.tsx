@@ -90,7 +90,7 @@ function FixtureGrid() {
             // Each cell sits in a slot rounded up to whole pixels so one fractional-width cell can't shift
             // every following cell onto sub-pixel positions (which changes anti-aliasing).
             <div key={c.id} data-fixture-slot="" className="flex">
-              <div dir={opts.dir} data-fixture={c.id} className={phoneMode ? "inline-flex leading-[normal]" : "inline-flex p-1 leading-[normal]"}>
+              <div dir={opts.dir} data-fixture={c.id} data-fixture-popup-overflow={c.popupOverflowReason} className={phoneMode ? "inline-flex leading-[normal]" : "inline-flex p-1 leading-[normal]"}>
                 {set.react(c.props)}
               </div>
             </div>

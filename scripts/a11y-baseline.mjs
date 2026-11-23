@@ -1,17 +1,19 @@
 // Node 24 strips the helper's TypeScript types. This CLI and the running specs
 // share the exact same identity/classification/ownership implementation.
+import { spawnSync } from "node:child_process"
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
-import { baselineCounts, entryKey, groups, parseTreeBaseline, reportEntries } from "../tests/a11y-tree-baseline.ts"
-import { requireCompleteCapture } from "../tests/a11y-tree-coverage.ts"
+import { baselineCounts, entryKey, groups, parseTreeBaseline, recordStructuralDifferences, reportEntries } from "../tests/a11y-tree-baseline.ts"
+import { initialMatrices, requireCompleteCapture } from "../tests/a11y-tree-coverage.ts"
 const args = process.argv.slice(2), file = "tests/a11y-tree-baseline.json"
-const reportPath = args.includes("--report") ? args[args.indexOf("--report") + 1] : "test-results/a11y-tree-report.json"
-const command = args.find((arg) => ["--write", "--list", "--prune"].includes(arg))
-if (!command) throw new Error("Use --write (E4 initial creation only), --list <owner>, or --prune <owner>; optional --report <capture>")
+const latest = "test-results/a11y-latest/a11y-tree-report.json"
+const reportPath = args.includes("--report") ? args[args.indexOf("--report") + 1] : existsSync(latest) ? latest : "test-results/a11y-tree-report.json"
+const command = args.find((arg) => ["--write", "--list", "--prune", "--record"].includes(arg))
+if (!command) throw new Error("Use --write (E4 initial creation only), --list <owner>, --prune <owner>, or --record <component>; optional --report <capture>")
 const loadReport = (complete = false) => {
   const report = JSON.parse(readFileSync(reportPath, "utf8"))
   const matrices = new Set(Object.keys(report).map((key) => key.split("/").slice(0, 2).join("/")))
-  for (const matrix of ["webcomponents/ltr", "webcomponents/rtl", "phone/ltr", "openui5/ltr"]) if (!matrices.has(matrix)) throw new Error(`Incomplete report: missing ${matrix}`)
-  const captureCounts = complete ? requireCompleteCapture(report, reportPath) : undefined
+  for (const matrix of initialMatrices) if (!matrices.has(matrix)) throw new Error(`Incomplete report: missing ${matrix}`)
+  const captureCounts = complete ? requireCompleteCapture(report, reportPath, command === "--write" ? initialMatrices : undefined) : undefined
   return { report, entries: reportEntries(report), captureCounts }
 }
 if (command === "--write") {
@@ -19,6 +21,17 @@ if (command === "--write") {
   const { entries, captureCounts } = loadReport(true)
   writeFileSync(file, JSON.stringify({ version: 1, entries }, null, 2) + "\n")
   console.log(JSON.stringify({ ...baselineCounts(entries), captureCounts }, null, 2))
+} else if (command === "--record") {
+  const component = args[args.indexOf(command) + 1]
+  if (!component || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(component)) throw new Error("Pass the registry component name to --record")
+  const { report } = loadReport(true)
+  const baseline = parseTreeBaseline(JSON.parse(readFileSync(file, "utf8")))
+  const tracked = spawnSync("git", ["ls-tree", "main", "--", `registry/ui/${component}.tsx`, `registry/items/${component}.json`], { encoding: "utf8" })
+  if (tracked.status !== 0) throw new Error("Cannot find local main to check component ownership")
+  const entries = recordStructuralDifferences(component, report, baseline, !tracked.stdout.trim())
+  const added = entries.length - baseline.entries.length
+  if (added) writeFileSync(file, JSON.stringify({ ...baseline, entries }, null, 2) + "\n")
+  console.log(`Recorded ${added} structural differences for ${component}`)
 } else {
   const owner = args[args.indexOf(command) + 1]
   if (!groups[owner]) throw new Error(`Unknown owner ${owner}`)

@@ -9,6 +9,8 @@ import type * as React from "react"
 export type FixtureCase<P = any> = {
   id: string
   props: P
+  /** Reason this individual visual case intentionally lets a popup leave its cell. */
+  popupOverflowReason?: string
   /** Interaction target relative to the cell; otherwise use its first focusable element. */
   interact?: { selector?: string; ui5Selector?: string }
 }
