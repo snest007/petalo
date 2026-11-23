@@ -54,6 +54,27 @@
       "p13nDialog.RESET"
     ]
   },
+  "analytical-table": {
+    "owner": "H1",
+    "gapCount": 0,
+    "okKeys": [
+      "wcr:COLLAPSE_PRESS_SPACE",
+      "wcr:DRAG_TO_RESIZE",
+      "wcr:EXPAND_PRESS_SPACE",
+      "wcr:FIXED_COLUMN",
+      "wcr:FREEZE_COLUMN",
+      "wcr:INCLUDES_X",
+      "wcr:LIST_NO_DATA",
+      "wcr:MOVE_TO_CONTENT_F2",
+      "wcr:NO_DATA_FILTERED",
+      "wcr:PLEASE_WAIT",
+      "wcr:SELECT_ALL_PRESS_SPACE",
+      "wcr:SELECT_PRESS_SPACE",
+      "wcr:UNFREEZE_COLUMN",
+      "wcr:UNSELECT_ALL_PRESS_SPACE",
+      "wcr:UNSELECT_PRESS_SPACE"
+    ]
+  },
   "avatar": {
     "owner": "P5",
     "gapCount": 4,

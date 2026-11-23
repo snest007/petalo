@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H8 (+H8b) | H1–H7, H9, H10 | **now: H7, H9 and H1** in parallel (H1→H5 in order); H6 after P2a |
+| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 | **now: H7, H9 and H2** in parallel (H2→H5 in order); H6 after P2a |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -305,7 +305,8 @@ H7–H10 run in parallel with them and with each other, except cards that touch 
 H6/H6b/H6c wait for P2a.
 
 - [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
-- [ ] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
+- [x] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/done/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
+- [x] [H1b AnalyticalTable: finish foundation acceptance](tasks/done/H1b-analytical-table-acceptance.md) — S (continue the [H1 return](returns/done/H1.md) before H2)
 - [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
 - [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)

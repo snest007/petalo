@@ -21,15 +21,22 @@
     ],
     "avoidWhen": [
       {
+        "when": "Compare wide analytical datasets with resizable, reorderable or frozen columns.",
+        "use": [
+          "analytical-table"
+        ]
+      },
+      {
         "when": "Compose JSX rows and cells without data-driven sorting, keeping roughly 200 loaded rows of average complexity and rethinking the design above 1,000.",
         "use": [
           "table"
         ]
       },
       {
-        "when": "Browse a few attributes per item without aligned column comparison.",
+        "when": "Browse a few attributes per item or read chronological object events without aligned column comparison.",
         "use": [
-          "list"
+          "list",
+          "timeline"
         ]
       },
       {
@@ -42,12 +49,6 @@
         "when": "Inspect or edit fields of one object rather than compare repeated records.",
         "use": [
           "form"
-        ]
-      },
-      {
-        "when": "Read object events in chronological order without sorting or column comparison.",
-        "use": [
-          "timeline"
         ]
       }
     ],

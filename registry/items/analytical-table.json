@@ -1,0 +1,24 @@
+{
+  "title": "AnalyticalTable",
+  "description": "Virtualized Fiori analytical grid with WCR column sizing, reordering, visibility, freezing, and keyboard navigation.",
+  "dependencies": ["@tanstack/react-table", "@tanstack/react-virtual"],
+  "registryDependencies": ["@petalo/busy-indicator", "@petalo/menu", "@petalo/icons", "@petalo/locale"],
+  "files": [
+    { "path": "registry/lib/analytical-table/layout.ts", "type": "registry:lib", "target": "lib/analytical-table/layout.ts" },
+    { "path": "registry/lib/analytical-table/navigation.ts", "type": "registry:lib", "target": "lib/analytical-table/navigation.ts" },
+    { "path": "registry/lib/analytical-table/owned-props.ts", "type": "registry:lib", "target": "lib/analytical-table/owned-props.ts" }
+  ],
+  "usage": {
+    "summary": "Compare wide or large datasets in a virtualized Fiori grid with configurable column widths, order, visibility and freezing.",
+    "useWhen": [
+      "Keep identifying columns visible while users scroll horizontally through measures.",
+      "Let users resize, reorder and hide columns with controlled layout state.",
+      "Use the experimental Customise API for protected cell content, header menu actions and layout replacements."
+    ],
+    "avoidWhen": [
+      { "when": "Render a lighter data-driven table with sorting and responsive pop-in.", "use": ["data-table"] },
+      { "when": "Compose static rows and cells directly in JSX.", "use": ["table"] }
+    ],
+    "source": "sap-fiori-guidelines"
+  }
+}

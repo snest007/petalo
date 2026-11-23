@@ -8,6 +8,16 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "AnalyticalTable.className": "analytical-table-custom",
+  "AnalyticalTable.NoDataComponent": "analytical-table-custom",
+  "AnalyticalTable.LoadingComponent": "analytical-table-custom",
+  "AnalyticalTable.renderRowSubComponent": "analytical-table-custom",
+  "AnalyticalTableRow.className": "analytical-table-custom",
+  "AnalyticalTableRow.children": "analytical-table-custom",
+  "AnalyticalTableCell.className": "analytical-table-custom",
+  "AnalyticalTableCell.children": "analytical-table-custom",
+  "AnalyticalTableHeaderCell.className": "analytical-table-custom",
+  "AnalyticalTableHeaderCell.children": "analytical-table-custom",
   "DynamicDateRange.className": "dynamic-date-range",
   "SelectDialog.className": "select-dialog",
   "SelectDialog.renderItem": "select-dialog",
@@ -564,9 +574,9 @@ const excludedCustomizationPoints = {
 // Like f6-navigation.spec.ts, this builds a real consumer in memory. It imports
 // each owning fixture renderer and the distributed components; no production
 // page, shared fixture helper or caller-side ARIA repair is added.
-// Native WCR renderers and H0's temporary data-only pilot have no registry customization surface.
+// Native WCR renderers have no registry customization surface.
 const fixtureFiles = readdirSync("docs/src/fixtures")
-  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".wcr.tsx") && file !== "wcr-smoke.tsx")
+  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".wcr.tsx"))
   .filter((file) => /\bdefineFixtures(?:<[^>]+>)?\(\s*\{/.test(readFileSync(`docs/src/fixtures/${file}`, "utf8")))
 const config = ts.readConfigFile("tsconfig.json", ts.sys.readFile)
 const parsed = ts.parseJsonConfigFileContent(config.config, ts.sys, ".")
@@ -593,7 +603,7 @@ for (const file of program.getSourceFiles().filter((source) => /registry\/ui\/[^
 }
 let code: string, css: string
 const names = fixtureFiles.map((file) => file.slice(0, -4))
-const supplementalNames = ["data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels"]
+const supplementalNames = ["analytical-table-custom", "data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels"]
 test.beforeAll(async () => {
   const imports = Object.keys(metadata).map((file, index) => `import * as M${index} from ${JSON.stringify(resolve(`registry/ui/${file}`))};`).join("\n")
   const fixtures = fixtureFiles.map((file, index) => `import F${index} from ${JSON.stringify(resolve(`docs/src/fixtures/${file}`))};`).join("\n")
@@ -632,7 +642,24 @@ test.beforeAll(async () => {
     function PickerConsumer(){const [open,setOpen]=React.useState(true);return C('PickerField',{value:'2024-03-13',open,onOpenChange:setOpen,icon:appointment2,'aria-label':'Custom picker field',pickerLabel:'Custom picker dialog',valueState:'negative',valueStateMessage:text('Custom picker validation'),footer:button('Desktop footer'),phoneFooter:button('Phone footer'),popoverClassName:'custom-popup',wrapperClassName:'custom-wrapper',className:'custom-input'},C('Button',{tabIndex:0},'Custom picker content'))}
     const tableColumns=[{accessorKey:'name',id:'name',header:()=>text('Custom name'),cell:info=>text(info.getValue())}];
     const badge=()=>C('ButtonBadge',{design:'InlineText',text:'2'});
+    let customAnalyticalMode=false;
     const supplemental={
+      'analytical-table-custom':()=>h(React.Fragment,{},
+        h('span',{id:'analytical-table-external-name'},'Analytical stock'),
+        C('AnalyticalTable',{data:[{name:'Ada'}],columns:[{...tableColumns[0],headerLabel:'Item name',cellLabel:({value})=>'Item '+value,header:({header})=>
+          h('span',{},'Custom name',h('template',{},customize(C('AnalyticalTableHeaderCell',{header,className:'consumer-header'},'Header content'),customAnalyticalMode,false)))}],
+          'aria-labelledby':'analytical-table-external-name',minRows:1,
+          components:{Body:function ProductBody({children}){
+            const module=modules.find(m=>m.AnalyticalTable);
+            module.useAnalyticalTable();
+            const wrapped=React.Children.map(children,row=>React.cloneElement(row,{className:'consumer-row'},
+              React.Children.map(row.props.children.flat().filter(Boolean),cell=>React.cloneElement(cell,{className:'consumer-cell',role:'presentation','aria-selected':true,tabIndex:9,id:'foreign-id'}))));
+            return customize(wrapped, customAnalyticalMode, false);
+          }},renderRowSubComponent:()=>'Order notes'}),
+        C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock empty',minRows:1,
+          NoDataComponent:()=> 'No orders'}),
+        C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock loading',minRows:1,loading:true,
+          LoadingComponent:()=> 'Loading orders'})),
       'h8-badge-custom':()=>h(React.Fragment,{},
         C('Button',{badge:C('ButtonBadge',{design:'InlineText',text:'1',texts:{oneItem:count=>count+' update'}})},'Inbox'),
         C('ToggleButton',{badge:badge(),defaultPressed:true},'Pinned'),
@@ -718,6 +745,7 @@ test.beforeAll(async () => {
     window.e4Customization={cases:name=>fixtures[name].cases.map(c=>c.id),seen:()=>[...seen].sort(),mount:(name,id,custom,fill=false)=>{
       if(root)flushSync(()=>root.unmount());document.getElementById('customization-root').replaceChildren();seen.clear();
       const fixture=fixtures[name],entry=fixture.cases.find(c=>c.id===id);root=createRoot(document.getElementById('customization-root'));
+      customAnalyticalMode=custom;
       let output=fixture.react(entry.props);if(custom||fill)output=customize(output,custom,fill);flushSync(()=>root.render(output));return ++sequence;
     },snapshot,settledSnapshot,largeCombo:()=>{
       if(root)flushSync(()=>root.unmount());root=createRoot(document.getElementById('customization-root'));
@@ -898,4 +926,24 @@ test("H8 native names, relationships and text overrides reach their owning contr
   await expect(page.getByRole("button", { name: "Inbox 1 update" })).toBeVisible()
   await expect(page.getByRole("button", { name: "Pinned 2 items" })).toHaveAttribute("aria-pressed", "true")
   await expect(page.getByRole("toolbar", { name: "Badge actions" }).getByRole("button", { name: "Notifications 2 items" })).toBeVisible()
+})
+
+test("AnalyticalTable protects custom cell semantics and preserves native grid naming", async ({ page }) => {
+  await mountHarness(page)
+  const warnings: string[] = []
+  page.on("console", message => { if (message.type() === "warning") warnings.push(message.text()) })
+  await page.evaluate(() => (window as any).e4Customization.mount("analytical-table-custom", "analytical-table-custom", true))
+  const grid = page.getByRole("grid", { name: "Analytical stock", exact: true })
+  await expect(grid).toHaveAttribute("aria-rowcount", "1")
+  await expect(grid.getByRole("columnheader", { name: "Item name" })).toBeVisible()
+  const cell = grid.getByRole("gridcell", { name: "Item Ada", exact: true })
+  await expect(cell).toHaveClass(/consumer-cell/)
+  await expect(cell).toHaveAttribute("aria-colindex", "1")
+  await expect(cell).toHaveAttribute("tabindex", "-1")
+  await expect(cell).not.toHaveAttribute("id", "foreign-id")
+  await expect(cell).not.toHaveAttribute("aria-selected")
+  for (const attribute of ["role", "aria-selected", "tabIndex", "id"]) expect(warnings.some(message =>
+    message.includes(`AnalyticalTable cell: ignored owned prop "${attribute}"`))).toBe(true)
+  await expect(page.getByRole("grid", { name: "Analytical stock empty" }).getByRole("gridcell")).toHaveText("No orders")
+  await expect(page.getByRole("progressbar", { name: "Please wait" })).toHaveText("Loading orders")
 })

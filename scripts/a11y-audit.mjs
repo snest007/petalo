@@ -73,6 +73,28 @@ for (const [component, member, equivalent] of [
   ["NumericInput", "accessibleName", "aria-label on the native textbox"],
   ["NumericInput", "accessibleNameRef", "aria-labelledby on the native textbox"],
 ]) verified[`${component}.${member}`] = { equivalent, proof: h8NativeProof, status: "ok" }
+const h1Source = "node_modules/@ui5/webcomponents-react/dist/components/AnalyticalTable"
+const h1Proof = "tests/a11y-tree-customizations.spec.ts: AnalyticalTable protects custom cell semantics and preserves native grid naming"
+const h1Members = [
+  ["accessibleName", "aria-label on the inner grid", "index.js"],
+  ["accessibleNameRef", "aria-labelledby on the inner grid", "index.js"],
+  ["headerLabel", "column.headerLabel on the owned columnheader", "hooks/useA11y.js"],
+  ["cellLabel", "column.cellLabel on the owned gridcell", "hooks/useA11y.js"],
+]
+const h1Texts = [
+  ["wcr:FIXED_COLUMN", "fixedColumn", "pluginHooks/useStickyColumns.js"],
+  ["wcr:FREEZE_COLUMN", "freezeColumn", "pluginHooks/useStickyColumns.js"],
+  ["wcr:UNFREEZE_COLUMN", "unfreezeColumn", "pluginHooks/useStickyColumns.js"],
+  ["wcr:MOVE_TO_CONTENT_F2", "moveToContent", "pluginHooks/useF2CellEdit.js"],
+  ["wcr:INCLUDES_X", "includesContent", "pluginHooks/useF2CellEdit.js"],
+  ["ARIA_LABEL_EMPTY_CELL", "emptyCell", "pluginHooks/useAnnounceEmptyCells.js"],
+  ["wcr:SELECT_PRESS_SPACE", "selectRow", "index.js"],
+  ["wcr:UNSELECT_PRESS_SPACE", "unselectRow", "index.js"],
+  ["wcr:SELECT_ALL_PRESS_SPACE", "selectAll", "index.js"],
+  ["wcr:UNSELECT_ALL_PRESS_SPACE", "unselectAll", "index.js"],
+  ["wcr:EXPAND_PRESS_SPACE", "expandRow", "index.js"],
+  ["wcr:COLLAPSE_PRESS_SPACE", "collapseRow", "index.js"],
+]
 const verifiedTexts = {
   "segmented-button.LIST_ITEM_SELECTED": { equivalent: "SegmentedButton.texts.selected", proof: "tests/segmented-button.spec.ts: selection announces assertively and deselection does not announce", status: "fixed in E4" },
   "segmented-button.SEGMENTEDBUTTON_ARIA_DESCRIBEDBY": { equivalent: "SegmentedButton.texts.itemDescription / SegmentedButtonItem.texts.itemDescription", proof: "tests/segmented-button.spec.ts: item description and description-ref reach the UI5 owning element", status: "fixed in E4" },
@@ -196,6 +218,13 @@ for (const [file, owner] of sourceFiles) {
   }
 }
 // Use exported component signatures, not broad implementation-line regexes.
+for (const [member, equivalent, file] of h1Members) {
+  rows.push({ component: "AnalyticalTable", owner: "analytical-table", member, equivalent, status: "ok", proof: h1Proof, source: `${h1Source}/${file}` })
+}
+for (const [key, field, file] of h1Texts) {
+  textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source: `${h1Source}/${file}` })
+}
+
 // The allowed consumer spec owns the exact runtime proof map and source-backed
 // nonfunctional classifications; unknown public points stay gap.
 const consumerSpec = read("tests/a11y-tree-customizations.spec.ts")

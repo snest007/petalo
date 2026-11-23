@@ -2,6 +2,7 @@
 
 | Item | Summary |
 | --- | --- |
+| [analytical-table](#analytical-table) | Compare wide or large datasets in a virtualized Fiori grid with configurable column widths, order, visibility and freezing. |
 | [data-table](#data-table) | Render data-driven responsive tables with TanStack columns, sorting and optional row virtualization. |
 | [list](#list) | Present a sequence of business items for browsing, navigation or selection without column comparison. |
 | [object-identifier](#object-identifier) | Identify a business object with a primary title and supporting identifier or attributes. |
@@ -11,6 +12,27 @@
 | [timeline](#timeline) | Present object events and changes in chronological order. |
 | [tree](#tree) | Browse or select hierarchical items through expandable parent-child nodes. |
 | [upload-collection](#upload-collection) | Manage prepared or uploaded files with per-file status and lifecycle actions. |
+
+## analytical-table
+
+Compare wide or large datasets in a virtualized Fiori grid with configurable column widths, order, visibility and freezing.
+
+### Use when
+
+- Keep identifying columns visible while users scroll horizontally through measures.
+- Let users resize, reorder and hide columns with controlled layout state.
+- Use the experimental Customise API for protected cell content, header menu actions and layout replacements.
+
+### Don't use when
+
+- Render a lighter data-driven table with sorting and responsive pop-in. → [data-table](data.md#data-table)
+- Compose static rows and cells directly in JSX. → [table](data.md#table)
+
+Main exports: `AnalyticalTable`, `AnalyticalTableCell`, `AnalyticalTableHeaderCell`, `AnalyticalTableRow`.
+
+```bash
+npx shadcn add @petalo/analytical-table
+```
 
 ## data-table
 
@@ -25,11 +47,11 @@ Render data-driven responsive tables with TanStack columns, sorting and optional
 
 ### Don't use when
 
+- Compare wide analytical datasets with resizable, reorderable or frozen columns. → [analytical-table](data.md#analytical-table)
 - Compose JSX rows and cells without data-driven sorting, keeping roughly 200 loaded rows of average complexity and rethinking the design above 1,000. → [table](data.md#table)
-- Browse a few attributes per item without aligned column comparison. → [list](data.md#list)
+- Browse a few attributes per item or read chronological object events without aligned column comparison. → [list](data.md#list), [timeline](data.md#timeline)
 - Expand and collapse a parent-child hierarchy; this wrapper renders flat rows. → [tree](data.md#tree)
 - Inspect or edit fields of one object rather than compare repeated records. → [form](forms.md#form)
-- Read object events in chronological order without sorting or column comparison. → [timeline](data.md#timeline)
 
 Main exports: `DataTable`, `createDataTableColumnHelper`.
 

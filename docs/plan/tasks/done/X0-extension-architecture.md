@@ -21,7 +21,7 @@ structural layer is what this card designs.
 
 ## Inputs to read first
 
-- `docs/plan/tasks/H1-analytical-table-foundation.md` → "Extension contract". This is the deepest contract in the
+- `docs/plan/tasks/done/H1-analytical-table-foundation.md` → "Extension contract". This is the deepest contract in the
   plan so far: instance access, controlled state, content-only render slots, styling hooks, prop getters with owned
   ARIA filtered out. Start from it and generalise it; don't contradict it.
 - `docs/plan/tasks/H6-calendar-extension-points.md`, `H6b-…`, `H6c-…`: the Calendar extension points planned so far.
