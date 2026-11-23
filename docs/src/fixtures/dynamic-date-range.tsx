@@ -1,6 +1,6 @@
 import * as React from "react"
 import { DynamicDateRange, type DynamicDateRangeValue } from "@/components/ui/dynamic-date-range"
-import { defineFixtures } from "../fixture-types"
+import { defineFixtures, FIELD_WIDTH } from "../fixture-types"
 import { inPlace } from "./popover"
 
 type RangeCase = { value?: DynamicDateRangeValue; popup?: "options" | "LASTDAYS" | "DATE" | "DATERANGE" }
@@ -14,8 +14,8 @@ function RangeFixture({ value, popup }: RangeCase) {
   React.useLayoutEffect(() => {
     if (popup && popup !== "options") frame.current?.querySelector<HTMLElement>(`[data-ddr-option="${popup}"]`)?.click()
   }, [popup])
-  return <div ref={frame} data-ddr-fixture={popup || "closed"}>
-    <DynamicDateRange aria-label="Period" options={options} defaultValue={value} defaultOpen={!!popup} portal={false}
+  return <div ref={frame} data-ddr-fixture={popup || "closed"} style={popup ? undefined : { width: FIELD_WIDTH }}>
+    <DynamicDateRange aria-label="Period" options={options} defaultValue={value} open={!!popup} portal={false}
       classNames={{ root: popup ? "hidden" : "w-full", popover: popup ? "max-h-none" : undefined }} />
   </div>
 }

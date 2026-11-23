@@ -27,6 +27,13 @@ export default defineUi5(set, ({ value, popup }) => {
   frame.style.cssText = "overflow:hidden;padding:.75rem"
   field.style.width = "max-content"
   frame.fixtureReady = (async () => {
+    // The first renderFinished can settle before this custom element's own
+    // template mounts. Wait for both actual surfaces before pinning the popup.
+    await customElements.whenDefined(field.localName)
+    await field.definePromise
+    for (let frame = 0; !field.shadowRoot?.querySelector("ui5-responsive-popover") && frame < 120; frame++) {
+      await new Promise(requestAnimationFrame)
+    }
     await renderFinished()
     if (popup !== "options") {
       // Select the real UI5 editor without raising the native popover into the top layer.
@@ -35,8 +42,9 @@ export default defineUi5(set, ({ value, popup }) => {
       await renderFinished()
     }
     const root = field.shadowRoot!
-    const fieldRoot = root.querySelector<HTMLElement>(".ui5-dynamic-date-range-root")!
-    const surface = root.querySelector<HTMLElement>("ui5-responsive-popover")!
+    const fieldRoot = root?.querySelector<HTMLElement>(".ui5-dynamic-date-range-root")
+    const surface = root?.querySelector<HTMLElement>("ui5-responsive-popover")
+    if (!fieldRoot || !surface) throw new Error(`DynamicDateRange fixture ${popup} has no rendered popup surface`)
     fieldRoot.style.display = "none"
     placeInPlace(surface)
     surface.removeAttribute("popover")
