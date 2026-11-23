@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test } from "@playwright/test"
-import { allowedDifferences, applyAllowedWrappers, captureAX, diffTree } from "./a11y-tree-normalize"
+import { allowedDifferences, applyAllowedWrappers, captureAX, diffTree, reconcileMessageBoxNameRef } from "./a11y-tree-normalize"
 
 for (const dir of ["ltr", "rtl"]) {
   test(`WCR accessibility trees ${dir}`, async ({ page: ours, context }) => {
@@ -21,7 +21,11 @@ for (const dir of ["ltr", "rtl"]) {
       const [a, b] = await Promise.all([captureAX(ours, selector), captureAX(wcr, selector)])
       const allowance = allowed[id]
       if (allowance) expect(allowance.reason.trim()).not.toBe("")
-      const adjusted = applyAllowedWrappers(a, b, allowance?.ignore ?? [])
+      const adjusted = applyAllowedWrappers(a, b, allowance?.ignore ?? [], allowance?.ui5FormHosts, allowance?.ui5FocusScaffolding)
+      if (allowance?.messageBoxNameRef) {
+        expect(id).toBe("message-box-confirm")
+        reconcileMessageBoxNameRef(adjusted.ours, adjusted.ui5)
+      }
       const differences = diffTree(adjusted.ours, adjusted.ui5, adjusted.leaves)
       writeFileSync(`${output}/${dir}-${id}.json`, JSON.stringify({ ours: a, wcr: b, differences, allowance }, null, 2))
 

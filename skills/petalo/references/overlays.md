@@ -5,6 +5,7 @@
 | [adapt-filters-dialog](#adapt-filters-dialog) | Personalize filter fields, their order and values in a staged dialog before applying changes. |
 | [dialog](#dialog) | Pause the current task for a focused decision, confirmation or contained editing task. |
 | [menu](#menu) | Let users choose commands from an opened hierarchy of menu items. |
+| [message-box](#message-box) | Interrupt the current task to report an outcome or obtain a decision. |
 | [popover](#popover) | Show information or actions tied to an opener without leaving the current page. |
 | [responsive-popover](#responsive-popover) | Keep contextual content anchored on desktop and tablet, then show it in a full-screen phone dialog. |
 | [toast](#toast) | Confirm a completed action or provide information in a non-disruptive message that disappears automatically. |
@@ -47,11 +48,11 @@ Pause the current task for a focused decision, confirmation or contained editing
 
 ### Don't use when
 
-- Show contextual information beside an opener while users can keep working on the page. → [popover](overlays.md#popover)
-- Show contextual content as a popover on desktop and a full-screen dialog on phones. → [responsive-popover](overlays.md#responsive-popover)
+- Show contextual content beside an opener. Use ResponsivePopover for a full-screen surface on phones. → [popover](overlays.md#popover), [responsive-popover](overlays.md#responsive-popover)
 - Offer a hierarchy of commands without a form or confirmation task. → [menu](overlays.md#menu)
 - Confirm a completed action transiently without requiring a response. → [toast](overlays.md#toast)
 - Keep a contextual message visible alongside otherwise usable page content. → [message-strip](display.md#message-strip)
+- Ask for a short confirmation or report an outcome with standard actions. → [message-box](overlays.md#message-box)
 
 Main exports: `Dialog`, `DialogBody`, `DialogClose`, `DialogContent`, `DialogDescription`, `DialogFooter`, `DialogHeader`, `DialogOverlay`, `DialogTitle`, `DialogTrigger`.
 
@@ -81,6 +82,26 @@ Main exports: `Menu`, `MenuContent`, `MenuGroup`, `MenuItem`, `MenuSeparator`, `
 
 ```bash
 npx shadcn add @petalo/menu
+```
+
+## message-box
+
+Interrupt the current task to report an outcome or obtain a decision.
+
+### Use when
+
+- Ask for a short confirmation or show a semantic error with a small action set.
+- Use useMessageBox for local Promise-based confirmation flows.
+
+### Don't use when
+
+- Collect input or show a dialog with a custom workflow. → [dialog](overlays.md#dialog)
+- Give inline contextual guidance or brief nonblocking feedback. → [message-strip](display.md#message-strip), [toast](overlays.md#toast)
+
+Main exports: `MessageBox`.
+
+```bash
+npx shadcn add @petalo/message-box
 ```
 
 ## popover
@@ -142,7 +163,7 @@ Confirm a completed action or provide information in a non-disruptive message th
 
 - Keep a contextual message visible alongside otherwise usable page content. → [message-strip](display.md#message-strip)
 - Explain an empty or unavailable content area with an illustration and recovery action. → [illustrated-message](display.md#illustrated-message)
-- Require an explicit response or confirmation before users continue. → [dialog](overlays.md#dialog)
+- Require an explicit response. Use MessageBox for standard actions, or Dialog for a custom workflow. → [dialog](overlays.md#dialog), [message-box](overlays.md#message-box)
 - Retain business-event updates so users can read, act on or dismiss them later. → [notification-list](navigation.md#notification-list)
 
 Main exports: `Toast`.

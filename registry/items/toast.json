@@ -23,9 +23,10 @@
         ]
       },
       {
-        "when": "Require an explicit response or confirmation before users continue.",
+        "when": "Require an explicit response. Use MessageBox for standard actions, or Dialog for a custom workflow.",
         "use": [
-          "dialog"
+          "dialog",
+          "message-box"
         ]
       },
       {

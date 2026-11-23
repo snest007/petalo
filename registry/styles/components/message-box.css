@@ -1,0 +1,36 @@
+/* WCR 2.28.2 MessageBox.module.css over the Dialog surface. */
+.fiori-message-box[data-type="Confirm"] .fiori-popup__header::before {
+  height: var(--sapElement_BorderWidth);
+  background: var(--sapNeutralBorderColor);
+}
+.fiori-message-box[data-custom-header] .fiori-popup__header {
+  gap: 0;
+}
+.fiori-message-box[data-custom-header] .fiori-popup__title {
+  font-size: var(--sapFontHeader5Size);
+  height: auto;
+  line-height: normal;
+}
+.fiori-message-box__icon {
+  display: flex;
+  flex: none;
+  width: 1rem;
+  height: 1rem;
+  margin-inline-end: .5rem;
+  color: var(--sapNeutralColor);
+}
+.fiori-message-box__icon > [data-slot="icon"] {
+  width: 100%;
+  height: 100%;
+}
+.fiori-message-box .fiori-popup__footer {
+  height: calc(var(--fiori-wcr-x-barheight) + 1px);
+}
+.fiori-message-box .fiori-popup__content {
+  font-size: var(--sapFontHeader5Size);
+}
+
+/* The WCR 4rem minimum is content-box on the UI5 button host. */
+.fiori-message-box {
+  --message-box-action-min-width: calc(4rem + var(--sapElement_BorderWidth) + var(--sapElement_BorderWidth));
+}

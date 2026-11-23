@@ -19,14 +19,9 @@
     ],
     "avoidWhen": [
       {
-        "when": "Show contextual information beside an opener while users can keep working on the page.",
+        "when": "Show contextual content beside an opener. Use ResponsivePopover for a full-screen surface on phones.",
         "use": [
-          "popover"
-        ]
-      },
-      {
-        "when": "Show contextual content as a popover on desktop and a full-screen dialog on phones.",
-        "use": [
+          "popover",
           "responsive-popover"
         ]
       },
@@ -46,6 +41,12 @@
         "when": "Keep a contextual message visible alongside otherwise usable page content.",
         "use": [
           "message-strip"
+        ]
+      },
+      {
+        "when": "Ask for a short confirmation or report an outcome with standard actions.",
+        "use": [
+          "message-box"
         ]
       }
     ],
