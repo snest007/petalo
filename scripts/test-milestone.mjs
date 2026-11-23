@@ -3,6 +3,7 @@ import { spawnSync } from "node:child_process"
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath } from "node:url"
+import { checkExplicitPorts } from "./free-port.mjs"
 
 // Shared by the three verification entry points so failures and flakes have the same meaning.
 export function run(command, args, { env = {}, log } = {}) {
@@ -38,7 +39,7 @@ export function ensureStorybookBuild({ force = false } = {}) {
 
 export function testSummary(args, { env = {}, log } = {}) {
   const result = run("pnpm", ["test:summary", ...args], { env, log })
-  const summary = result.output.match(/^(\d+) passed, (\d+) failed, (\d+) flaky, (\d+) skipped \(([\d.]+)s\) \| Log: (.+)$/m)
+  const summary = result.output.match(/^(\d+) passed, (\d+) failed, (\d+) flaky, (\d+) skipped \(([\d.]+)s\) \| Log: (\S+)(?: \| .+)?$/m)
   // Fail closed on collection/server failures (no result), and on a retry which passed.
   result.ok &&= !!summary && Number(summary[2]) === 0 && Number(summary[3]) === 0
   result.summary = summary?.[0] ?? "No test summary produced; see the log."
@@ -63,7 +64,7 @@ function slowest(log) {
   return [...totals].sort((a, b) => b[1] - a[1]).slice(0, 10)
 }
 
-export function milestone(args = process.argv.slice(2)) {
+export async function milestone(args = process.argv.slice(2)) {
   const runsArgs = args.filter((arg) => arg.startsWith("--runs="))
   const workerArgs = args.filter((arg) => arg.startsWith("--workers="))
   const runs = runsArgs[0]?.slice(7) ?? "1"
@@ -74,11 +75,12 @@ export function milestone(args = process.argv.slice(2)) {
     console.error("Usage: pnpm test:milestone [--runs=1|2] [--workers=<positive integer>]")
     return false
   }
+  if (!await checkExplicitPorts(process.env, ["PORT", "SAPUI5_PORT", "STORYBOOK_PORT"])) return false
   const started = Date.now()
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Shanghai", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())
   const out = `.integration/milestone-${date}`
   mkdirSync(out, { recursive: true })
-  const env = { ...process.env, PORT: process.env.PORT ?? "4310", SAPUI5_PORT: process.env.SAPUI5_PORT ?? "4311" }
+  const env = { ...process.env }
   // Undefined removes inherited filters from spawnSync's merged environment too.
   env.VISUAL_ONLY = undefined
   env.STORYBOOK_ONLY = undefined
@@ -98,7 +100,7 @@ export function milestone(args = process.argv.slice(2)) {
   }
   if (ok) for (let i = 1; i <= Number(runs); i++) {
     // Always collect both suites' evidence for this round, even if main fails.
-    for (const [name, config, port] of [["main", [], env.PORT], ["Storybook", ["-c", "playwright.storybook.config.ts"], process.env.STORYBOOK_PORT ?? "4320"]]) {
+    for (const [name, config, port] of [["main", [], env.PORT], ["Storybook", ["-c", "playwright.storybook.config.ts"], undefined]]) {
       console.log(`Milestone ${name} run ${i}/${runs}.`)
       const result = testSummary([...config, ...testArgs], { env: { ...env, PORT: port }, log: `${out}/${name.toLowerCase()}-${i}.log` })
       const timings = result.log && existsSync(result.log) ? slowest(result.log) : []
@@ -126,4 +128,4 @@ export function milestone(args = process.argv.slice(2)) {
   return ok
 }
 
-if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) process.exitCode = milestone() ? 0 : 1
+if (resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) process.exitCode = await milestone() ? 0 : 1

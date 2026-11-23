@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { staleCaseCoverage } from "./a11y-tree-baseline"
-import { writeMatrixCoverage } from "./a11y-tree-coverage"
+import { treeReportFile, writeMatrixCoverage } from "./a11y-tree-coverage"
 import { expect, test } from "@playwright/test"
 import { allowedDifferences, compareCase, pageAX, writeComparisonReport } from "./a11y-tree-normalize"
 
@@ -21,6 +21,6 @@ test("all OpenUI5 accessibility trees", async ({ browser }) => {
     const [oursAX, referenceAX] = await Promise.all([pageAX(ours), pageAX(reference)])
     const failures: string[] = []
     for (const id of ids) failures.push(...await compareCase(ours, reference, id, `openui5/ltr/${id}`, allowed[id], undefined, { ours: oursAX, reference: referenceAX }))
-    expect(failures.length, `${failures.length} difference lines; full captures: test-results/a11y-tree-report.json\n${failures.slice(0, 20).join("\n")}`).toBe(0)
+    expect(failures.length, `${failures.length} difference lines; full captures: ${treeReportFile}\n${failures.slice(0, 20).join("\n")}`).toBe(0)
   } finally { writeComparisonReport(); await Promise.all([ours.close(), reference.close()]) }
 })

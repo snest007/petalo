@@ -67,3 +67,22 @@ test("test:changed: failed audit diagnostics omit the child process stack", () =
   }
   expect(auditFailure("scripts/a11y-audit.mjs", result)).toBe("scripts/a11y-audit.mjs: Accessibility audit ratchet increased:\nbutton.gap: 1 > 0")
 })
+
+test("free ports skip an existing server and explain an explicit busy port", async () => {
+  const { createServer } = await import("node:net")
+  const { reservePort } = await import("../scripts/free-port.mjs")
+  const server = createServer()
+  await new Promise<void>((resolve, reject) => server.once("error", reject).listen(0, "127.0.0.1", resolve))
+  const address = server.address()
+  if (!address || typeof address === "string") throw new Error("Missing TCP address")
+  try {
+    const reservation = await reservePort("PORT", undefined, address.port)
+    try {
+      expect(reservation.port).toBeGreaterThan(address.port)
+      const competing = await reservePort("PORT", undefined, reservation.port)
+      try { expect(competing.port).toBeGreaterThan(reservation.port) } finally { competing.release() }
+    } finally { reservation.release() }
+    await expect(reservePort("PORT", String(address.port), 4310)).rejects.toThrow(
+      new RegExp(`PORT=${address.port} is busy\\.[\\s\\S]*(?:node\\s+${process.pid}\\b|PID ${process.pid}:.*node)`, "i"))
+  } finally { await new Promise<void>((resolve) => server.close(() => resolve())) }
+})

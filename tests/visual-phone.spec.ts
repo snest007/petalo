@@ -2,6 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
+import { assertPopupsInCells } from "./visual-popup-cell"
 
 const THEMES = ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
 const DENSITIES = ["cozy", "compact"]
@@ -39,6 +40,7 @@ for (const theme of THEMES) for (const density of DENSITIES) {
         // paints that host at opacity .1 even when animations are disabled.
         if (index) await expect(dialog).toHaveCSS("opacity", "1")
         await page.mouse.move(0, 666)
+        await assertPopupsInCells(page, true)
         return PNG.sync.read(await page.screenshot({ animations: "disabled", caret: "hide" }))
       }))
       const [a, b] = shots

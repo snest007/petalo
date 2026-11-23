@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util"
 import { createHash } from "node:crypto"
 import { readFileSync } from "node:fs"
 
@@ -24,11 +25,14 @@ export function componentOwner(component: string): string {
   if (!owner) throw new Error(`No P-card owner for component ${component}`)
   return owner
 }
-export function caseOwner(caseId: string): string {
+export function caseComponent(caseId: string): string {
   const normalized = caseId.replace(/^sapui5-/, "").replace(/^shellbar(?=-)/, "shell-bar").replace(/^icons?(?=-|$)/, "text")
   const component = Object.values(groups).flat().sort((a, b) => b.length - a.length).find((name) => normalized === name || normalized.startsWith(`${name}-`))
   if (!component) throw new Error(`No P-card owner for case ${caseId}`)
-  return componentOwner(component)
+  return component
+}
+export function caseOwner(caseId: string): string {
+  return componentOwner(caseComponent(caseId))
 }
 // The test server's origin carries PORT (any free port per AGENTS.md), so link `url` mismatches would change
 // fingerprint with the port. Hash a port-independent line.
@@ -37,7 +41,7 @@ export const entryKey = (entry: BaselineEntry) => JSON.stringify([entry.matrix, 
 export function differenceEntry(key: string, line: string): BaselineEntry {
   const [engine, direction, ...id] = key.split("/")
   const caseId = id.join("/")
-  if (!caseId || !["webcomponents", "phone", "openui5"].includes(engine) || !["ltr", "rtl"].includes(direction)) throw new Error(`Invalid matrix key ${key}`)
+  if (!caseId || !["webcomponents", "phone", "openui5", "wcr"].includes(engine) || !["ltr", "rtl"].includes(direction)) throw new Error(`Invalid matrix key ${key}`)
   const match = /^(\/[^:]*): (.+)$/.exec(line)
   if (!match) throw new Error(`Non-tree failure cannot enter the baseline: ${key}: ${line}`)
   const [, path, details] = match
@@ -69,7 +73,7 @@ export function parseTreeBaseline(value: unknown): TreeBaseline {
   if (!baseline || baseline.version !== 1 || !Array.isArray(baseline.entries)) throw new Error("Malformed accessibility tree baseline")
   const identities = new Set<string>()
   for (const entry of baseline.entries) {
-    if (!entry || !["webcomponents/ltr", "webcomponents/rtl", "phone/ltr", "openui5/ltr"].includes(entry.matrix) || typeof entry.caseId !== "string" || !entry.caseId || typeof entry.path !== "string" || !entry.path.startsWith("/") || typeof entry.kind !== "string" || !entry.kind || !/^[a-f0-9]{64}$/.test(entry.fingerprint ?? "")) throw new Error("Malformed accessibility tree baseline entry")
+    if (!entry || !["webcomponents/ltr", "webcomponents/rtl", "phone/ltr", "openui5/ltr", "wcr/ltr", "wcr/rtl"].includes(entry.matrix) || typeof entry.caseId !== "string" || !entry.caseId || typeof entry.path !== "string" || !entry.path.startsWith("/") || typeof entry.kind !== "string" || !entry.kind || !/^[a-f0-9]{64}$/.test(entry.fingerprint ?? "")) throw new Error("Malformed accessibility tree baseline entry")
     if (caseOwner(entry.caseId) !== entry.owner) throw new Error(`Incorrect baseline owner for ${entry.caseId}`)
     const key = entryKey(entry)
     if (identities.has(key)) throw new Error(`Duplicate baseline identity ${key}`)
@@ -98,4 +102,80 @@ export function baselineCounts(entries: BaselineEntry[]) {
   const owners: Record<string, number> = {}, matrices: Record<string, number> = {}
   for (const entry of entries) { owners[entry.owner] = (owners[entry.owner] ?? 0) + 1; matrices[entry.matrix] = (matrices[entry.matrix] ?? 0) + 1 }
   return { total: entries.length, owners, matrices }
+}
+
+
+type Node = Record<string, unknown> & { children: Node[] }
+type Trees = { ax: Node[]; snapshot: Node[] }
+type Capture = {
+  differences: string[]
+  ours?: Trees
+  ui5?: Trees
+  compared?: { ours: Trees; ui5: Trees }
+}
+
+function isInertGeneric(value: unknown): boolean {
+  if (!value || typeof value !== "object") return false
+  const { role, name, properties, states, children, ...channels } = value as Node
+  return role === "generic"
+    && (name === undefined || name === "")
+    && Array.isArray(children)
+    && Object.keys(channels).length === 0
+    && (states === undefined || (Array.isArray(states) && states.length === 0))
+    && (properties === undefined || (!!properties && typeof properties === "object" && !Array.isArray(properties)
+      && Object.entries(properties).every(([key, state]) => key === "focusable" && typeof state === "boolean")))
+}
+
+function semanticSequence(nodes: Node[]) {
+  const sequence: { parent: number; channels: Omit<Node, "children"> }[] = []
+  function walk(list: Node[], parent: number) {
+    for (const node of list) {
+      const { children, ...channels } = node
+      const index = isInertGeneric(node) ? parent : sequence.push({ parent, channels }) - 1
+      walk(children, index)
+    }
+  }
+  walk(nodes, -1)
+  return sequence
+}
+
+function atPath(tree: Trees, path: string) {
+  return path.slice(1).split("/").reduce<unknown>((value, key) => {
+    return value && typeof value === "object" && Object.hasOwn(value, key) ? (value as Record<string, unknown>)[key] : undefined
+  }, tree)
+}
+
+export function recordStructuralDifferences(component: string, report: Record<string, Capture>, baseline: TreeBaseline, newComponent: boolean) {
+  const owner = componentOwner(component)
+  const known = new Map(baseline.entries.map((entry) => [entryKey(entry), entry]))
+  const additions = []
+  const errors = []
+  for (const [key, capture] of Object.entries(report)) {
+    if (caseComponent(key.split("/").slice(2).join("/")) !== component) continue
+    const pending = capture.differences.map((line) => ({ line, entry: differenceEntry(key, line) }))
+      .filter(({ entry }) => known.get(entryKey(entry))?.fingerprint !== entry.fingerprint)
+    if (!pending.length) continue
+    const ours = capture.compared?.ours ?? capture.ours
+    const ui5 = capture.compared?.ui5 ?? capture.ui5
+    if (!ours || !ui5) throw new Error(`Missing paired trees for ${key}`)
+    const sameSemantics = (["ax", "snapshot"] as const).every((channel) =>
+      Array.isArray(ours[channel]) && Array.isArray(ui5[channel])
+      && isDeepStrictEqual(semanticSequence(ours[channel]), semanticSequence(ui5[channel])))
+    for (const { entry, line } of pending) {
+      const actual = atPath(ours, entry.path), reference = atPath(ui5, entry.path)
+      const structural = entry.kind === "extra-node" ? isInertGeneric(actual) && reference === undefined
+        : entry.kind === "missing-node" ? actual === undefined && isInertGeneric(reference)
+        : entry.kind === "structure" && isInertGeneric(actual) && isInertGeneric(reference)
+      const reason = !structural ? "difference is not an unnamed state-free generic node"
+        : !sameSemantics ? "semantic sequence or parentage differs"
+        : known.has(entryKey(entry)) ? "existing fingerprint changed"
+        : !newComponent ? "component already exists on main"
+        : !/^P[1-6]a?$/.test(owner) ? "component has no owning P card"
+        : undefined
+      if (reason) errors.push(`${key}: ${line} (${reason})`)
+      else additions.push(entry)
+    }
+  }
+  if (errors.length) throw new Error(errors.join("\n"))
+  return [...baseline.entries, ...additions].sort((a, b) => entryKey(a).localeCompare(entryKey(b)))
 }

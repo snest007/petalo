@@ -38,8 +38,7 @@ Read AGENTS.md, then do card <ID> (docs/plan/tasks/<file>.md). Worktree .worktre
 Read AGENTS.md, then continue on codex/<ID> in .worktrees/<ID> with card <IDb> (merge local main first; the card's Review findings section says where to start).
 ```
 
-Ports are chosen by the test scripts (E11); don't put port numbers in prompts. Until E11 is merged, give each parallel
-session its own `PORT`/`STORYBOOK_PORT` pair (4310/4320, 4330/4340, 4350/4360, 4370/4380) in the prompt.
+Test scripts choose free ports. Leave port numbers out of prompts.
 
 ## Card session flow (summary of AGENTS.md)
 
