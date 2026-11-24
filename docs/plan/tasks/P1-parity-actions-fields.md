@@ -73,3 +73,9 @@ same alert with no text child. A browser-clock probe on the source matching clea
 reproduced both states. Capture the intended announcement at a deterministic point in its lifecycle.
 Keep the real clear behavior and the exact tree ratchet. The review log is under
 `.worktrees/review-h2-h9/.integration/review-h2d/`.
+
+In a separate H9c full-suite run, the pinned native phone Select kept “Shipping country” after the
+test's label update to “Billing country” at `tests/select.spec.ts:159`. The unchanged test passed
+12/12 isolated H9c runs, 16/16 on clean main and the full confirmation. See
+`.worktrees/review-h2-h9/.integration/review-h9c/native-select-main.log`. Check that the label click
+and native observer have completed after the preceding dialog dismissal.

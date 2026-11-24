@@ -150,6 +150,11 @@ for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) 
   }
 }
 
+for (const [key, equivalent] of [
+  ["CANCEL", "cancel"], ["CLEAR", "clear"], ["SEARCH", "search"], ["SELECT", "select"],
+  ["SELECTED", "selected"], ["SELECTED_ITEMS", "selectedItems"], ["BUTTON_ARIA_TYPE_EMPHASIZED", "confirmDescription"], ["LIST_ITEM_ACTIVE", "itemActive"],
+]) verifiedTexts[`select-dialog.${key}`] = { equivalent: `SelectDialog.texts.${equivalent}`, status: "ok",
+  proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" }
 verifiedTexts["splitter-layout.PRESS_ARROW_KEYS_TO_MOVE"] = { equivalent: "SplitterLayout.texts.keyboardHint", status: "ok",
   proof: "tests/splitter-layout.spec.ts: SplitterLayout keyboard bounds and steps" }
 for (const [key, equivalent] of [
@@ -193,6 +198,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/TableCustomAnnouncement.js", "table"],
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js", "select-dialog"],
   ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
   ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)
@@ -211,6 +217,9 @@ for (const [file, owner] of sourceFiles) {
     if (file.endsWith("/ComboBox.js") && (lines[index].includes("announce(`${groupHeaderText}") || lines[index].includes("announce(`${currentItemAdditionalText}"))) Object.assign(row, { status: "fixed in E4", equivalent: "ComboBox owned polite alert: group header or additionalText plus displayed non-group position while open; additionalText alone while closed", proof: "tests/combobox.spec.ts: ComboBox [ltr/rtl] keyboard announcements use displayed rows, group headers and additional text" })
     if (file.endsWith("/List.js") && lines[index].includes("announce(selectedText")) Object.assign(row, { status: "fixed in E4", equivalent: "List/Tree owned polite alerts in the nearest modal ancestor or document.body (Tree inherits this native List selection channel)", proof: "tests/list.spec.ts: List selection changes announce politely with the same selected/not-selected text; tests/tree.spec.ts: Tree [RTL] custom content cannot replace owned role, states, ids or tab stops; Tree text overrides keep selection descriptions and polite announcements connected" })
     if (file.endsWith("/Select.js") && lines[index].includes("announce(text")) Object.assign(row, { status: "fixed in E4", equivalent: "Select's owned polite alert announces selected text; open state adds the same position text", proof: "tests/select.spec.ts: Select group summary and selection announcements preserve UI5 text and politeness" })
+    if (owner === "select-dialog" && lines[index].includes("announce(i18nBundle.getText(SELECTED_ITEMS")) Object.assign(row, {
+      status: "ok", equivalent: "SelectDialog's polite live region reports the number of selected items",
+      proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" })
     if (file.endsWith("/ListItemCustom.js")) Object.assign(row, { equivalent: "ListItemCustom focus name/connected label targets verified for custom text + Fiori Button; other widget/state hooks still gap", proof: "tests/list.spec.ts: List custom focus description matches UI5 content and controls and clears on blur" })
   }
 }
@@ -273,6 +282,12 @@ custom.push({
   owner: "analytical-table", point: "AnalyticalTable.columns.Filter", source: "registry/ui/analytical-table.tsx",
   declaration: "AnalyticalTable.columns.Filter", status: "ok", functional: true,
   proof: "tests/analytical-table.spec.ts: controlled sorting and the custom Filter renderer keep the owned menu and header",
+})
+
+custom.push({
+  owner: "select-dialog", point: "SelectDialog.getItemProps", source: "registry/ui/select-dialog.tsx",
+  declaration: "SelectDialog.getItemProps", status: "ok", functional: true,
+  proof: "tests/select-dialog.spec.ts: SelectDialog custom content keeps selection and keyboard ownership (ltr/rtl)",
 })
 
 const live = owners.flatMap((file) => read(`registry/ui/${file}`).split("\n").flatMap((line, index) =>
