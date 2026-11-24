@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H3, H4, H5, H7 (+H7b), H8 (+H8b), H9 (+H9b–H9d) | H6, H9e, H10–H14 and follow-ups | **H10 NavigationMenu next.** H6 follows P2a. H9e returned for open-editor accessibility review. |
+| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H3, H4, H5, H7 (+H7b), H8 (+H8b), H9 (+H9b–H9d) | H6, H9e, H10–H14 and follow-ups | **H10b NavigationMenu next.** H6 follows P2a. H9e returned for open-editor accessibility review. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
@@ -330,6 +330,7 @@ H6/H6b/H6c wait for P2a.
 - [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
 - [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
 - [ ] [H10 NavigationMenu](tasks/H10-navigation-menu.md) — M (after H0, E4, E5)
+- [ ] [H10b NavigationMenu built parity and open-state acceptance](tasks/H10b-navigation-menu-built-parity.md) — S (continue the [H10 return](returns/H10.md))
 - [ ] [H11 AnalyticalCardHeader and NumericSideIndicator](tasks/H11-analytical-card-header.md) — M (after H0, E4, E5)
 - [ ] [H12 ActionSheet](tasks/H12-action-sheet.md) — M (after H0, E4, E5)
 - [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
