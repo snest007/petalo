@@ -316,7 +316,7 @@ H6/H6b/H6c wait for P2a.
 - [x] [H2d AnalyticalTable: restore built-in filter parity](tasks/done/H2d-analytical-table-filter-parity.md) — S (same branch as H2; after E11)
 - [x] [H3 AnalyticalTable: grouping and aggregation](tasks/done/H3-analytical-table-group-aggregate.md) — L (after H2–H2d merge)
 - [x] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/done/H4-analytical-table-tree-select-subcomponents.md) — L (after H3), [acceptance](returns/done/H4.md)
-- [ ] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4)
+- [x] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4), [acceptance](returns/H5.md)
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
