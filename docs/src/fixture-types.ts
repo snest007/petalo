@@ -39,6 +39,8 @@ type FixtureA11yDiff = {
   analyticalTableDetailRows?: number[]
   /** The pinned WCR disabled-selection plugin leaves an inactive header instruction. */
   analyticalTableDisabledSelection?: true
+  /** Display column whose hidden header text repeats the existing accessible name. */
+  analyticalTableHeaderText?: number
   /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
   ui5FormHosts?: string[]
   /** Exact empty UI5 popup/List focus sentinels and the anonymous UI5 popup host. */

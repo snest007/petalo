@@ -1248,15 +1248,18 @@ export function AnalyticalTable<T extends RowData>({
             const column = ordered[item.index]
             const header = headersById.get(column.id)
             if (!header) return null
-            if (displayColumnIds.has(column.id)) return <div className="fiori-at-header-position" key={column.id} style={cellStyle(item.index)}>
-              <div {...context.getHeaderProps(header)} data-highlight-header={column.id === highlightColumnId || undefined}>
-                {column.id === selectionColumnId && showSelectAll && <>
-                  <Checkbox {...part("row-check", "fiori-at-check")} tabIndex={-1} aria-hidden="true"
-                    checked={allSelected || (someSelected ? "indeterminate" : false)} disabled={!selectableRows.length} />
-                  <span className="fiori-at-sr">{texts.selectAllLabel}</span>
-                </>}
+            if (displayColumnIds.has(column.id)) {
+              const headerProps = context.getHeaderProps(header)
+              return <div className="fiori-at-header-position" key={column.id} style={cellStyle(item.index)}>
+                <div {...headerProps} data-highlight-header={column.id === highlightColumnId || undefined}>
+                  {column.id === selectionColumnId && showSelectAll ? <>
+                    <Checkbox {...part("row-check", "fiori-at-check")} tabIndex={-1} aria-hidden="true"
+                      checked={allSelected || (someSelected ? "indeterminate" : false)} disabled={!selectableRows.length} />
+                    <span className="fiori-at-sr">{texts.selectAllLabel}</span>
+                  </> : <span className="fiori-at-sr">{headerProps["aria-label"]}</span>}
+                </div>
               </div>
-            </div>
+            }
             const def = definition(column)
             const frozen = isFrozen(item.index)
             const configuredPin = pinning.start.includes(column.id)

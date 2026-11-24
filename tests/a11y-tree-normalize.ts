@@ -296,7 +296,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** As with the in-place SplitButton/Menu fixture, the closed reference is
  * painted inside its cell without opening a modal surface. Verify PopupTemplate's
  * owning host, closed block layer and both exact focus guards, then compare all
@@ -497,6 +497,21 @@ function reconcileAnalyticalTableDisabledHeader(ours: any, ui5: any) {
   delete native.properties.describedby
 }
 
+/** ColumnHeader/index.js names synthetic headers with an ARIA label alone.
+ * Petalo also supplies real text matching that exact name, as required by axe.
+ * Compare the original name and all other AX channels. */
+function reconcileAnalyticalTableHeaderText(ours: any, ui5: any, index: number) {
+  const header = (capture: any) => capture.ax[0]?.children[0]?.children[0]?.children[index]?.children[0]
+  const actual = header(ours), native = header(ui5)
+  expect(native.role).toBe("columnheader")
+  expect(native.name).toMatch(/^(Selection|Highlight|Navigation) Column$/)
+  expect(actual).toMatchObject({ role: native.role, name: native.name })
+  const text = { role: "StaticText", name: native.name, properties: {}, children: [] }
+  expect(native.children).toEqual([])
+  expect(actual.children).toEqual([text])
+  native.children.push(text)
+}
+
 /** Read only the literal a11yDiff object, without running fixture React modules or broadening main.tsx ownership. */
 export function allowedDifferences(directory: string): Record<string, Allowed> {
   const result: Record<string, Allowed> = {}
@@ -618,6 +633,12 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.splitButtonMenu) {
       if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")
       reconcileSplitButtonMenu(adjusted.ours, native, allowed.splitButtonMenu)
+    }
+    if (allowed?.analyticalTableHeaderText !== undefined) {
+      if (!/^analytical-table-(?:select-single-row(?:selector)?|select-disabled|row-highlight|row-navigation)$/.test(id)) {
+        throw new Error("Header text allowance applies only to the paired synthetic AnalyticalTable headers")
+      }
+      reconcileAnalyticalTableHeaderText(adjusted.ours, native, allowed.analyticalTableHeaderText)
     }
     if (allowed?.analyticalTableDisabledSelection) {
       if (id !== "analytical-table-select-disabled") throw new Error("Disabled selection allowance is specific to analytical-table-select-disabled")
