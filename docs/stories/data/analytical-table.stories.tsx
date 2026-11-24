@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AnalyticalTable } from "@/components/ui/analytical-table"
-import { AnalyticalTableGroupingDemo, AnalyticalTableRowFeaturesDemo, AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
+import { AnalyticalTableGroupingDemo, AnalyticalTableRowFeaturesDemo, AnalyticalTableSortFilterDemo, AnalyticalTableVirtualDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
 import { fioriMeta } from "../_lib/meta"
 
 const base = fioriMeta({ name: "analytical-table", component: AnalyticalTable<(typeof inventory)[number]> })
@@ -63,3 +63,18 @@ export const RowDetails: Story = { args: {
   defaultExpanded: { 0: true }, subComponentsBehavior: "IncludeHeightExpandable",
   renderRowSubComponent: ({ row }) => <p className="p-2">Stock details for {row.original.product}</p>,
 } }
+
+
+export const InfiniteScrollAndEditing: Story = { render: () => <AnalyticalTableVirtualDemo /> }
+export const InfiniteScrollAndEditingRTL: Story = { render: () => <AnalyticalTableVirtualDemo dir="rtl" /> }
+export const StyledScrollbars: Story = {
+  args: { nativeScrollbar: false, columns: columns.map(column => ({ ...column, width: 220 })) },
+}
+export const InfiniteLoading: Story = { args: { infiniteScroll: true, totalRowCount: inventory.length, loading: true, loadingDelay: 0 } }
+
+const popInColumns = (popinDisplay: "Block" | "Inline" | "WithoutHeader") => columns.map((column, index) =>
+  index === 1 ? { ...column, responsiveMinWidth: 500, responsivePopIn: true, popinDisplay,
+    PopInHeader: () => <strong>Type</strong> } : column)
+export const PopInBlock: Story = { args: { adjustTableHeightOnPopIn: true, columns: popInColumns("Block") } }
+export const PopInInline: Story = { args: { adjustTableHeightOnPopIn: true, columns: popInColumns("Inline") } }
+export const PopInWithoutHeader: Story = { args: { adjustTableHeightOnPopIn: true, columns: popInColumns("WithoutHeader") } }

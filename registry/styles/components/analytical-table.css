@@ -445,3 +445,38 @@
   outline: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
   outline-offset: calc(-1 * var(--sapContent_FocusWidth));
 }
+
+/* The existing sticky viewport owns both axes, so the native and themed
+   alternatives need no second scrollbar with a mirrored scroll position. */
+.fiori-at-grid[data-scrollbar] { scrollbar-width: auto; }
+.fiori-at-grid[data-scrollbar="fiori"] {
+  scrollbar-color: var(--sapScrollBar_FaceColor) var(--sapScrollBar_TrackColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar {
+  inline-size: var(--sapScrollBar_Dimension);
+  block-size: var(--sapScrollBar_Dimension);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-thumb {
+  background: var(--sapScrollBar_FaceColor);
+  border: 1px solid var(--sapScrollBar_BorderColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-thumb:hover {
+  background: var(--sapScrollBar_Hover_FaceColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-track { background: var(--sapScrollBar_TrackColor); }
+
+/* WCR defaults/Column/PopIn.js and AnalyticalTable.module.css. */
+.fiori-at-pop-in { inline-size: 100%; min-inline-size: 0; }
+.fiori-at-pop-in-primary {
+  block-size: var(--at-primary-row-height);
+  display: flex;
+  overflow: hidden;
+}
+.fiori-at-pop-in-primary > :first-child { padding-block-start: .25rem; }
+.fiori-at-pop-in-header { color: var(--sapContent_LabelColor); block-size: var(--at-pop-in-header-height); }
+.fiori-at-pop-in-value {
+  block-size: var(--at-primary-row-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fiori-at-pop-in-field[data-display="Inline"] { display: flex; gap: .5rem; }

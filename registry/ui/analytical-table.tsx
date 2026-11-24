@@ -62,10 +62,19 @@ type GridRow<T extends RowData> = Row<Features, T>
 type GridCell<T extends RowData> = Cell<Features, T, unknown>
 type Align = "Start" | "Center" | "End" | "Left" | "Right"
 type VerticalAlign = "Top" | "Middle" | "Bottom"
+export type AnalyticalTablePopInDisplay = "Block" | "Inline" | "WithoutHeader"
+
+export type AnalyticalTableScrollDetail<T extends RowData> = {
+  rows: GridRow<T>[]
+  rowElements: HTMLCollection
+}
+export type AnalyticalTableLoadMoreDetail = { rowCount: number; totalRowCount: number }
+export type AnalyticalTableScrollEvent<Detail> = Event & { readonly detail: Detail }
 export type AnalyticalTableSlot = "grid" | "header-row" | "header-cell" | "header-content" | "header-menu" |
   "body" | "row" | "cell" | "cell-content" | "resizer" | "vertical-resizer" | "empty-row" |
   "no-data" | "loading" | "header-filter" | "header-indicator" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text" |
-  "group-toggle" | "announcement" | "row-toggle" | "row-check" | "row-highlight" | "row-navigation"
+  "group-toggle" | "announcement" | "row-toggle" | "row-check" | "row-highlight" | "row-navigation" |
+  "pop-in" | "pop-in-header" | "pop-in-value" | "busy-row"
 
 export type AnalyticalTableColumnMeta = {
   className?: string
@@ -84,6 +93,9 @@ export type AnalyticalTableCellInfo<T extends RowData, V = unknown> = Analytical
 type ColumnRenderKeys = "header" | "cell" | "footer"
 type WithoutRenderers<Def> = Def extends unknown ? Omit<Def, ColumnRenderKeys> : never
 type HeaderInfo<T extends RowData, V> = AnalyticalTableContentInfo<T> & { header: Header<Features, T, V>; column: GridColumn<T> }
+
+export type AnalyticalTablePopInHeaderInfo<T extends RowData, V = unknown> =
+  AnalyticalTableCellInfo<T, V> & { isPopIn: true }
 
 export type AnalyticalTableFilterInfo<T extends RowData> = AnalyticalTableContentInfo<T> & {
   column: GridColumn<T>
@@ -118,6 +130,12 @@ export type AnalyticalTableColumnDef<T extends RowData, V = unknown> = WithoutRe
   disableResizing?: boolean
   disableDragAndDrop?: boolean
   interactiveElementName?: string | ((cell: GridCell<T>) => string)
+  /** When the viewport is narrower than this width, hide or move the column. */
+  responsiveMinWidth?: number
+  responsivePopIn?: boolean
+  popinDisplay?: AnalyticalTablePopInDisplay
+  /** Experimental content-only label slot. The first visible cell owns its label relationship. */
+  PopInHeader?: React.ReactNode | ((info: AnalyticalTablePopInHeaderInfo<T, V>) => React.ReactNode)
   autoResizable?: boolean
   sticky?: "start"
   scaleWidthModeOptions?: { cellString?: string; headerString?: string }
@@ -310,6 +328,19 @@ export type AnalyticalTableProps<T extends RowData> = Omit<HostProps, "children"
   loading?: boolean
   loadingDelay?: number
   alwaysShowBusyIndicator?: boolean
+  overscanCount?: number
+  overscanCountHorizontal?: number
+  infiniteScroll?: boolean
+  infiniteScrollThreshold?: number
+  /** The known server total for infinite scrolling. The grid reports -1 while it is unknown. */
+  totalRowCount?: number
+  onLoadMore?: (event: AnalyticalTableScrollEvent<AnalyticalTableLoadMoreDetail>) => void
+  onTableScroll?: (event: AnalyticalTableScrollEvent<AnalyticalTableScrollDetail<T>>) => void
+  /** Show native scrollbars, or use the Fiori scrollbar colors when false. */
+  nativeScrollbar?: boolean
+  adjustTableHeightOnPopIn?: boolean
+  /** Enable WCR's same-column Tab navigation between the header and table body. */
+  f2CellEdit?: boolean
   noDataText?: string
   noDataReason?: EmptyReason
   NoDataComponent?: React.ComponentType<EmptyInfo<T>>
@@ -408,7 +439,7 @@ function columnId<T extends RowData>(definition: AnalyticalTableColumnDef<T>) {
 }
 
 function useViewport(root: React.RefObject<HTMLDivElement | null>, grid: React.RefObject<HTMLDivElement | null>, dir: "ltr" | "rtl" | undefined) {
-  const [viewport, setViewport] = React.useState({ width: 0, availableHeight: 0, rowHeight: 0, headerHeight: 0, selectionWidth: 44, highContrast: false, rtl: dir === "rtl", fontsReady: false })
+  const [viewport, setViewport] = React.useState({ width: 0, outerWidth: 0, availableHeight: 0, rowHeight: 0, headerHeight: 0, selectionWidth: 44, highContrast: false, rtl: dir === "rtl", fontsReady: false })
   React.useLayoutEffect(() => {
     const element = grid.current
     const parent = root.current?.parentElement
@@ -417,6 +448,7 @@ function useViewport(root: React.RefObject<HTMLDivElement | null>, grid: React.R
       const style = getComputedStyle(element)
       const measured = {
         width: element.clientWidth,
+        outerWidth: element.offsetWidth,
         availableHeight: parent.clientHeight,
         rowHeight: Number.parseFloat(style.getPropertyValue("--fiori-wcr-x-analyticaltablerowheight")) || 44,
         headerHeight: Number.parseFloat(style.getPropertyValue("--fiori-wcr-x-analyticaltableheaderrowheight")) || 44,
@@ -449,6 +481,8 @@ const navigationColumnId = "__ui5wcr__internal_navigation_column"
 const indicatorWidth = 6 // useRowHighlight.js and useRowNavigationIndicator.js
 const displayColumnIds: ReadonlySet<string> = new Set([selectionColumnId, highlightColumnId, navigationColumnId])
 const rowClickIgnore = "a[href],button,input,select,textarea,summary,[contenteditable=true],[role=button],[role=link],[role=checkbox],[role=switch]"
+// PopIn.js and AnalyticalTable.module.css reserve this CSS-pixel header height.
+const popInHeaderHeight = 16
 const dragType = "application/x-petalo-analytical-table-column"
 const slot = (name: AnalyticalTableSlot) => `analytical-table-${name}`
 
@@ -469,6 +503,8 @@ export function AnalyticalTable<T extends RowData>({
   retainColumnWidth = false, scaleWidthMode = "Default", rowHeight, headerRowHeight,
   alternateRowColor = false, minRows = 5, visibleRows, defaultVisibleRows = 15, onVisibleRowsChange,
   visibleRowCountMode = "Fixed", loading = false, loadingDelay, alwaysShowBusyIndicator = false,
+  overscanCount, overscanCountHorizontal = 10, infiniteScroll = false, infiniteScrollThreshold = 20,
+  totalRowCount, onLoadMore, onTableScroll, nativeScrollbar, adjustTableHeightOnPopIn = false, f2CellEdit = false,
   noDataText, noDataReason, NoDataComponent, LoadingComponent, renderRowSubComponent,
   isTreeTable = false, subRowsKey = "subRows", getSubRows,
   selectionMode = "None", selectionBehavior = "Row", selectedRowIds, defaultSelectedRowIds, onSelectedRowIdsChange,
@@ -637,7 +673,15 @@ export function AnalyticalTable<T extends RowData>({
     return row && (alwaysShowDetails || row.getIsExpanded()) && showDetail(row) ? detailHeights[row.id] ?? 0 : 0
   }
   const grouped = groupState.some(id => table.getColumn(id) !== undefined)
-  const visible = table.getVisibleLeafColumns()
+  const availableColumns = table.getVisibleLeafColumns()
+  // usePopIn.js removes responsive columns from the viewport model, not the source cells.
+  const responsiveWidth = viewport.outerWidth
+  const isBelowWidth = (column: GridColumn<T>) => {
+    const minWidth = definition(column).responsiveMinWidth
+    return responsiveWidth > 0 && minWidth !== undefined && responsiveWidth < minWidth
+  }
+  const popInColumns = availableColumns.filter(column => definition(column).responsivePopIn && isBelowWidth(column))
+  const visible = availableColumns.filter(column => !isBelowWidth(column))
   const headersById = new Map(table.getHeaderGroups().at(-1)?.headers.map(header => [header.column.id, header]) ?? [])
   const leading = [highlightColumnId, selectionColumnId].flatMap(id => visible.filter(column => column.id === id))
   const trailing = visible.filter(column => column.id === navigationColumnId)
@@ -651,13 +695,16 @@ export function AnalyticalTable<T extends RowData>({
   const firstUserId = ordered[leading.length]?.id
   const pinnedCount = freezeActive ? leading.length + pinned.length : 0
   const rowCount = rows.length
+  const reportedRowCount = infiniteScroll ? totalRowCount ?? -1 : rowCount
+  const renderedRowHeight = densityRow + popInColumns.reduce((height, column) =>
+    height + densityRow + ((definition(column).popinDisplay ?? "Block") === "Block" ? popInHeaderHeight : 0), 0)
   const showSelectAll = selectionMode === "Multiple" && rowCount > 0 && !isRowSelectable
   const auto = visibleRowCountMode.startsWith("Auto")
   const availableBody = viewport.availableHeight - densityHeader
-  const fitRows = auto && availableBody >= densityRow ? Math.max(1, Math.floor(availableBody / densityRow)) : requestedRows
+  const fitRows = auto && availableBody >= renderedRowHeight ? Math.max(1, Math.floor(availableBody / renderedRowHeight)) : requestedRows
   const viewportRows = visibleRowCountMode === "AutoWithEmptyRows" || (auto && !rowCount) ? fitRows :
     rowCount < fitRows ? Math.max(rowCount, minRows) : fitRows
-  const bodyHeight = Math.max(0, viewportRows) * densityRow +
+  const bodyHeight = Math.max(0, viewportRows) * (auto || adjustTableHeightOnPopIn ? renderedRowHeight : densityRow) +
     (includeDetailHeight ? rows.slice(0, viewportRows).reduce((height, row) => height + detailHeight(row), 0) : 0)
   const footer = ordered.some(column => column.columnDef.footer != null)
   const virtualRows = React.useRef<ReturnType<typeof useVirtualizer<HTMLDivElement, HTMLDivElement>>>(null)
@@ -666,19 +713,31 @@ export function AnalyticalTable<T extends RowData>({
     if (position.row > 0) virtualRows.current?.scrollToIndex(position.row - 1, { align: "auto" })
     if (position.column >= pinnedCount) virtualColumns.current?.scrollToIndex(position.column, { align: "auto" })
   }
-  const nav = useGridNavigation(grid, rowCount, ordered.length, densityRow, Math.max(1, viewportRows), rtl, reveal)
+  const nav = useGridNavigation(grid, rowCount, ordered.length, renderedRowHeight,
+    Math.max(1, Math.floor(bodyHeight / renderedRowHeight)), rtl, reveal, f2CellEdit)
+  // TanStack recalculates positions when the item-key function changes. Keep
+  // its measurements and the row-index map stable across scroll renders.
+  const rowKey = React.useCallback((index: number) => rows[index]?.id ?? `empty-${index}`, [rows])
+  const getScrollElement = React.useCallback(() => grid.current, [])
   const rowVirtual = useVirtualizer<HTMLDivElement, HTMLDivElement>({
     count: rowCount ? Math.max(rowCount, minRows, viewportRows) : 0,
-    getScrollElement: () => grid.current, estimateSize: index => densityRow + detailHeight(rows[index]),
-    getItemKey: index => rows[index]?.id ?? `empty-${index}`,
-    overscan: Math.floor(fitRows / 2), paddingStart: densityHeader, scrollPaddingStart: densityHeader,
-    rangeExtractor: range => keepIndexes(defaultRangeExtractor(range), nav.active?.row ? [nav.active.row - 1] : []),
+    getScrollElement, estimateSize: index => renderedRowHeight + detailHeight(rows[index]),
+    getItemKey: rowKey,
+    overscan: overscanCount ?? Math.floor(fitRows / 2), paddingStart: densityHeader, scrollPaddingStart: densityHeader,
+    // WCR VirtualTableBody uses a body viewport below the header. Exclude
+    // the row covered by our sticky header before adding row overscan.
+    rangeExtractor: range => {
+      const instance = virtualRows.current
+      const first = instance?.getVirtualItemForOffset((instance.scrollOffset ?? 0) + densityHeader)
+      const startIndex = Math.min(range.endIndex, first?.index ?? range.startIndex)
+      return keepIndexes(defaultRangeExtractor({ ...range, startIndex }), nav.active?.row ? [nav.active.row - 1] : [])
+    },
   })
   const pendingHeaderFocus = React.useRef<string>(undefined)
   const colVirtual = useVirtualizer<HTMLDivElement, HTMLDivElement>({
-    count: ordered.length, getScrollElement: () => grid.current, horizontal: true, isRtl: rtl,
+    count: ordered.length, getScrollElement, horizontal: true, isRtl: rtl,
     estimateSize: index => ordered[index]?.getSize() ?? minimumColumnWidth,
-    getItemKey: index => ordered[index]?.id ?? index, overscan: 10,
+    getItemKey: index => ordered[index]?.id ?? index, overscan: overscanCountHorizontal,
     scrollPaddingStart: freezeActive ? frozenSize : 0,
     rangeExtractor: range => keepIndexes(defaultRangeExtractor(range),
       [...Array.from({ length: pinnedCount }, (_, index) => index), ...(nav.active ? [nav.active.column] : []),
@@ -690,10 +749,10 @@ export function AnalyticalTable<T extends RowData>({
   React.useLayoutEffect(() => { colVirtual.measure() }, [colVirtual, widthSignature])
   React.useLayoutEffect(() => {
     if (!renderRowSubComponent) rowVirtual.measure()
-  }, [rowVirtual, densityRow, renderRowSubComponent])
+  }, [rowVirtual, renderedRowHeight, renderRowSubComponent])
   React.useLayoutEffect(() => {
     if (!renderRowSubComponent) return
-    for (const item of rowVirtual.getVirtualItems()) rowVirtual.resizeItem(item.index, densityRow + detailHeight(rows[item.index]))
+    for (const item of rowVirtual.getVirtualItems()) rowVirtual.resizeItem(item.index, renderedRowHeight + detailHeight(rows[item.index]))
   })
 
   const scrollToRow: AnalyticalTableInstance<T>["scrollToRow"] = (index, options) => rowVirtual.scrollToIndex(index, options)
@@ -728,11 +787,43 @@ export function AnalyticalTable<T extends RowData>({
     }
   }
   const rowPositions = new Map(rowVirtual.getVirtualItems().map(item => [rows[item.index]?.id, item]))
-  const rowIndexes = new Map(rows.map((row, index) => [row.id, index]))
+  const rowIndexes = React.useMemo(() => new Map(rows.map((row, index) => [row.id, index])), [rows])
+  const bodyContent = React.useRef<HTMLDivElement>(null)
+  const lastLoad = React.useRef({ count: 0, offset: 0, fired: false })
+
+  function scrollGrid(event: React.UIEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget
+    const previous = lastLoad.current
+    const loadedCount = infiniteScroll ? table.getCoreRowModel().flatRows.length : rowCount
+    const fired = previous.count === loadedCount && previous.fired
+    // VirtualTableBodyContainer.js also checks the bottom in grouped tables.
+    // Appending to an existing collapsed group does not change the visible row
+    // count. Dedupe by the loaded rows and use the measured viewport for details.
+    const groupedBottom = grouped && scrollTop > 0 && scrollHeight - scrollTop - clientHeight <= 1
+    const lastVisibleRow = rowVirtual.getVirtualItemForOffset(scrollTop + clientHeight - 1)
+    const remaining = rowCount - (lastVisibleRow?.index ?? -1) - 1
+    const load = !!onLoadMore && infiniteScroll && !loading && loadedCount > 0 && !fired &&
+      (groupedBottom || scrollTop > previous.offset && remaining < infiniteScrollThreshold) &&
+      (totalRowCount === undefined || totalRowCount < 0 || loadedCount < totalRowCount)
+    lastLoad.current = { count: loadedCount, offset: scrollTop, fired: fired || load }
+    if (!load && !onTableScroll) return
+
+    // WCR enrichEventWithDetails preserves the scroll event and adds the row model.
+    const rowElements = bodyContent.current?.getElementsByClassName("fiori-at-row")
+    const counts = load ? { rowCount: rows.filter(row => row.depth === 0).length, totalRowCount: rowCount } : {}
+    const enriched: Event = Object.defineProperty(event.nativeEvent, "detail", {
+      configurable: true, value: { ...counts, rows, rowElements },
+    })
+    if (rowElements) onTableScroll?.(enriched as AnalyticalTableScrollEvent<AnalyticalTableScrollDetail<T>>)
+    if (load) onLoadMore(enriched as AnalyticalTableScrollEvent<AnalyticalTableLoadMoreDetail>)
+  }
   const columnIndexes = new Map(ordered.map((column, index) => [column.id, index]))
   const part = (name: AnalyticalTableSlot, base?: string) => ({ "data-slot": slot(name), className: cn(base, classNames?.[name]) })
   const headerId = (column: GridColumn<T>) => `${id}-head-${encodeURIComponent(column.id)}`
   const valueId = (cell: GridCell<T>) => `${id}-value-${encodeURIComponent(cell.id)}`
+  const popInId = (row: GridRow<T>, column: GridColumn<T>, part: "header" | "value") =>
+    `${id}-pop-in-${part}-${encodeURIComponent(column.id)}-${encodeURIComponent(row.id)}`
   const emptyId = `${id}-empty`
   React.useLayoutEffect(() => {
     const restore = pendingHeaderFocus.current
@@ -1057,7 +1148,7 @@ export function AnalyticalTable<T extends RowData>({
           onRowContextMenu?.({ row, column: column ? table.getColumn(column) : undefined, event })
         },
         "data-alternate": alternateRowColor && index % 2 === 0 || undefined,
-        style: { top: (rowPositions.get(row.id)?.start ?? densityHeader) - densityHeader, height: densityRow + detailHeight(row) },
+        style: { top: (rowPositions.get(row.id)?.start ?? densityHeader) - densityHeader, height: renderedRowHeight + detailHeight(row) },
       } as HostProps, getRowProps?.(row), extra)
     },
     getCellProps: (cell, extra) => {
@@ -1075,7 +1166,16 @@ export function AnalyticalTable<T extends RowData>({
       const selectCell = (canSelect(cell.row) || disabledSelector) && (selector || selectionBehavior !== "RowSelector") && !expandable
       const selected = selectCell ? checked(cell.row) : undefined
       const display = displayColumnIds.has(cell.column.id)
-      const labelRefs = [!display && valueId(cell), voiceOver && headerId(cell.column), empty && emptyId].filter(Boolean).join(" ")
+      const hasPopIn = first && popInColumns.length > 0 && !group
+      // useA11y.setCellProps keeps the moved fields in the first column's
+      // name. VoiceOver reads the header first when these fields follow.
+      const popInRefs = hasPopIn ? popInColumns.flatMap(column => [
+        definition(column).popinDisplay !== "WithoutHeader" && popInId(cell.row, column, "header"),
+        popInId(cell.row, column, "value"),
+      ]) : []
+      const headerRef = voiceOver && headerId(cell.column)
+      const labelRefs = [...(hasPopIn ? [headerRef, valueId(cell)] : [!display && valueId(cell), headerRef]),
+        ...popInRefs, empty && emptyId].filter(Boolean).join(" ")
       // useA11y.setCellProps + useCanUseVoiceOver: value first, then the header on Apple platforms.
       const interactiveName = typeof def.interactiveElementName === "function" ? def.interactiveElementName(cell) : def.interactiveElementName
       const cellName = def.cellLabel?.(cellInfo(cell))
@@ -1092,17 +1192,18 @@ export function AnalyticalTable<T extends RowData>({
         "aria-disabled": disabledSelector || undefined,
         "aria-describedby": expandable ? `${id}-hint-${expanded ? 5 : 4}` :
           selectCell ? `${id}-hint-${selected ? 1 : 0}` : undefined,
-        "aria-labelledby": name === undefined && labelRefs || undefined,
+        "aria-labelledby": (name === undefined || hasPopIn) && labelRefs || undefined,
         "data-grid-row": row, "data-grid-column": column, "data-column-id": cell.column.id,
+        "data-grid-editor": interactiveName !== undefined || undefined,
         "data-display": display || undefined,
         "data-selection-cell": selector || undefined,
         "data-selection-disabled": disabledSelector || undefined,
         "data-navigation-cell": cell.column.id === navigationColumnId || undefined,
         "data-frozen": isFrozen(column) || undefined,
-        tabIndex: !loading && nav.isActive(row, column) ? 0 : -1,
-        style: { ...cellStyle(column), ...(renderRowSubComponent ? { height: densityRow } : {}),
+        tabIndex: !loading && !nav.isEditing && nav.isActive(row, column) ? 0 : -1,
+        style: { ...cellStyle(column), ...(renderRowSubComponent ? { height: renderedRowHeight } : {}),
           justifyContent: selector ? "center" : def.hAlign?.toLowerCase(),
-          alignItems: def.vAlign === "Top" ? "start" : def.vAlign === "Bottom" ? "end" : "center" },
+          alignItems: hasPopIn || def.vAlign === "Top" ? "start" : def.vAlign === "Bottom" ? "end" : "center" },
         onFocus: event => nav.onHostFocus(event, row, column), onBlur: nav.onHostBlur,
         onKeyDown: event => {
           if (event.target === event.currentTarget) {
@@ -1153,16 +1254,36 @@ export function AnalyticalTable<T extends RowData>({
   const noData = noDataText ?? (emptyReason === "Filtered" ? texts.noDataFiltered : texts.noData)
   const placeholder = loading && !rowCount && !alwaysShowBusyIndicator
   const Body = components?.Body
+  // PopIn.js renders each moved field under the first data cell while
+  // retaining the original cell renderer and the protected header/value IDs.
+  function renderPopIn(row: GridRow<T>, column: GridColumn<T>, cell: GridCell<T> | undefined) {
+    const def = definition(column)
+    const display = def.popinDisplay ?? "Block"
+    const header = headersById.get(column.id)
+    const fallback = typeof def.header === "string" ? def.header : column.id
+    const label = header ? flexRender(def.header, { ...header.getContext(), ...info(fallback) }) ?? fallback : fallback
+    const content = cell ? cellInfo(cell) : undefined
+    const context = content && { ...content, defaultContent: label, isPopIn: true as const }
+    const heading = typeof def.PopInHeader === "function" ? context && def.PopInHeader(context) : def.PopInHeader ?? label
+    const value = cell && content && (def.cell ?
+      flexRender(def.cell, { ...cell.getContext(), ...content, isPopIn: true }) : content.value === 0 || content.value ? content.defaultContent : null)
+    return <div key={column.id} className="fiori-at-pop-in-field" data-display={display}>
+      {display !== "WithoutHeader" &&
+        <div {...part("pop-in-header", "fiori-at-pop-in-header")} id={popInId(row, column, "header")} aria-hidden="true">{heading}:{" "}</div>}
+      <div {...part("pop-in-value", "fiori-at-pop-in-value")} id={popInId(row, column, "value")}
+        aria-hidden={def.interactiveElementName ? undefined : true}>{value}</div>
+    </div>
+  }
   const renderedRows = rowVirtual.getVirtualItems().map(item => {
     const row = rows[item.index]
     if (!row) return <div key={item.key} {...part("empty-row", "fiori-at-row")}
       data-alternate={alternateRowColor && item.index % 2 !== 0 || undefined}
-      style={{ top: item.start - densityHeader, height: densityRow }}>
+      style={{ top: item.start - densityHeader, height: renderedRowHeight }}>
       {renderedColumns.map(col => <div key={col.key} className="fiori-at-cell" aria-hidden="true" style={cellStyle(col.index)} data-frozen={isFrozen(col.index) || undefined} />)}
     </div>
     const cells = new Map(row.getAllCells().map(cell => [cell.column.id, cell]))
     const showPanel = !!renderRowSubComponent && (alwaysShowDetails || row.getIsExpanded()) && showDetail(row)
-    const detail = showPanel && <MeasuredRowDetail {...part("sub-component", "fiori-at-row-detail")} top={densityRow}
+    const detail = showPanel && <MeasuredRowDetail {...part("sub-component", "fiori-at-row-detail")} top={renderedRowHeight}
       onMeasure={height =>
         setDetailHeights(previous => previous[row.id] === height ? previous : { ...previous, [row.id]: height })}
       onNavigate={direction => nav.focusCell(item.index + 1 + (direction === "down" ? 1 : 0), nav.active?.column ?? leading.length)}>
@@ -1204,7 +1325,8 @@ export function AnalyticalTable<T extends RowData>({
         const toggleProps = { type: "button" as const, tabIndex: -1, "aria-expanded": expand,
           "aria-label": toggleLabel, onMouseDown: (event: React.MouseEvent) => event.preventDefault(),
           onClick: (event: React.MouseEvent) => { event.stopPropagation(); toggleGroupRow(row) } }
-        return <AnalyticalTableCell key={cell.id} cell={cell}>
+        const popIn = cell.column.id === firstUserId && !row.getIsGrouped() && popInColumns.length > 0
+        const contentRow = <>
           {treeCell && (toggle ?
             <span className="fiori-at-tree-control" style={{ paddingInlineStart: indentation }} title={toggleLabel}>
               {viewport.highContrast ?
@@ -1222,25 +1344,42 @@ export function AnalyticalTable<T extends RowData>({
           </button>}
           {group && custom && <span {...part("hidden-text", "fiori-at-sr")} id={valueId(cell)} aria-hidden="true">{content.defaultContent}</span>}
           {(!repeat || custom) && <span {...part("cell-content", custom ? undefined : "fiori-at-ellipsis")} id={group && custom ? undefined : valueId(cell)}
+            role={custom && def?.interactiveElementName !== undefined ? "presentation" : undefined}
             title={custom ? undefined : String(content.defaultContent ?? "")} aria-hidden={custom ? undefined : true}>
             {custom ? flexRender(custom, { ...cell.getContext(), ...content }) : content.defaultContent}
           </span>}
+        </>
+        return <AnalyticalTableCell key={cell.id} cell={cell}>
+          {popIn ? <div {...part("pop-in", "fiori-at-pop-in")}>
+            <div className="fiori-at-pop-in-primary">{contentRow}</div>{" "}
+            {popInColumns.map(column => renderPopIn(row, column, cells.get(column.id)))}
+          </div> : contentRow}
         </AnalyticalTableCell>
       })}
       {legacyDetail && detail}
     </AnalyticalTableRow>
   })
+  // WCR's AnalyticalTable/index.js paints an overlay across the loaded grid.
+  // The outer layer catches pointers while the busy row owns announcements.
+  const infiniteBusy = infiniteScroll && loading && rowCount > 0
+  const overlayClass = cn("fiori-at-busy", classNames?.loading)
+  const busyIndicator = <BusyIndicator active delay={loadingDelay} inert={infiniteBusy || undefined}
+    className={infiniteBusy ? undefined : overlayClass} aria-label={texts.busy} />
   return <Context.Provider value={context}>
     <div {...rootProps} data-slot="analytical-table" dir={direction} className={cn("fiori-at", className)} style={{ "--at-grid-height": `${densityHeader + bodyHeight + (footer ? densityHeader : 0)}px`, ...rootProps.style } as React.CSSProperties}
       ref={node => { root.current = node; if (typeof ref === "function") return ref(node); if (ref) ref.current = node }}>
       <div {...part("grid", "fiori-at-grid")} ref={grid} role={grouped || isTreeTable ? "treegrid" : "grid"} aria-label={label} aria-labelledby={labelledBy}
-        aria-describedby={describedBy} aria-description={[description, columns.some(column => column.interactiveElementName) && texts.moveToContent].filter(Boolean).join(" ") || undefined} aria-details={details} aria-rowcount={rowCount}
+        aria-describedby={describedBy} aria-description={[description, (f2CellEdit || columns.some(column => column.interactiveElementName)) && texts.moveToContent].filter(Boolean).join(" ") || undefined} aria-details={details} aria-rowcount={reportedRowCount}
         aria-colcount={ordered.length} aria-multiselectable={selectionMode === "Multiple"} data-fills-width={totalWidth >= viewport.width || undefined}
         data-grouped={grouped || undefined}
         tabIndex={!loading && !nav.active && rowCount ? 0 : -1} onFocus={nav.onGridFocus}
+        onScroll={onLoadMore || onTableScroll || infiniteScroll ? scrollGrid : undefined}
+        data-scrollbar={nativeScrollbar === undefined ? undefined : nativeScrollbar ? "native" : "fiori"}
+        aria-busy={infiniteScroll && loading || undefined}
         style={{ height: densityHeader + bodyHeight + (footer ? densityHeader : 0),
           scrollPaddingInlineStart: freezeActive ? frozenSize : undefined,
-          "--at-header-height": `${densityHeader}px`, "--at-row-height": `${densityRow}px`,
+          "--at-header-height": `${densityHeader}px`, "--at-row-height": `${renderedRowHeight}px`,
+          "--at-primary-row-height": `${densityRow}px`, "--at-pop-in-header-height": `${popInHeaderHeight}px`,
           "--at-content-height": `${bodyHeight + densityHeader}px`,
         } as React.CSSProperties}>
         <div {...part("header-row", "fiori-at-header-row")} role="row" aria-rowindex={1} style={{ width: totalWidth }}>
@@ -1354,8 +1493,11 @@ export function AnalyticalTable<T extends RowData>({
           })}
         </div>
         {rowCount ? <div {...part("body", "fiori-at-body")} role="rowgroup" tabIndex={-1}>
-          <div className="fiori-at-body-content" style={{ width: totalWidth, height: rowVirtual.getTotalSize() - densityHeader }}>
+          <div className="fiori-at-body-content" ref={bodyContent} style={{ width: totalWidth, height: rowVirtual.getTotalSize() - densityHeader }}>
             {Body ? <Body>{renderedRows}</Body> : renderedRows}
+            {infiniteScroll && loading && <div {...part("busy-row", "fiori-at-sr")} role="row" aria-rowindex={rowCount + 2}>
+              <div role="gridcell" aria-colspan={ordered.length || undefined}>{texts.pleaseWait}</div>
+            </div>}
           </div>
         </div> : <div role="row" tabIndex={loading ? -1 : 0} className="fiori-at-empty" style={{ height: bodyHeight, width: totalWidth || undefined }}>
           <div {...part(placeholder ? "loading" : "no-data", placeholder ? "fiori-at-placeholder" : "fiori-at-no-data")} role="gridcell">
@@ -1377,8 +1519,8 @@ export function AnalyticalTable<T extends RowData>({
           })}
         </div>}
       </div>
-      {loading && (rowCount > 0 || alwaysShowBusyIndicator) &&
-        <BusyIndicator active delay={loadingDelay} className={cn("fiori-at-busy", classNames?.loading)} aria-label={texts.busy} />}
+      {infiniteBusy ? <div className={overlayClass} aria-hidden="true">{busyIndicator}</div> :
+        loading && (rowCount > 0 || alwaysShowBusyIndicator) && busyIndicator}
       {visibleRowCountMode === "Interactive" && <div {...part("vertical-resizer", "fiori-at-vertical-resizer")}
         role="separator" aria-hidden="true" title={texts.dragToResize} onPointerDown={event => {
           if (!event.isPrimary || event.button !== 0) return

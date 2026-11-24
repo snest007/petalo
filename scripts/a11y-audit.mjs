@@ -305,6 +305,12 @@ custom.push({
 })
 
 custom.push({
+  owner: "analytical-table", point: "AnalyticalTable.columns.PopInHeader", source: "registry/ui/analytical-table.tsx",
+  declaration: "AnalyticalTable.columns.PopInHeader", status: "ok", functional: true,
+  proof: "tests/a11y-tree-customizations.spec.ts: AnalyticalTable protects custom cell semantics and preserves native grid naming",
+})
+
+custom.push({
   owner: "select-dialog", point: "SelectDialog.getItemProps", source: "registry/ui/select-dialog.tsx",
   declaration: "SelectDialog.getItemProps", status: "ok", functional: true,
   proof: "tests/select-dialog.spec.ts: SelectDialog custom content keeps selection and keyboard ownership (ltr/rtl)",

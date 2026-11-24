@@ -665,7 +665,15 @@ test.beforeAll(async () => {
         C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock empty',minRows:1,
           NoDataComponent:()=> 'No orders'}),
         C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock loading',minRows:1,loading:true,
-          LoadingComponent:()=> 'Loading orders'})),
+          LoadingComponent:()=> 'Loading orders'}),
+        h('div',{style:{width:300}},C('AnalyticalTable',{
+          data:[{name:'Ada',category:'Hardware'}], minRows:1,
+          columns:[{accessorKey:'name',header:'Item name',width:250},
+            {accessorKey:'category',header:'Category',responsiveMinWidth:400,responsivePopIn:true,popinDisplay:'Inline',
+              PopInHeader:()=>h('strong',{role:'button',tabIndex:99,id:'foreign-pop-in-label'},'Stock category')}],
+          'aria-label':'Responsive analytical stock', adjustTableHeightOnPopIn:true,
+          getCellProps:()=>({role:'button',id:'foreign-pop-in-cell','aria-selected':true,'aria-labelledby':'foreign-pop-in-label',tabIndex:99})
+        }))),
       'h8-badge-custom':()=>h(React.Fragment,{},
         C('Button',{badge:C('ButtonBadge',{design:'InlineText',text:'1',texts:{oneItem:count=>count+' update'}})},'Inbox'),
         C('ToggleButton',{badge:badge(),defaultPressed:true},'Pinned'),
@@ -972,6 +980,19 @@ test("AnalyticalTable protects custom cell semantics and preserves native grid n
     message.includes(`AnalyticalTable cell: ignored owned prop "${attribute}"`))).toBe(true)
   await expect(page.getByRole("grid", { name: "Analytical stock empty" }).getByRole("gridcell")).toHaveText("No orders")
   await expect(page.getByRole("progressbar", { name: "Please wait" })).toHaveText("Loading orders")
+  const responsive = page.getByRole("grid", { name: "Responsive analytical stock" })
+  const popIn = responsive.getByRole("gridcell", { name: "Item name Ada Stock category: Hardware" })
+  const header = popIn.locator('[data-slot="analytical-table-pop-in-header"]')
+  await expect(popIn).toHaveAttribute("aria-colindex", "1")
+  await expect(popIn).toHaveAttribute("tabindex", "-1")
+  await expect(popIn).not.toHaveAttribute("aria-selected")
+  await expect(popIn).not.toHaveAttribute("id", "foreign-pop-in-cell")
+  const references = (await popIn.getAttribute("aria-labelledby"))!.split(" ")
+  expect(references).toContain(await header.getAttribute("id"))
+  expect(references).not.toContain("foreign-pop-in-label")
+  await expect(header.locator("#foreign-pop-in-label")).toHaveAttribute("tabindex", "-1")
+  await expect(popIn.getByRole("button")).toHaveCount(0)
+  expect(warnings.some(message => message.includes('AnalyticalTable cell: ignored owned prop "aria-labelledby"'))).toBe(true)
 })
 
 test("H7 content slots protect option and alertdialog ownership", async ({ page }) => {
