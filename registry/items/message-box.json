@@ -1,0 +1,14 @@
+{
+  "title": "MessageBox",
+  "description": "Present a confirmation or a short semantic message with predefined localized actions.",
+  "registryDependencies": ["@petalo/dialog", "@petalo/button", "@petalo/text", "@petalo/icons", "@petalo/locale"],
+  "usage": {
+    "summary": "Interrupt the current task to report an outcome or obtain a decision.",
+    "useWhen": ["Ask for a short confirmation or show a semantic error with a small action set.", "Use useMessageBox for local Promise-based confirmation flows."],
+    "avoidWhen": [
+      { "when": "Collect input or show a dialog with a custom workflow.", "use": ["dialog"] },
+      { "when": "Give inline contextual guidance or brief nonblocking feedback.", "use": ["message-strip", "toast"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

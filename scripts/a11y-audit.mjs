@@ -13,6 +13,7 @@ for (const file of owners) {
   for (const match of source.matchAll(/(?:function|const)\s+([A-Z]\w*)\b/g)) exported.set(match[1], file.replace(/\.tsx$/, ""))
 }
 const aliases = {
+  SuggestionItem: "input", SuggestionItemGroup: "input",
   TextArea: "textarea", CheckBox: "checkbox", ComboBoxItem: "combobox", ComboBoxItemGroup: "combobox", Option: "select", OptionGroup: "select",
   MultiComboBoxItem: "multi-combobox", MultiComboBoxItemGroup: "multi-combobox", RadioButton: "radio-group",
   ListItemStandard: "list", ListItemCustom: "list", ListItemGroup: "list", ListItemBase: "list", ListItem: "list",
@@ -95,6 +96,7 @@ const h1Texts = [
   ["wcr:EXPAND_PRESS_SPACE", "expandRow", "index.js"],
   ["wcr:COLLAPSE_PRESS_SPACE", "collapseRow", "index.js"],
 ]
+const inputSuggestionsProof = "tests/input.spec.ts: Input suggestions preview, selection, announcements and phone editor"
 const verifiedTexts = {
   "segmented-button.LIST_ITEM_SELECTED": { equivalent: "SegmentedButton.texts.selected", proof: "tests/segmented-button.spec.ts: selection announces assertively and deselection does not announce", status: "fixed in E4" },
   "segmented-button.SEGMENTEDBUTTON_ARIA_DESCRIBEDBY": { equivalent: "SegmentedButton.texts.itemDescription / SegmentedButtonItem.texts.itemDescription", proof: "tests/segmented-button.spec.ts: item description and description-ref reach the UI5 owning element", status: "fixed in E4" },
@@ -150,6 +152,18 @@ for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) 
 
 verifiedTexts["splitter-layout.PRESS_ARROW_KEYS_TO_MOVE"] = { equivalent: "SplitterLayout.texts.keyboardHint", status: "ok",
   proof: "tests/splitter-layout.spec.ts: SplitterLayout keyboard bounds and steps" }
+for (const [key, equivalent] of [
+  ["INPUT_AVALIABLE_VALUES", "popupLabel"], ["INPUT_SUGGESTIONS", "description"],
+  ["INPUT_SUGGESTIONS_TITLE", "title"], ["INPUT_SUGGESTIONS_ONE_HIT", "oneHit"],
+  ["INPUT_SUGGESTIONS_MORE_HITS", "moreHits"], ["INPUT_SUGGESTIONS_NO_HIT", "noHit"],
+  ["INPUT_SUGGESTIONS_EXPANDED", "expanded"], ["INPUT_SUGGESTIONS_COLLAPSED", "collapsed"],
+  ["INPUT_SUGGESTIONS_OK_BUTTON", "ok"], ["INPUT_SUGGESTIONS_CANCEL_BUTTON", "cancel"],
+  ["LIST_ITEM_POSITION", "position"], ["LIST_ITEM_GROUP_HEADER", "groupHeader"],
+  ["VALUE_STATE_LINK", "stateLink"], ["VALUE_STATE_LINK_MAC", "stateLinkMac"],
+  ["VALUE_STATE_LINKS", "stateLinks"], ["VALUE_STATE_LINKS_MAC", "stateLinksMac"],
+  ["VALUE_STATE_TYPE_ERROR", "negativeType"], ["VALUE_STATE_TYPE_WARNING", "criticalType"],
+  ["VALUE_STATE_TYPE_SUCCESS", "positiveType"], ["VALUE_STATE_TYPE_INFORMATION", "informationType"],
+]) verifiedTexts[`input.${key}`] = { equivalent: `Input.texts.${equivalent}`, proof: inputSuggestionsProof, status: "ok" }
 
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {
@@ -180,6 +194,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
   ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
+  ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)
 const textRows = [], announcements = []
 for (const [file, owner] of sourceFiles) {

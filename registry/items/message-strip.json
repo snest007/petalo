@@ -27,9 +27,10 @@
         ]
       },
       {
-        "when": "Interrupt the flow to require an explicit decision or immediate response.",
+        "when": "Require an explicit response. Use MessageBox for standard actions, or Dialog for a custom workflow.",
         "use": [
-          "dialog"
+          "dialog",
+          "message-box"
         ]
       },
       {

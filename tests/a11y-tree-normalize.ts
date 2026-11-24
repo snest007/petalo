@@ -104,11 +104,13 @@ export function normalizeAX(nodes: AXNode[], rootId: string): unknown[] {
 /** Explicit DOM-only allowances unwrap one inert generic node, preserving all children.
  * This is applied only to paths listed by a fixture's a11yDiff; it is not a global normalization.
  */
-export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[], ui5FormHosts: string[] = []) {
+export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[], ui5FormHosts: string[] = [], ui5FocusScaffolding: string[] = []) {
   const values: Record<string, any> = { ours: structuredClone(ours), ui5: structuredClone(ui5) }
   const forms = new Set(ui5FormHosts)
+  const focus = new Set(ui5FocusScaffolding)
+  if ([...focus].some(path => !path.startsWith("/ui5/ax/"))) throw new Error("Focus scaffolding allowances must name exact UI5 AX paths")
   if ([...forms].some(path => !path.startsWith("/ui5/ax/"))) throw new Error("Form host allowances must name an exact UI5 AX path")
-  const wrappers = [...paths.filter(path => /^\/(ours|ui5)\/ax\//.test(path)), ...forms].map(path => path.slice(1).split("/"))
+  const wrappers = [...paths.filter(path => /^\/(ours|ui5)\/ax\//.test(path)), ...forms, ...focus].map(path => path.slice(1).split("/"))
   wrappers.sort((a, b) => b.length - a.length || b.join("/").localeCompare(a.join("/"), "en", { numeric: true }))
   for (const parts of wrappers) {
     let parent: any = values
@@ -118,7 +120,18 @@ export function applyAllowedWrappers(ours: unknown, ui5: unknown, paths: string[
     }
     const index = Number(parts.at(-1)), node = parent?.[index]
     const props = node?.properties ?? {}
-    const form = forms.has("/" + parts.join("/"))
+    const path = "/" + parts.join("/")
+    const form = forms.has(path)
+    if (focus.has(path)) {
+      const focusOnly = JSON.stringify(props) === '{"focusable":true}'
+      const emptySentinel = node?.role === "generic" && node.children?.length === 0
+      const popupHost = node?.role === "group" && node.children?.length === 1
+        && ["dialog", "alertdialog"].includes(node.children[0].role)
+      if (!Array.isArray(parent) || !focusOnly || node?.name !== "" || node.description !== undefined || node.value !== undefined
+        || !(emptySentinel || popupHost)) throw new Error(`Unexpected UI5 focus scaffolding: ${path}`)
+      parent.splice(index, 1, ...node.children)
+      continue
+    }
     const disabled = props.disabled === true
     const ownedControl = Array.isArray(node?.children) ? node.children.filter((child: { role: string }) => child.role === "button" || child.role === "textbox") : []
     // Button, NumericInput and its inner Input are form-associated custom
@@ -282,7 +295,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** The H8 fixture composes the existing desktop Menu in place. The UI5
  * ResponsivePopover advertises aria-modal and exposes focus guards even though
  * the fixture paints a closed surface. Pin both surfaces exactly, then compare
@@ -347,6 +360,59 @@ function reconcileNumericInputMessage(ours: any, ui5: any, { state, message }: N
   ui5.ax[0].properties.describedby[0].text = complete
   ui5.ax[1].name = complete
   ui5.snapshot[1].text = complete
+}
+
+/** WCR MessageBox/index.js passes the title and text references to the UI5
+ * host. Dialog.js resolves the two strings into aria-label on its inner
+ * alertdialog. Compare the resolved name and both valid reference texts. */
+export function reconcileMessageBoxNameRef(ours: any, ui5: any) {
+  const actual = ours.ax[0], native = ui5.ax[0], refs = actual?.properties.labelledby
+  const heading = native?.children[0]?.children[0]
+  const bodyText = native?.children[1]?.children[0]
+  if (actual?.role !== "alertdialog" || native?.role !== "alertdialog" || native.properties.labelledby !== undefined
+    || heading?.role !== "heading" || bodyText?.role !== "StaticText"
+    || JSON.stringify(refs) !== JSON.stringify([{ text: heading.name, valid: true }, { text: bodyText.name, valid: true }])
+    || native.name !== `${heading.name} ${bodyText.name}` || actual.name !== native.name) {
+    throw new Error("WCR MessageBox must resolve its exact title and message reference texts")
+  }
+  native.properties.labelledby = refs
+}
+
+/** Popup.js allocates two empty global announcement outlets on phone. Input uses
+ * its own status and count in both implementations, and the phone Dialog has no
+ * additional announcement content. Retain any nonempty alert as a failure. */
+function removeEmptyInputPhoneAlerts(ui5: any) {
+  const ax = ui5.ax[0], snapshot = ui5.snapshot[0]
+  if (ax?.role !== "dialog" || snapshot?.role !== "dialog") throw new Error("Expected the owned Input phone Dialog")
+  const alerts = ax.children.slice(-2)
+  const live = ["polite", "assertive"]
+  if (alerts.length !== 2 || !alerts.every((node: any, index: number) => node.role === "alert" && node.name === ""
+    && node.children.length === 0 && node.properties.live === live[index] && node.properties.atomic === true)
+    || !snapshot.children.slice(-2).every((node: any) => node.role === "alert" && !node.name && !node.text && node.children.length === 0)) {
+    throw new Error("Input's native phone Dialog announcement outlets changed")
+  }
+  ax.children.splice(-2)
+  snapshot.children.splice(-2)
+}
+
+/** PopoverTemplate.js exposes a banner inside the desktop suggestion dialog.
+ * Compare the exact header as the React group while retaining its text, all
+ * descendants and the field's separately compared description relationship. */
+function reconcileInputSuggestionBanner(ours: any, ui5: any, paths: NonNullable<Allowed["inputSuggestionBanner"]>) {
+  for (const channel of ["ax", "snapshot"] as const) {
+    const path = paths[channel]
+    if (!new RegExp(`^/${channel}/\\d+/children/0$`).test(path)) {
+      throw new Error(`Input validation header requires an exact first-child path: ${path}`)
+    }
+    const [, , index] = path.split("/")
+    const actualDialog = ours[channel][Number(index)]
+    const nativeDialog = ui5[channel][Number(index)]
+    const actual = actualDialog?.children[0], native = nativeDialog?.children[0]
+    if (actualDialog?.role !== "dialog" || nativeDialog?.role !== "dialog" || actual?.role !== "group" || native?.role !== "banner") {
+      throw new Error(`Input validation header must be the native dialog banner and its React group: ${path}`)
+    }
+    native.role = "group"
+  }
 }
 
 /** Read only the literal a11yDiff object, without running fixture React modules or broadening main.tsx ownership. */
@@ -456,7 +522,7 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
   let differences: string[], allowanceError: string | undefined
   let compared: { ours: typeof a; ui5: typeof b } | undefined
   try {
-    const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [], allowed?.ui5FormHosts)
+    const adjusted = applyAllowedWrappers(a, b, allowed?.ignore ?? [], allowed?.ui5FormHosts, allowed?.ui5FocusScaffolding)
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
     if (allowed?.calendarHeaderBug) native = correctCalendarHeaderBugs(adjusted.ours, native, allowed.calendarHeaderBug)
     if (allowed?.splitButtonMenu) {
@@ -466,6 +532,18 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.numericInputMessage) {
       if (id !== "numeric-input-information") throw new Error("Nested value-state slot allowance is specific to numeric-input-information")
       reconcileNumericInputMessage(adjusted.ours, native, allowed.numericInputMessage)
+    }
+    if (allowed?.inputPhoneAlerts) {
+      if (!id.startsWith("input-suggestions-phone")) throw new Error("Empty phone outlets allowance is specific to Input")
+      removeEmptyInputPhoneAlerts(native)
+    }
+    if (allowed?.messageBoxNameRef) {
+      if (id !== "message-box-confirm") throw new Error("Name reference allowance is specific to message-box-confirm")
+      reconcileMessageBoxNameRef(adjusted.ours, native)
+    }
+    if (allowed?.inputSuggestionBanner) {
+      if (id !== "input-suggestions-state") throw new Error("Validation header allowance is specific to input-suggestions-state")
+      reconcileInputSuggestionBanner(adjusted.ours, native, allowed.inputSuggestionBanner)
     }
     const [engine, direction, ...casePath] = key.split("/")
     const legacy = existsSync("tests/a11y-tree-baseline.json") && readTreeBaseline().entries.some((entry) =>

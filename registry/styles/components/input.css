@@ -1,0 +1,156 @@
+/* UI5 2.28 Suggestions.css.js, SuggestionItem.css.js and ListBoxItemGroupTemplate.js. */
+.fiori-input-suggestions-popup,
+.fiori-input-suggestions-phone {
+  background: var(--sapGroup_ContentBackground);
+  color: var(--sapTextColor);
+  font-family: var(--sapFontFamily);
+  font-size: var(--sapFontSize);
+  line-height: normal;
+}
+.fiori-input-suggestions-popup {
+  position: absolute;
+  inset-inline-start: calc(-1 * var(--input-suggestion-border-start, 0px));
+  inset-block-start: calc(100% + var(--input-suggestion-border-bottom, 0px));
+  z-index: 50;
+  width: max-content;
+  min-width: var(--input-suggestion-anchor-width, 100%);
+  max-width: max(100%, 40rem);
+  max-height: var(--input-suggestion-available-height, none);
+  overflow: auto;
+  border-radius: var(--fiori-popup-border-radius);
+  box-shadow: var(--sapContent_Shadow1);
+}
+.fiori-input-suggestions-popup[data-placement="above"] {
+  inset-block-start: auto;
+  inset-block-end: calc(100% + var(--input-suggestion-border-top, 0px));
+}
+.fiori-input-suggestion-list { list-style: none; padding: 0; margin: 0; }
+.fiori-input-suggestion-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: calc(var(--fiori-list-item-base-height) + var(--sapElement_BorderWidth));
+  gap: 1rem;
+  padding: var(--fiori-list-item-base-padding);
+  position: relative;
+  color: var(--sapList_TextColor);
+  background: var(--sapList_Background);
+  font-size: var(--fiori-list-item-title-size);
+  cursor: pointer;
+}
+.fiori-input-suggestion-item [data-slot="input-suggestion-text"] {
+  min-width: 0;
+  padding-block: .5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fiori-input-suggestion-item [data-slot="input-suggestion-text"] b {
+  font-family: var(--sapFontBoldFamily);
+  font-weight: normal;
+}
+.fiori-input-suggestion-item [data-slot="input-suggestion-additional-text"] {
+  font-size: var(--sapFontSize);
+}
+.fiori-input-suggestion-item:hover { background: var(--sapList_Hover_Background); }
+.fiori-input-suggestion-item[data-selected] { background: var(--sapList_SelectionBackgroundColor); }
+.fiori-input-suggestion-group-header {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: var(--fiori-group-header-list-item-height);
+  padding: var(--fiori-list-item-base-padding);
+  padding-block-start: .5rem;
+  background: var(--fiori-x-group-header-listitem-background-color);
+  color: var(--sapList_TableGroupHeaderTextColor);
+  font-family: var(--sapFontHeaderFamily);
+  font-size: var(--sapFontHeader6Size);
+  font-weight: 700;
+}
+.fiori-input-suggestion-list [data-active]::after {
+  content: "";
+  position: absolute;
+  inset: .125rem;
+  pointer-events: none;
+  border: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+}
+.fiori-input-suggestions-phone {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.fiori-input-suggestions-phone__content { overflow: auto; flex: 1 1 auto; }
+.fiori-input-suggestions-phone__header {
+  background: var(--sapPageHeader_Background);
+  box-shadow: var(--fiori-popup-header-shadow);
+  border-bottom: var(--fiori-popup-header-border);
+}
+.fiori-input-suggestions-phone__header h1 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding-inline: 1rem;
+  font-family: var(--sapFontHeaderFamily);
+  font-size: var(--sapFontHeader5Size);
+  font-weight: normal;
+  color: var(--sapGroup_TitleTextColor);
+}
+.fiori-input-suggestions-phone__header > .fiori-field {
+  width: calc(100% - 2rem);
+  margin-inline: 1rem;
+  --fiori-input-margin-top-bottom: max(.25rem, calc((2.5rem - var(--fiori-input-height)) / 2));
+}
+.fiori-field[data-suggestions-open]:has(> .fiori-input-suggestions-phone)::after { content: none; }
+.fiori-input-suggestions-phone__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-inline: 1rem;
+  min-height: calc(var(--fiori-popup-footer-height) + var(--sapElement_BorderWidth));
+  border-top: 1px solid var(--sapPageFooter_BorderColor);
+  background: var(--sapPageFooter_Background);
+}
+
+/* ResponsivePopoverCommon.css.js keeps the close button's physical margin. */
+.fiori-input-suggestions-phone__footer > :last-child { margin-left: .5rem; }
+
+/* ValueStateMessage.css.js styles the suggestion header independently of the
+   field's standalone validation popover. The HC header uses an inset line. */
+.fiori-input-suggestions-popup > .fiori-value-state-message,
+.fiori-input-suggestions-phone .fiori-value-state-message {
+  padding: var(--fiori-value-state-header-padding);
+  border: var(--fiori-value-state-header-border);
+  border-bottom: var(--fiori-value-state-header-border-bottom);
+  min-height: var(--fiori-value-state-message-popover-header-min-height);
+}
+.fiori-input-suggestions-phone .fiori-value-state-message {
+  padding: var(--fiori-value-state-message-padding-phone);
+}
+.fiori-input-suggestions-phone .fiori-value-state-message > svg {
+  inset-inline-start: var(--fiori-value-state-message-icon-offset-phone);
+}
+.fiori-input-suggestions-popup [data-value-state="negative"],
+.fiori-input-suggestions-phone [data-slot="input-suggestion-message"][data-value-state="negative"] {
+  box-shadow: var(--fiori-value-state-header-box-shadow-error);
+}
+.fiori-input-suggestions-popup [data-value-state="critical"],
+.fiori-input-suggestions-phone [data-slot="input-suggestion-message"][data-value-state="critical"] {
+  box-shadow: var(--fiori-value-state-header-box-shadow-warning);
+}
+.fiori-input-suggestions-popup [data-value-state="positive"],
+.fiori-input-suggestions-phone [data-slot="input-suggestion-message"][data-value-state="positive"] {
+  box-shadow: var(--fiori-value-state-header-box-shadow-success);
+}
+.fiori-input-suggestions-popup [data-value-state="information"],
+.fiori-input-suggestions-phone [data-slot="input-suggestion-message"][data-value-state="information"] {
+  box-shadow: var(--fiori-value-state-header-box-shadow-information);
+}

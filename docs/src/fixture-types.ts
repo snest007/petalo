@@ -37,6 +37,14 @@ type FixtureA11yDiff = {
   reason: string
   /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
   ui5FormHosts?: string[]
+  /** Exact empty UI5 popup/List focus sentinels and the anonymous UI5 popup host. */
+  ui5FocusScaffolding?: string[]
+  /** Popup.js resolves custom header name references in the host before emitting aria-label. */
+  messageBoxNameRef?: true
+  /** InputSuggestionsTemplate's phone Dialog allocates empty Popup announcement outlets. */
+  inputPhoneAlerts?: true
+  /** PopoverTemplate's nested banner appears as a group in the desktop Input. */
+  inputSuggestionBanner?: { ax: string; snapshot: string }
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */
