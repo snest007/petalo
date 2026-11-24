@@ -39,42 +39,10 @@ Run [`node scripts/plan-check.mjs`](../../scripts/plan-check.mjs) after editing 
 
 ## How to run a card (for Codex)
 
-```bash
-git switch main && git switch -c codex/<card-id>      # or the worktree the card names
-pnpm install --frozen-lockfile && pnpm generate
-# tier 1 while working: pnpm test:changed (main specs + visuals + stories)
-pnpm typecheck && pnpm registry:build
-# tier 2 card done (reviewer repeats it):
-pnpm test:changed --repeat-each=2 && pnpm test:smoke
-# shared-file cards: full main + Storybook once instead (through test:summary)
-git add -A && git commit -m "<card-id>: <summary>"
-```
-
-Suggested prompt: `Read AGENTS.md (including the Verification budget), then implement docs/plan/tasks/<card-id>.md.
-Follow its budget and acceptance checks exactly.`
-
-[AGENTS.md](../../AGENTS.md) "Verification budget" applies to every card: at most 2 CI pushes when a card authorizes
-them, 2 local fix hypotheses per failing test, about 2 hours, compact output, background long runs, headless
-browsers. At a limit: stop, commit and write `returns/<card>.md`. Don't push or merge; the owner's reviewer merges
-reviewed branches into main and runs push + CI at milestones (end of a wave, every 3–5 merged cards, or a release).
-
-**Three tiers:** tier 1 is the affected inner loop (1–3 minutes); tier 2 is two scoped runs plus one smoke run
-(about 5 minutes), repeated by the reviewer; tier 3 is the reviewer's milestone, full main + Storybook once, then
-push + CI (about 20 minutes local / 12 minutes CI). `pnpm test:milestone --runs=2` is available for releases.
-If `test:changed` reports a shared file (`.storybook/**`, Storybook helpers, shared styles/libs, Playwright configs,
-docs entry points or CI), the card runs full main and Storybook suites **once** instead; the second full verification
-is the milestone/CI. Existing card requirements saying "main ×2, Storybook ×2" now mean **tier 2**, subject to this
-shared-file rule; do not rewrite old cards. Follow any additional card-specific acceptance checks and tighter budget.
-`test:changed` ignores only bookkeeping in `docs/plan/README.md`, `docs/plan/tasks/**`, `docs/plan/returns/**`,
-and `docs/plan/handoff/**`; bookkeeping-only branches print "bookkeeping only: no tests needed" and exit 0.
-New components and the shared inventories they register in (AGENTS.md "Definition of done" → New components)
-run the inventory specs in the scoped run instead of forcing the full suite (owner's decision 2026-11-23). Cards
-and prompts don't need to repeat the registration steps. Other `docs/plan/` files stay shared.
-
-One card per branch. Cards in the same wave touch disjoint files and can run in parallel (separate worktrees/branches);
-later waves depend on earlier ones. Orchestration: [RUN.md](RUN.md) (one session per card, one orchestrator/reviewer;
-any agent) and [INTEGRATION.md](INTEGRATION.md) (review, follow-up cards, merge). Why things are this way:
-[decisions.md](decisions.md).
+Use [RUN.md's prompt templates](RUN.md#prompts) to start or resume a card. Its
+[card session flow](RUN.md#card-session-flow-summary-of-agentsmd) covers worktree setup and handoff.
+Follow the card's acceptance checks and the [verification budget in AGENTS.md](../../AGENTS.md#verification-budget).
+See [INTEGRATION.md](INTEGRATION.md) for review and merge, and [decisions.md](decisions.md) for the rationale.
 
 Sizes: S ≈ <300 changed lines, M ≈ 300–900, L ≈ 900+.
 

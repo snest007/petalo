@@ -40,10 +40,8 @@ Quick lookup: `grep -- '--fiori-checkbox' registry/styles/fiori.css | sort -u`
 
 ## Done means
 
-```bash
-pnpm generate && pnpm typecheck && pnpm registry:build
-PORT=<your port> pnpm exec playwright test   # all green, including your fixtures in 4 themes × 2 densities
-```
+Follow the card's acceptance checks and the [definition of done](AGENTS.md#definition-of-done-every-card).
+The [verification budget](AGENTS.md#verification-budget) defines when to run scoped or full suites.
 
 The visual test fails a cell if more than 2% of its pixels differ, or if its size differs at all. Failing cells
 are written to `test-results/visual/<theme>-<density>/` as `<id>-ours.png`, `-ui5.png` and `-diff.png`. Open them with the Read tool.
