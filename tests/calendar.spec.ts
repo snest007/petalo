@@ -291,3 +291,18 @@ for (const dir of ["ltr", "rtl"]) test(`Calendar ${dir} repeated Selected keeps 
     }
   } finally { await reference.close() }
 })
+
+test("CalendarLegend standalone hides defaults and exposes one roving item", async ({ page }) => {
+  await page.goto("/index.html?fixtures&only=calendar-legend-custom-only")
+  const legend = page.locator('[data-fixture="calendar-legend-custom-only"]').getByRole("list")
+  await expect(legend).toHaveAttribute("aria-roledescription", "Calendar Legend")
+  const items = legend.getByRole("listitem")
+  await expect(items).toHaveText(["Delivery", "Stocktake"])
+  await expect(items.first()).toHaveAttribute("tabindex", "0")
+  await items.first().focus()
+  await page.keyboard.press("ArrowDown")
+  await expect(items.last()).toBeFocused()
+  await expect(items.first()).toHaveAttribute("tabindex", "-1")
+  await page.keyboard.press("ArrowUp")
+  await expect(items.first()).toBeFocused()
+})

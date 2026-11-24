@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
+import { assertPopupsInCells } from "./visual-popup-cell"
 
 const THEMES = ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
 const DENSITIES = ["cozy", "compact"] as const
@@ -42,6 +43,7 @@ async function shoot(page: Page, url: string, ids?: string[]) {
   await page.goto(url, { waitUntil: "domcontentloaded" })
   await page.waitForSelector("html[data-ready=true]", { timeout: 60_000 })
   await page.mouse.move(0, 0)
+  await assertPopupsInCells(page)
   const boxes = await page.locator("[data-fixture]").evaluateAll((elements) => elements.map((element) => {
     const rect = element.getBoundingClientRect()
     return {

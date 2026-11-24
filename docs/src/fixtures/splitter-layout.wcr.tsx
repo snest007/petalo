@@ -1,0 +1,15 @@
+import { SplitterElement } from "@ui5/webcomponents-react/SplitterElement"
+import { SplitterLayout } from "@ui5/webcomponents-react/SplitterLayout"
+import { defineFixtures } from "../fixture-types"
+import { automaticContent, automaticFrame, automaticWidths, frame, paneStyle, splitterCases } from "./splitter-layout.cases"
+
+export default defineFixtures({
+  ...splitterCases,
+  react: ({ vertical, fixed, three, automatic }) => automatic ? <SplitterLayout style={automaticFrame}>
+    {automaticWidths.map(width => <SplitterElement key={width} minSize={48} style={paneStyle}>{automaticContent(width)}</SplitterElement>)}
+  </SplitterLayout> : <SplitterLayout vertical={vertical} style={frame}>
+    <SplitterElement size={vertical ? 120 : three ? 112 : 168} minSize={48} resizable={!fixed} style={paneStyle}><span style={{ padding: "1rem" }}>Editor</span></SplitterElement>
+    <SplitterElement size={three ? 112 : undefined} minSize={48} resizable={!fixed} style={paneStyle}><span style={{ padding: "1rem" }}>Preview</span></SplitterElement>
+    {three && <SplitterElement minSize={48} style={paneStyle}><span style={{ padding: "1rem" }}>Outline</span></SplitterElement>}
+  </SplitterLayout>,
+})

@@ -650,6 +650,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Croissant",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Veuillez patienter",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Appuyez sur les touches de direction pour vous déplacer.",
   "wcr:RETRY": "Réessayer",
   "wcr:ROW_COLLAPSED": "Ligne réduite",
   "wcr:ROW_DESELECTED": "Ligne désélectionnée",

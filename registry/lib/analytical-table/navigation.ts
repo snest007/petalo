@@ -27,6 +27,7 @@ export function useGridNavigation(
   }
   function setDescendants(host: HTMLElement, enabled: boolean) {
     const focusables = [...host.querySelectorAll<HTMLElement>(focusable)]
+      .filter(element => !element.closest("[data-analytical-table-popup]"))
     for (const element of focusables) {
       if (!savedTabIndexes.current.has(element)) savedTabIndexes.current.set(element, element.getAttribute("tabindex"))
       const original = savedTabIndexes.current.get(element)

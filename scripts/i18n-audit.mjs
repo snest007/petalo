@@ -270,10 +270,12 @@ const wcrComponents = {
 }
 
 function wcrRows(component, name) {
-  const directory = `${wcr}/components/${name}`
+  // SplitterLayout delegates the separator and its keyboard hint to Splitter.
+  const directories = (component === 'splitter-layout' ? [name, 'Splitter'] : [name]).map(part => `${wcr}/components/${part}`)
+  const files = directories.flatMap(directory => readdirSync(directory, { recursive: true })
+    .filter(file => file.endsWith('.js')).map(file => `${directory}/${file}`)).sort()
   const imports = new Map()
-  for (const file of readdirSync(directory, { recursive: true }).filter(file => file.endsWith('.js')).sort()) {
-    const path = `${directory}/${file}`
+  for (const path of files) {
     const text = readFileSync(path, 'utf8')
     const declaration = /import\s*\{([^}]+)\}\s*from\s*['"](\.[^'"]*\/i18n\/i18n-defaults\.js)['"]/g
     for (const match of text.matchAll(declaration)) {
@@ -344,7 +346,6 @@ unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STA
   'NumericInputTemplate forwards a slot element to the inner Input; Input.valueStateLinks inspects element children, not assigned nodes of that slot.')
 
 for (const [card, keys] of [
-  ['H2 sorting and filters', ['CLEAR_SORTING', 'FILTER', 'FILTERED', 'SORT_ASCENDING', 'SORT_DESCENDING']],
   ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
   ['H4 tree, selection and row states', [
     'ALL_ROWS_DESELECTED', 'ALL_ROWS_DESELECTED_FILTERED', 'ALL_ROWS_SELECTED', 'ALL_ROWS_SELECTED_FILTERED',

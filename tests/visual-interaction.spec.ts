@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs"
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
+import { assertPopupsInCells } from "./visual-popup-cell"
 
 const THEMES = ["sap_horizon", "sap_horizon_hcb"]
 const CASES = [
@@ -72,6 +73,7 @@ async function blur(page: Page) {
 }
 
 async function shot(page: Page, id: string) {
+  await assertPopupsInCells(page)
   return PNG.sync.read(await page.locator(`[data-fixture="${id}"]`).screenshot({ animations: "disabled", caret: "hide" }))
 }
 

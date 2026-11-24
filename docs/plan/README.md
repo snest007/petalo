@@ -9,16 +9,16 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | Wave | Done | Open | Next |
 |---|---|---|---|
 | A–D, F, G (features, platform, personalization, usage guidance) | all | — | — |
-| E (quality infrastructure) | E1–E8, E4b, E5b, E10 | — | E9 cancelled 2026-11-20 (Linux-only CI noise; see Phase) |
+| E (quality infrastructure) | E1–E8, E4b, E5b, E10–E12, E11b | — | E9 cancelled 2026-11-20. |
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H8 (+H8b) | H2–H7, H9, H10 | **now: H7, H9 and H2** in parallel (H2→H5 in order); H6 after P2a |
+| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H8 (+H8b), H9 (+H9b, H9d) | H3–H7, H9c, H9e, H10 and follow-ups | **H3, H9c and H9e are eligible.** H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
 order → **H10**; **P2a** only right before **H6/H6b/H6c**. The remaining P cards, X cards and S5 follow once the new
-components are in. CI is a reminder, not a gate; see AGENTS.md "Verification budget" → "Current phase".
+components are in. CI serves as a reminder. See the [milestone and CI rules](RUN.md#milestones-and-pushing).
 Cancelled cards are kept in `tasks/cancelled/` with the reason.
 
 Returned cards keep their branch and worktree; their notes are in [`returns/`](returns/). Component defects found
@@ -30,8 +30,8 @@ Run [`node scripts/plan-check.mjs`](../../scripts/plan-check.mjs) after editing 
 1. Merge the reviewed card branches into main; `node scripts/plan-check.mjs --fix` moves ticked cards (and their
    return notes) to `done/` and fixes links. `plan-check` must report 0 errors.
 2. Update the **Status** table above and the README "Not done yet" list if a wave changed.
-3. Check that rules agreed with the owner since the last milestone are in AGENTS.md (and RUN.md / INTEGRATION.md if
-   they describe the same step), and that open cards still match them (dependencies, file names, test counts).
+3. Check that rules agreed with the owner since the last milestone are in AGENTS.md and [decisions.md](decisions.md)
+   (and RUN.md / INTEGRATION.md if they describe the same step), and that open cards still match them (dependencies, file names, test counts).
 4. Run tier 3 on macOS: `pnpm test:milestone` once (full main + Storybook incl. the stored-baseline tree comparisons),
    then push (= publish; Pages redeploys). Record the summary lines in the commit message. Note the CI result: a
    failure that reproduces on macOS or in a behaviour test gets fixed; a Linux-only one is only noted.
@@ -72,9 +72,9 @@ run the inventory specs in the scoped run instead of forcing the full suite (own
 and prompts don't need to repeat the registration steps. Other `docs/plan/` files stay shared.
 
 One card per branch. Cards in the same wave touch disjoint files and can run in parallel (separate worktrees/branches);
-later waves depend on earlier ones. Optional orchestration: [RUN.md](RUN.md) (one Codex session with sub-agents) or
-[INTEGRATION.md](INTEGRATION.md) (a separate merge session); today the owner runs one Codex session per card and a
-Claude session reviews and merges.
+later waves depend on earlier ones. Orchestration: [RUN.md](RUN.md) (one session per card, one orchestrator/reviewer;
+any agent) and [INTEGRATION.md](INTEGRATION.md) (review, follow-up cards, merge). Why things are this way:
+[decisions.md](decisions.md).
 
 Sizes: S ≈ <300 changed lines, M ≈ 300–900, L ≈ 900+.
 
@@ -132,6 +132,9 @@ F1 and F2 can run in parallel after F0.
 - [x] [E7 CI back under 12 minutes: Playwright container or cached system packages, time-based shards, timing warning](tasks/done/E7-ci-speed.md) — S (done 2026-11-19: Playwright container, time-based shards, timing warning; CI ≈11 min)
 - [x] [E8 Tiered verification: per-card tests in minutes, full suites at milestones](tasks/done/E8-tiered-verification.md) — S (owner's decision 2026-11-20; tiered verification implemented)
 - [x] [E10 A missing registration fails in seconds, with one clear message](tasks/done/E10-fast-registration-failure.md) — S (any time; found 2026-11-23 reviewing H8: an unregistered new component took 40 min of noisy failures)
+- [x] [E11 Free ports, recorded structural differences, popups kept in their cell](tasks/done/E11-ports-structural-diffs-popup-cells.md) — M (shared-file card; see [decisions](decisions.md) 2026-11-23)
+- [x] [E11b Close the E11 review gaps](tasks/done/E11b-close-review-gaps.md) — S (same branch as E11)
+- [x] [E12 Slim AGENTS.md without losing a rule](tasks/done/E12-slim-agents-md.md) — S (text only; any time, not in parallel with another card that edits AGENTS.md)
 
 ## Wave G — usage guidance for coding agents ("use X when / don't use X when / use Y instead")
 
@@ -307,18 +310,25 @@ H6/H6b/H6c wait for P2a.
 - [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
 - [x] [H1 AnalyticalTable: extension contract, ARIA ownership, columns, keyboard](tasks/done/H1-analytical-table-foundation.md) — L (after H0; conforms to the approved `docs/extension-contract.md`)
 - [x] [H1b AnalyticalTable: finish foundation acceptance](tasks/done/H1b-analytical-table-acceptance.md) — S (continue the [H1 return](returns/done/H1.md) before H2)
-- [ ] [H2 AnalyticalTable: sorting and filtering](tasks/H2-analytical-table-sort-filter.md) — L (after H1)
-- [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2)
+- [x] [H2 AnalyticalTable: sorting and filtering](tasks/done/H2-analytical-table-sort-filter.md) — L (after H1)
+- [x] [H2b AnalyticalTable: finish sort and filter acceptance](tasks/done/H2b-analytical-table-acceptance.md) — S (continue the [H2 return](returns/done/H2.md) before H3)
+- [x] [H2c AnalyticalTable: match the filter-item tree](tasks/done/H2c-filter-item-tree.md) — S (after H2b, before H3)
+- [x] [H2d AnalyticalTable: restore built-in filter parity](tasks/done/H2d-analytical-table-filter-parity.md) — S (same branch as H2; after E11)
+- [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2–H2d merge)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)
 - [ ] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4)
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
 - [ ] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
-- [ ] [H7b Input suggestions: finish full-grid and Storybook acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (continue the [H7 return](returns/H7.md) on `codex/H7`)
+- [ ] [H7b Input suggestions full-grid acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (same branch as H7)
 - [x] [H8 SplitButton, ButtonBadge, NumericInput](tasks/done/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
 - [x] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/done/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
-- [ ] [H9 SelectDialog, SplitterLayout, DynamicDateRange, CalendarLegend check](tasks/H9-select-dialog-splitter-dynamic-date-range.md) — L (after H0)
+- [x] [H9 SplitterLayout and CalendarLegend check](tasks/done/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d
+- [x] [H9b Finish H9 parity](tasks/done/H9b-finish-h9-parity.md) — see the [H9 return](returns/done/H9.md) for the owner split
+- [ ] [H9c SelectDialog parity](tasks/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
+- [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
+- [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
 - [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
 
 Not planned from issue #1 (proposed; owner to confirm): **FlexBox** and **Grid** (layout utilities WCR adds for apps

@@ -150,6 +150,8 @@ for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) 
   }
 }
 
+verifiedTexts["splitter-layout.PRESS_ARROW_KEYS_TO_MOVE"] = { equivalent: "SplitterLayout.texts.keyboardHint", status: "ok",
+  proof: "tests/splitter-layout.spec.ts: SplitterLayout keyboard bounds and steps" }
 for (const [key, equivalent] of [
   ["INPUT_AVALIABLE_VALUES", "popupLabel"], ["INPUT_SUGGESTIONS", "description"],
   ["INPUT_SUGGESTIONS_TITLE", "title"], ["INPUT_SUGGESTIONS_ONE_HIT", "oneHit"],
@@ -191,6 +193,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/TableCustomAnnouncement.js", "table"],
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
   ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)
 const textRows = [], announcements = []
@@ -218,6 +221,16 @@ for (const [member, equivalent, file] of h1Members) {
 for (const [key, field, file] of h1Texts) {
   textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source: `${h1Source}/${file}` })
 }
+
+for (const [key, field, source] of [
+  ["wcr:SORT_ASCENDING", "sortAscending", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:SORT_DESCENDING", "sortDescending", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:CLEAR_SORTING", "clearSorting", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:FILTER", "filter", `${h1Source}/defaults/Column/ColumnHeaderModal.js`],
+  ["wcr:FILTERED", "filtered", `${h1Source}/hooks/useA11y.js`],
+  ["LIST_ITEM_ACTIVE", "menuItemActive", "node_modules/@ui5/webcomponents/dist/ListItemBase.js"],
+  ["INPUT_CLEAR_ICON_ACC_NAME", "clearFilter", "node_modules/@ui5/webcomponents/dist/Input.js"],
+]) textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source })
 
 // The allowed consumer spec owns the exact runtime proof map and source-backed
 // nonfunctional classifications; unknown public points stay gap.
@@ -255,6 +268,12 @@ for (const point of ["DataTable.columns.header", "DataTable.columns.cell", "Filt
   const owner = point.startsWith("DataTable") ? "data-table" : "adapt-filters-dialog", proof = customizationProofs[point]
   custom.push({ owner, point, source: `registry/ui/${owner}.tsx`, declaration: point, status: proof ? "fixed in E4" : "gap", functional: true, proof: proof && `tests/a11y-tree-customizations.spec.ts: ${proof}` })
 }
+
+custom.push({
+  owner: "analytical-table", point: "AnalyticalTable.columns.Filter", source: "registry/ui/analytical-table.tsx",
+  declaration: "AnalyticalTable.columns.Filter", status: "ok", functional: true,
+  proof: "tests/analytical-table.spec.ts: controlled sorting and the custom Filter renderer keep the owned menu and header",
+})
 
 const live = owners.flatMap((file) => read(`registry/ui/${file}`).split("\n").flatMap((line, index) =>
   /aria-live=|role="(?:status|alert)"|\bannounce\(/.test(line)

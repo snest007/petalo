@@ -1,0 +1,11 @@
+{
+  "title": "SplitterLayout",
+  "description": "A horizontal or vertical layout with pointer- and keyboard-resizable panes.",
+  "registryDependencies": ["@petalo/icons", "@petalo/locale"],
+  "usage": {
+    "summary": "Give users control over the space shared by adjacent content panes.",
+    "useWhen": ["Resize a preview beside an editor or above a related panel.", "Set a minimum size on panes that need to remain usable while resizing."],
+    "avoidWhen": [{ "when": "Navigate among responsive list, detail and sub-detail pages.", "use": ["flexible-column-layout"] }],
+    "source": "ui5-apidoc"
+  }
+}

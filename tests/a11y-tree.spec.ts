@@ -1,7 +1,7 @@
-import { existsSync, readdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs"
 import { expect, test } from "@playwright/test"
 import { staleCaseCoverage, treeBaselineDate } from "./a11y-tree-baseline"
-import { writeMatrixCoverage } from "./a11y-tree-coverage"
+import { treeReportDirectory, treeReportFile, writeMatrixCoverage } from "./a11y-tree-coverage"
 import { allowedDifferences, compareCase, pageAX, writeComparisonReport } from "./a11y-tree-normalize"
 
 for (const direction of ["ltr", "rtl"] as const) test(`all Web Component accessibility trees ${direction}`, async ({ browser }) => {
@@ -19,7 +19,8 @@ for (const direction of ["ltr", "rtl"] as const) test(`all Web Component accessi
       const rendererNames = readdirSync("docs/src/fixtures").filter((file) => file.endsWith(".ui5.ts")).map((file) => file.slice(0, -7))
       const pairedIds = oursIds.filter((id) => rendererNames.some((name) => id === name || id.startsWith(`${name}-`)))
       const unpairedIds = oursIds.filter((id) => !pairedIds.includes(id))
-      writeFileSync(`test-results/a11y-tree-coverage-${direction}.json`, JSON.stringify({
+      mkdirSync(treeReportDirectory, { recursive: true })
+      writeFileSync(`${treeReportDirectory}/a11y-tree-coverage-${direction}.json`, JSON.stringify({
         pairedIds: [...pairedIds].sort(), referenceIds: [...referenceIds].sort(), unpairedIds,
         unpairedReason: "No checked-in Web Component renderer for the owning fixture set; no reference was silently inferred.",
       }, null, 2))
@@ -50,6 +51,6 @@ for (const direction of ["ltr", "rtl"] as const) test(`all Web Component accessi
           } finally { await focusedOurs.close(); await focusedReference.close() }
         } else failures.push(...await compareCase(ours, reference, id, `webcomponents/${direction}/${id}`, allowed[id], undefined, { ours: oursAX, reference: referenceAX }))
       }
-      expect(failures.length, `${failures.length} difference lines; full captures: test-results/a11y-tree-report.json\n${failures.slice(0, 20).join("\n")}`).toBe(0)
+      expect(failures.length, `${failures.length} difference lines; full captures: ${treeReportFile}\n${failures.slice(0, 20).join("\n")}`).toBe(0)
     } finally { writeComparisonReport(); await Promise.all([ours.close(), reference.close()]) }
   })

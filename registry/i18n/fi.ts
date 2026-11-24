@@ -650,6 +650,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Nousevasti",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Odota",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Siirrä painamalla nuolinäppäimiä",
   "wcr:RETRY": "Yritä uudelleen",
   "wcr:ROW_COLLAPSED": "Rivi tiivistetty",
   "wcr:ROW_DESELECTED": "Rivin valinta poistettu",

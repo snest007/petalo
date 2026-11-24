@@ -58,9 +58,12 @@
     "owner": "H1",
     "gapCount": 0,
     "okKeys": [
+      "wcr:CLEAR_SORTING",
       "wcr:COLLAPSE_PRESS_SPACE",
       "wcr:DRAG_TO_RESIZE",
       "wcr:EXPAND_PRESS_SPACE",
+      "wcr:FILTER",
+      "wcr:FILTERED",
       "wcr:FIXED_COLUMN",
       "wcr:FREEZE_COLUMN",
       "wcr:INCLUDES_X",
@@ -70,6 +73,8 @@
       "wcr:PLEASE_WAIT",
       "wcr:SELECT_ALL_PRESS_SPACE",
       "wcr:SELECT_PRESS_SPACE",
+      "wcr:SORT_ASCENDING",
+      "wcr:SORT_DESCENDING",
       "wcr:UNFREEZE_COLUMN",
       "wcr:UNSELECT_ALL_PRESS_SPACE",
       "wcr:UNSELECT_PRESS_SPACE"
@@ -1673,6 +1678,13 @@
       "WIZARD_STEP_ACTIVE",
       "WIZARD_STEP_ARIA_LABEL",
       "WIZARD_STEP_INACTIVE"
+    ]
+  },
+  "splitter-layout": {
+    "owner": "H9",
+    "gapCount": 0,
+    "okKeys": [
+      "wcr:PRESS_ARROW_KEYS_TO_MOVE"
     ]
   },
   "message-box": {

@@ -647,6 +647,7 @@
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Възходящо",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Моля, изчакайте",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Натиснете клавишите със стрелки за придвижване",
   "wcr:RETRY": "Повторен опит",
   "wcr:ROW_COLLAPSED": "Редът е свит",
   "wcr:ROW_DESELECTED": "Редът е премахнат от избраните",

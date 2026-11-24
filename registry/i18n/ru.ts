@@ -650,6 +650,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "По восходящей",
   "wcr:OK": "ОК",
   "wcr:PLEASE_WAIT": "Подождите",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Для перемещения используйте клавиши со стрелками",
   "wcr:RETRY": "Повторить",
   "wcr:ROW_COLLAPSED": "Строка свернута",
   "wcr:ROW_DESELECTED": "Выбор строки отменен",

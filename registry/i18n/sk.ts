@@ -650,6 +650,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Vzostupne",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Čakajte",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Na presunutie stlačte príslušné klávesy so ŠÍPKOU",
   "wcr:RETRY": "Znova",
   "wcr:ROW_COLLAPSED": "Riadok zbalený",
   "wcr:ROW_DESELECTED": "Výber riadka zrušený",

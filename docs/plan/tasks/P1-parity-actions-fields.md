@@ -63,3 +63,13 @@ the whole page. Don't raise timeouts.
 NumericInput (added by H8, owner P1) has no paired fixture for its **focused value-state popup** yet. Add one that uses
 the UI5 input's actual validation popover kept in place (`docs/src/fixtures/ui5-popup-in-place.ts`). Behaviour tests
 already cover the visible status and the textbox description.
+
+## Phone Select tree capture
+
+The H2d merge review found a load-dependent fingerprint change at `phone/ltr/select-phone`,
+`/ax/0/children/0`. The fixture's snapshot contains `Germany List item 3 of 4`, then
+`registry/ui/select.tsx` clears the live message after 3000 ms and the CDP AX capture sees the
+same alert with no text child. A browser-clock probe on the source matching clean main `c12684c`
+reproduced both states. Capture the intended announcement at a deterministic point in its lifecycle.
+Keep the real clear behavior and the exact tree ratchet. The review log is under
+`.worktrees/review-h2-h9/.integration/review-h2d/`.

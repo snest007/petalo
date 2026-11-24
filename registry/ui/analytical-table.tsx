@@ -15,29 +15,40 @@
 
 import * as React from "react"
 import {
+  columnFilteringFeature, globalFilteringFeature, rowSortingFeature,
   columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
   flexRender, tableFeatures, useTable,
   type Cell, type Column, type ColumnDef, type ColumnOrderState, type ColumnPinningState,
   type ColumnSizingState, type Header, type Row, type RowData, type TableOptions,
-  type Updater, type ColumnVisibilityState,
+  type Updater, type ColumnVisibilityState, type SortingState, type ColumnFiltersState,
 } from "@tanstack/react-table"
 import { defaultRangeExtractor, useVirtualizer, type ScrollToOptions } from "@tanstack/react-virtual"
 import { BusyIndicator } from "@/components/ui/busy-indicator"
 import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu"
-import { pushpinOff, pushpinOn } from "@/lib/fiori-icons"
+import { Icon } from "@/components/ui/icon"
+import { Input, InputIcon } from "@/components/ui/input"
+import { AnalyticalHeaderMenu } from "@/lib/analytical-table/header-menu"
+import { decline, filter as filterIcon, pushpinOff, pushpinOn, sortAscending, sortDescending, type FioriIconData } from "@/lib/fiori-icons"
 import { useFioriLocale, useFioriTexts } from "@/lib/fiori-locale"
 import { formatNumber } from "@/lib/fiori-numbers"
 import { cn } from "@/lib/utils"
 import { clampWidth, measureWidths, minimumColumnWidth, type ScaleWidthMode } from "@/lib/analytical-table/layout"
 import { useGridNavigation, type Position } from "@/lib/analytical-table/navigation"
+import { analyticalModelOptions, createAnalyticalFilterModel, createAnalyticalSortModel, removeAnalyticalFilter,
+  type AnalyticalTableFilter, type AnalyticalTableSortType } from "@/lib/analytical-table/sort-filter"
 import { mergeHost, type HostProps } from "@/lib/analytical-table/owned-props"
 
 const features = tableFeatures({
+  columnFilteringFeature, globalFilteringFeature, rowSortingFeature,
   columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
   columnMeta: {} as AnalyticalTableColumnMeta,
 })
 type Features = typeof features
 type Table<T extends RowData> = ReturnType<typeof useTable<Features, T>>
+export type AnalyticalTableEngine<T extends RowData> = import("@tanstack/react-table").Table<Features, T>
+export type AnalyticalTableRowModel<T extends RowData> = Row<Features, T>
+export type { AnalyticalTableFilter, AnalyticalTableSortType }
+export type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
 type GridColumn<T extends RowData> = Column<Features, T>
 type GridHeader<T extends RowData> = Header<Features, T, unknown>
 type GridRow<T extends RowData> = Row<Features, T>
@@ -46,7 +57,7 @@ type Align = "Start" | "Center" | "End" | "Left" | "Right"
 type VerticalAlign = "Top" | "Middle" | "Bottom"
 export type AnalyticalTableSlot = "grid" | "header-row" | "header-cell" | "header-content" | "header-menu" |
   "body" | "row" | "cell" | "cell-content" | "resizer" | "vertical-resizer" | "empty-row" |
-  "no-data" | "loading" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text"
+  "no-data" | "loading" | "header-filter" | "header-indicator" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text"
 
 export type AnalyticalTableColumnMeta = {
   className?: string
@@ -66,6 +77,13 @@ type ColumnRenderKeys = "header" | "cell" | "footer"
 type WithoutRenderers<Def> = Def extends unknown ? Omit<Def, ColumnRenderKeys> : never
 type HeaderInfo<T extends RowData, V> = AnalyticalTableContentInfo<T> & { header: Header<Features, T, V>; column: GridColumn<T> }
 
+export type AnalyticalTableFilterInfo<T extends RowData> = AnalyticalTableContentInfo<T> & {
+  column: GridColumn<T>
+  value: unknown
+  setFilter: (value: unknown) => void
+  accessibleNameRef: string
+}
+
 export type AnalyticalTableColumnDef<T extends RowData, V = unknown> = WithoutRenderers<ColumnDef<Features, T, V>> & {
   cell?: string | ((info: AnalyticalTableCellInfo<T, V> & ReturnType<Cell<Features, T, V>["getContext"]>) => React.ReactNode)
   header?: string | ((info: HeaderInfo<T, V>) => React.ReactNode)
@@ -78,6 +96,17 @@ export type AnalyticalTableColumnDef<T extends RowData, V = unknown> = WithoutRe
   headerTooltip?: string
   headerLabel?: string
   cellLabel?: (info: AnalyticalTableCellInfo<T, V>) => string
+  sortable?: boolean
+  disableSortBy?: boolean
+  sortType?: AnalyticalTableSortType<T>
+  sortInverted?: boolean
+  filterable?: boolean
+  disableFilters?: boolean
+  disableGlobalFilter?: boolean
+  filter?: AnalyticalTableFilter<T>
+  filterType?: AnalyticalTableFilter<T>
+  /** Experimental content slot. Name the editor with accessibleNameRef. */
+  Filter?: (info: AnalyticalTableFilterInfo<T>) => React.ReactNode
   disableResizing?: boolean
   disableDragAndDrop?: boolean
   interactiveElementName?: string | ((cell: GridCell<T>) => string)
@@ -120,6 +149,13 @@ const defaultTexts = {
   moveToContent: "To move to the content, press F2.", // WCR MOVE_TO_CONTENT_F2
   includesContent: (name: string) => `Includes ${name}`, // WCR INCLUDES_X
   busy: "Busy", // WCR TablePlaceholder.js aria-valuetext
+  sortAscending: "Sort Ascending", // WCR SORT_ASCENDING
+  sortDescending: "Sort Descending", // WCR SORT_DESCENDING
+  clearSorting: "Clear Sorting", // WCR CLEAR_SORTING
+  filter: "Filter", // WCR FILTER
+  filtered: "Filtered", // WCR FILTERED
+  menuItemActive: "Is Active", // UI5 LIST_ITEM_ACTIVE, used by WCR ColumnHeaderModal
+  clearFilter: "Clear", // UI5 INPUT_CLEAR_ICON_ACC_NAME, used by WCR DefaultFilterComponent
   emptyCell: "Empty", // UI5 ARIA_LABEL_EMPTY_CELL
 }
 export type AnalyticalTableTexts = typeof defaultTexts
@@ -130,6 +166,9 @@ const textKeys = {
   noData: "wcr:LIST_NO_DATA", noDataFiltered: "wcr:NO_DATA_FILTERED",
   fixedColumn: "wcr:FIXED_COLUMN", freezeColumn: "wcr:FREEZE_COLUMN", unfreezeColumn: "wcr:UNFREEZE_COLUMN",
   dragToResize: "wcr:DRAG_TO_RESIZE", pleaseWait: "wcr:PLEASE_WAIT",
+  sortAscending: "wcr:SORT_ASCENDING", sortDescending: "wcr:SORT_DESCENDING",
+  clearSorting: "wcr:CLEAR_SORTING", filter: "wcr:FILTER", filtered: "wcr:FILTERED",
+  menuItemActive: "LIST_ITEM_ACTIVE", clearFilter: "INPUT_CLEAR_ICON_ACC_NAME",
   emptyCell: "ARIA_LABEL_EMPTY_CELL", moveToContent: "wcr:MOVE_TO_CONTENT_F2", includesContent: "wcr:INCLUDES_X",
 }
 
@@ -156,6 +195,25 @@ export type AnalyticalTableProps<T extends RowData> = Omit<HostProps, "children"
   columnPinning?: ColumnPinningState
   defaultColumnPinning?: ColumnPinningState
   onColumnPinningChange?: (pinning: ColumnPinningState) => void
+  sorting?: SortingState
+  defaultSorting?: SortingState
+  onSortingChange?: (sorting: SortingState) => void
+  columnFilters?: ColumnFiltersState
+  defaultColumnFilters?: ColumnFiltersState
+  onColumnFiltersChange?: (filters: ColumnFiltersState) => void
+  globalFilter?: string
+  defaultGlobalFilter?: string
+  onGlobalFilterChange?: (value: string) => void
+  /** WCR-named alias for the controlled global query. */
+  globalFilterValue?: string
+  sortable?: boolean
+  filterable?: boolean
+  disableGlobalFilter?: boolean
+  enableMultiSort?: boolean
+  /** The ordered IDs passed to WCR's useOrderedMultiSort hook. */
+  sortPriority?: readonly string[]
+  onSort?: (detail: { column: GridColumn<T>; sortDirection: "asc" | "desc" | "clear"; sorting: SortingState }) => void
+  onFilter?: (detail: { columnId: string; value: unknown; filters: ColumnFiltersState }) => void
   initialState?: { hiddenColumns?: string[] }
   classNames?: Partial<Record<AnalyticalTableSlot, string>>
   components?: Partial<AnalyticalTableComponents>
@@ -197,8 +255,13 @@ export type AnalyticalTableProps<T extends RowData> = Omit<HostProps, "children"
 export type AnalyticalTableContext<T extends RowData> = {
   model: { readonly rows: readonly GridRow<T>[]; readonly columns: readonly GridColumn<T>[]; readonly locale: string }
   state: Readonly<{ visibleRows: number; columnSizing: Readonly<ColumnSizingState>; columnOrder: readonly string[];
-    columnVisibility: Readonly<ColumnVisibilityState>; columnPinning: { readonly start: readonly string[]; readonly end: readonly string[] } }>
-  actions: Pick<AnalyticalTableInstance<T>, "focusCell" | "scrollToRow" | "scrollToColumn" | "resetColumnSizing" | "toggleStickyColumn">
+    sorting: ReadonlyArray<Readonly<SortingState[number]>>; columnFilters: ReadonlyArray<Readonly<ColumnFiltersState[number]>>;
+    globalFilter: string; columnVisibility: Readonly<ColumnVisibilityState>; columnPinning: { readonly start: readonly string[]; readonly end: readonly string[] } }>
+  actions: Pick<AnalyticalTableInstance<T>, "focusCell" | "scrollToRow" | "scrollToColumn" | "resetColumnSizing" | "toggleStickyColumn"> & {
+    setSorting: (sorting: SortingState) => void
+    setColumnFilters: (filters: ColumnFiltersState) => void
+    setGlobalFilter: (value: string) => void
+  }
   getRowProps(row: GridRow<T>, extra?: HostProps): HostProps
   getCellProps(cell: GridCell<T>, extra?: HostProps): HostProps
   getHeaderProps(header: GridHeader<T>, extra?: HostProps): HostProps
@@ -285,10 +348,14 @@ export function AnalyticalTable<T extends RowData>({
   columnPinning, defaultColumnPinning, onColumnPinningChange, initialState,
   className, classNames, components, getRowProps, getCellProps, getHeaderProps, headerMenuItems,
   enableColumnFreeze, onStickyColumnsChange, onColumnResize, onAutoResize, onColumnsReorder,
+  sorting, defaultSorting, onSortingChange, columnFilters, defaultColumnFilters, onColumnFiltersChange,
+  globalFilter, defaultGlobalFilter, onGlobalFilterChange, globalFilterValue,
+  sortable = false, filterable = false, disableGlobalFilter = false, enableMultiSort = false,
+  sortPriority, onSort, onFilter,
   retainColumnWidth = false, scaleWidthMode = "Default", rowHeight, headerRowHeight,
   alternateRowColor = false, minRows = 5, visibleRows, defaultVisibleRows = 15, onVisibleRowsChange,
   visibleRowCountMode = "Fixed", loading = false, loadingDelay, alwaysShowBusyIndicator = false,
-  noDataText, noDataReason = "Empty", NoDataComponent, LoadingComponent, renderRowSubComponent,
+  noDataText, noDataReason, NoDataComponent, LoadingComponent, renderRowSubComponent,
   announceEmptyCells = false, locale: localeProp, texts: textOverrides, dir,
   "aria-label": label, "aria-labelledby": labelledBy, "aria-describedby": describedBy, "aria-description": description, "aria-details": details,
   ref, ...rootProps
@@ -312,6 +379,10 @@ export function AnalyticalTable<T extends RowData>({
   const [visibility, setVisibility] = useColumnState(columnVisibility, () => defaultColumnVisibility ??
     tableOptions?.initialState?.columnVisibility ?? Object.fromEntries((initialState?.hiddenColumns ?? []).map(key => [key, false])), onColumnVisibilityChange)
   const [sizing, setSizing] = useColumnState(columnSizing, () => defaultColumnSizing ?? tableOptions?.initialState?.columnSizing ?? {}, onColumnSizingChange)
+  const [sortState, setSorting] = useColumnState(sorting, () => defaultSorting ?? tableOptions?.initialState?.sorting ?? [], onSortingChange)
+  const [filterState, setFilters] = useColumnState(columnFilters, () => defaultColumnFilters ?? tableOptions?.initialState?.columnFilters ?? [], onColumnFiltersChange)
+  const [globalQuery, setGlobalFilter] = useColumnState(globalFilter ?? globalFilterValue,
+    () => defaultGlobalFilter ?? tableOptions?.initialState?.globalFilter ?? "", onGlobalFilterChange)
   const [requestedRows, setVisibleRows] = useColumnState(visibleRows, () => defaultVisibleRows, onVisibleRowsChange)
   const startsFrozen = columns.some(column => column.sticky === "start")
   const frozenMenu = enableColumnFreeze ?? startsFrozen
@@ -347,15 +418,27 @@ export function AnalyticalTable<T extends RowData>({
   const definitions = React.useMemo(() => columns.map(column => ({
     ...column, minSize: column.minWidth ?? column.minSize ?? minimumColumnWidth,
     maxSize: column.maxWidth ?? column.maxSize ?? (scaleWidthMode === "Grow" ? 700 : Infinity),
-  })) as ColumnDef<Features, T, any>[], [columns, scaleWidthMode])
-  const table = useTable({
+    enableSorting: !column.disableSortBy && (column.sortable ?? column.enableSorting ?? sortable),
+    enableColumnFilter: !column.disableFilters && (column.filterable ?? column.enableColumnFilter ?? filterable),
+    enableGlobalFilter: !column.disableGlobalFilter && column.enableGlobalFilter !== false,
+    sortDescFirst: column.sortDescFirst ?? false,
+    invertSorting: column.sortInverted ?? column.invertSorting,
+  })) as ColumnDef<Features, T, any>[], [columns, scaleWidthMode, sortable, filterable])
+  const engineFeatures = {
+    filteredRowModel: createAnalyticalFilterModel, sortedRowModel: createAnalyticalSortModel,
+    ...tableOptions?.features, ...tableOptions?._features, ...features,
+  }
+  const table = useTable<Features, T>({
     ...tableOptions,
-    features: { ...tableOptions?.features, ...tableOptions?._features, ...features },
+    features: engineFeatures,
     columns: definitions,
     data,
-    state: { ...tableOptions?.state, columnSizing: { ...baseWidths, ...sizing }, columnOrder: order, columnVisibility: visibility, columnPinning: pinning },
+    meta: { ...tableOptions?.meta, [analyticalModelOptions]: { locale, disableGlobalFilter } },
+    state: { ...tableOptions?.state, columnSizing: { ...baseWidths, ...sizing }, columnOrder: order, columnVisibility: visibility, columnPinning: pinning,
+      sorting: sortState, columnFilters: filterState, globalFilter: disableGlobalFilter ? "" : globalQuery },
+    enableMultiSort, enableGlobalFilter: !disableGlobalFilter,
     onColumnOrderChange: setOrder, onColumnVisibilityChange: setVisibility, onColumnPinningChange: setPinning,
-    onColumnSizingChange: setSizing,
+    onColumnSizingChange: setSizing, onSortingChange: setSorting, onColumnFiltersChange: setFilters, onGlobalFilterChange: setGlobalFilter,
   })
   const rows = table.getRowModel().rows
   const visible = table.getVisibleLeafColumns()
@@ -506,18 +589,64 @@ export function AnalyticalTable<T extends RowData>({
     onColumnsReorder?.({ column: source, columnsNewOrder: next.map(key => table.getColumn(key)!) })
   }
 
+  function canSortOrFilter(column: GridColumn<T>) { return column.getCanSort() || column.getCanFilter() }
+  function sortDirection(column: GridColumn<T>) {
+    const state = sortState.find(item => item.id === column.id)
+    return state ? state.desc ? "desc" : "asc" : undefined
+  }
+  function filterValue(column: GridColumn<T>) { return filterState.find(item => item.id === column.id)?.value }
+  function isFiltered(column: GridColumn<T>) {
+    const value = filterValue(column)
+    // useA11y.setHeaderProps derives FILTERED from the filter value's length.
+    return (typeof value === "string" || Array.isArray(value)) && value.length > 0
+  }
+  function sortColumn(column: GridColumn<T>, direction: "asc" | "desc" | "clear") {
+    let next = sortState.filter(item => item.id !== column.id)
+    if (direction !== "clear") {
+      const entry = { id: column.id, desc: direction === "desc" }
+      // ColumnHeaderModal calls toggleSortBy with explicit direction and the
+      // column's multi-sort flag. Changing its direction preserves its priority.
+      next = !column.getCanMultiSort() ? [entry] : sortState.some(item => item.id === column.id)
+        ? sortState.map(item => item.id === column.id ? entry : item)
+        : [...sortState, entry]
+      if (sortPriority?.length && next.length > 1) {
+        const ranked = [...new Set(sortPriority)].flatMap(id => next.filter(item => item.id === id))
+        next = [...ranked, ...next.filter(item => !sortPriority.includes(item.id))]
+      }
+    }
+    setSorting(next)
+    onSort?.({ column, sortDirection: direction, sorting: next })
+  }
+  function updateFilter(column: GridColumn<T>, value: unknown) {
+    const id = column.id
+    const def = definition(column)
+    const remove = removeAnalyticalFilter(def.filter ?? def.filterType, value)
+    const next = remove ? filterState.filter(item => item.id !== id) :
+      filterState.some(item => item.id === id) ? filterState.map(item => item.id === id ? { id, value } : item) :
+        [...filterState, { id, value }]
+    setFilters(next)
+    // WCR tableReducer/setFilter reports the proposed filters and the edited column.
+    onFilter?.({ columnId: id, value, filters: next })
+  }
+
   function ownedHeader(header: GridHeader<T>, extra?: HostProps) {
     const column = header.column
     const index = columnIndexes.get(column.id) ?? 0
     const def = definition(column)
-    const hasMenu = canFreeze(column) || Boolean(menuItems.get(column.id)?.length)
+    const hasMenu = canSortOrFilter(column) || canFreeze(column) || Boolean(menuItems.get(column.id)?.length)
     const name = def.headerLabel ?? (typeof def.header === "string" ? def.header : undefined)
+    const sorted = sortDirection(column)
+    const filtered = isFiltered(column)
     const draggable = !def.disableDragAndDrop && !isFrozen(index) && !guide
     return mergeHost("header-cell", {
       ...part("header-cell", cn("fiori-at-header-cell", def.meta?.headerClassName)),
       id: headerId(column), role: "columnheader", "aria-colindex": index + 1,
       // WCR useStickyColumns.getHeaderProps supplies FIXED_COLUMN as the frozen header name.
-      "aria-label": isFrozen(index) ? texts.fixedColumn : name ? `${name} ` : undefined,
+      // WCR useA11y.setHeaderProps exposes sorting via aria-sort and appends
+      // FILTERED to the name. The naming channel supplies its sort/filter announcements.
+      "aria-label": isFrozen(index) ? texts.fixedColumn : (name ? `${name} ` : "") + (filtered ? texts.filtered : "") || undefined,
+      "aria-sort": sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined,
+      "data-sorted": sorted, "data-filtered": filtered || undefined,
       "aria-haspopup": hasMenu ? "menu" : undefined, "aria-expanded": hasMenu ? openColumn === column.id : undefined,
       "aria-controls": hasMenu ? `${headerId(column)}-menu` : undefined,
       tabIndex: !loading && nav.isActive(0, index) ? 0 : -1,
@@ -525,7 +654,7 @@ export function AnalyticalTable<T extends RowData>({
       "data-grid-row": 0, "data-grid-column": index, "data-column-id": column.id,
       "data-frozen": isFrozen(index) || undefined, "data-dragging": dropTarget === column.id || undefined,
       onFocus: event => nav.onHostFocus(event, 0, index), onBlur: nav.onHostBlur,
-      onClick: () => { if (hasMenu) setOpenColumn(column.id) },
+      onClick: event => { if (hasMenu && !(event.target as Element).closest(".fiori-at-sort-popup")) setOpenColumn(column.id) },
       onKeyUp: event => { if (event.target === event.currentTarget && event.key === " " && hasMenu) setOpenColumn(column.id) },
       onKeyDown: event => {
         if (event.target === event.currentTarget) {
@@ -559,8 +688,9 @@ export function AnalyticalTable<T extends RowData>({
   }
   const context: AnalyticalTableContext<T> = {
     model: { rows, columns: ordered, locale },
-    state: { visibleRows: requestedRows, columnSizing: sizing, columnOrder: order, columnVisibility: visibility, columnPinning: pinning },
-    actions: { focusCell: nav.focusCell, scrollToRow, scrollToColumn, resetColumnSizing, toggleStickyColumn },
+    state: { visibleRows: requestedRows, columnSizing: sizing, columnOrder: order, columnVisibility: visibility, columnPinning: pinning,
+      sorting: sortState, columnFilters: filterState, globalFilter: globalQuery },
+    actions: { focusCell: nav.focusCell, scrollToRow, scrollToColumn, resetColumnSizing, toggleStickyColumn, setSorting, setColumnFilters: setFilters, setGlobalFilter },
     getHeaderProps: ownedHeader,
     getRowProps: (row, extra) => {
       const index = rowIndexes.get(row.id) ?? 0
@@ -598,7 +728,8 @@ export function AnalyticalTable<T extends RowData>({
 
   const renderedColumns = colVirtual.getVirtualItems()
   const totalWidth = colVirtual.getTotalSize()
-  const noData = noDataText ?? (noDataReason === "Filtered" ? texts.noDataFiltered : texts.noData)
+  const emptyReason = noDataReason ?? (filterState.length || !disableGlobalFilter && globalQuery ? "Filtered" : "Empty")
+  const noData = noDataText ?? (emptyReason === "Filtered" ? texts.noDataFiltered : texts.noData)
   const placeholder = loading && !rowCount && !alwaysShowBusyIndicator
   const Body = components?.Body
   const renderedRows = rowVirtual.getVirtualItems().map(item => {
@@ -649,31 +780,81 @@ export function AnalyticalTable<T extends RowData>({
             const configuredPin = pinning.start.includes(column.id)
             const extra = menuItems.get(column.id) ?? []
             const content = flexRender(def.header, { ...header.getContext(), ...info(typeof def.header === "string" ? def.header : column.id) }) ?? column.id
+            const sorted = sortDirection(column)
+            const filtered = isFiltered(column)
+            const sortableHeader = column.getCanSort()
+            const filterableHeader = column.getCanFilter()
+            const sortOrFilter = sortableHeader || filterableHeader
+            const open = openColumn === column.id
+            const freeze = () => {
+              toggleStickyColumn(column.id)
+              onStickyColumnsChange?.({ column, sticky: !configuredPin,
+                stickyColumns: configuredPin ? pinning.start.filter(key => key !== column.id) : [...pinning.start, column.id] })
+            }
+            const close = () => setOpenColumn(undefined)
+            const restoreFocus = (event: Event) => {
+              event.preventDefault()
+              grid.current?.ownerDocument.getElementById(headerId(column))?.focus({ preventScroll: true })
+            }
+            const sortItems: { id: "asc" | "desc" | "clear"; text: string; icon: FioriIconData }[] = sortableHeader ? [
+              { id: sorted === "asc" ? "clear" : "asc", text: sorted === "asc" ? texts.clearSorting : texts.sortAscending, icon: sorted === "asc" ? decline : sortAscending },
+              { id: sorted === "desc" ? "clear" : "desc", text: sorted === "desc" ? texts.clearSorting : texts.sortDescending, icon: sorted === "desc" ? decline : sortDescending },
+            ] : []
+            const filterId = `${headerId(column)}-filter`
+            const filterText = filterValue(column)
+            const fieldRef = React.createRef<HTMLInputElement>()
+            // DefaultFilterComponent forwards the label as the input's accessible name.
+            const defaultFilter = <div aria-invalid="false">
+              <Input ref={fieldRef} aria-label={texts.filter} aria-invalid="false" value={String(filterText ?? "")}
+                onChange={event => updateFilter(column, event.target.value || undefined)}
+                icon={filterText ? <InputIcon><button type="button" tabIndex={-1} aria-label={texts.clearFilter}
+                  onMouseDown={event => event.preventDefault()}
+                  onClick={() => { updateFilter(column, undefined); fieldRef.current?.focus() }}><Icon icon={decline} /></button></InputIcon> : undefined} />
+            </div>
+            const sortPopup = sortOrFilter && open ? <AnalyticalHeaderMenu
+              id={`${headerId(column)}-menu`} anchorId={headerId(column)} rtl={rtl} close={close}
+              align={def.hAlign === "Center" ? "center" : def.hAlign === "End" || def.hAlign === (rtl ? "Left" : "Right") ? "end" : "start"}
+              className={cn("fiori-at-sort-popup", classNames?.["header-menu"])} activeText={texts.menuItemActive}
+              beforeFilter={sortItems.map(item => ({ ...item, run: () => { sortColumn(column, item.id); close() } }))}
+              afterFilter={[
+                ...extra.map(item => ({ ...item, run: () => { item.onSelect(); close() } })),
+                ...(canFreeze(column) ? [{ id: "freeze", icon: configuredPin ? pushpinOff : pushpinOn,
+                  text: configuredPin ? texts.unfreezeColumn : texts.freezeColumn, run: () => { freeze(); close() } }] : []),
+              ]}
+              // UI5 ListItemTemplate.js gives the .ui5-li-content div an ID. Keeping an ID on
+              // the matching layout box lets Chromium expose it around the WCR ColumnHeaderModal FlexBox.
+              filter={filterableHeader ? { text: texts.filter, content:
+                <div {...part("header-filter", "fiori-li__content fiori-at-header-filter")} id={`${filterId}-content`}>
+                  <div className="fiori-at-filter-content">
+                    <Icon icon={filterIcon} />
+                    <div className="fiori-at-filter-label" id={filterId}><span>{texts.filter}</span></div>
+                    {def.Filter ? flexRender(def.Filter, { ...info(defaultFilter), column, value: filterText,
+                      setFilter: value => updateFilter(column, value), accessibleNameRef: filterId }) : defaultFilter}
+                  </div>
+                </div>,
+              } : undefined} /> : null
             const host = <div {...context.getHeaderProps(header)}>
               {/* WCR ColumnHeader/index.js: classes.header contains the title renderer and
                   classes.iconContainer as siblings inside the positioned content wrapper. */}
               <div {...part("header-content", "fiori-at-header-content")} style={{ textAlign: def.hAlign?.toLowerCase() as React.CSSProperties["textAlign"] }}>
                 <div className="fiori-at-header-text" title={def.headerTooltip ?? (typeof content === "string" ? content : undefined)}>{content}</div>
-                <div className="fiori-at-header-icons" />
+                <div className="fiori-at-header-icons">
+                  {filtered && <Icon {...part("header-indicator")} icon={filterIcon} />}
+                  {sorted && <Icon {...part("header-indicator")} icon={sorted === "asc" ? sortAscending : sortDescending} />}
+                </div>
               </div>
+              {sortPopup}
             </div>
             return <div className="fiori-at-header-position" key={column.id} style={cellStyle(item.index)}
               data-frozen={frozen || undefined} data-frozen-edge={frozen && item.index === pinnedCount - 1 || undefined}>
-              {canFreeze(column) || extra.length ? <Menu dir={rtl ? "rtl" : "ltr"} modal={false}
+              {!sortOrFilter && (canFreeze(column) || extra.length > 0) ? <Menu dir={rtl ? "rtl" : "ltr"} modal={false}
                 open={openColumn === column.id} onOpenChange={open => setOpenColumn(open ? column.id : undefined)}>
                 {host}
                 <MenuTrigger aria-hidden="true" tabIndex={-1} className="fiori-at-menu-anchor" />
 
-                <MenuContent data-slot="analytical-table-header-menu" id={`${headerId(column)}-menu`} aria-labelledby={headerId(column)} className={classNames?.["header-menu"]} onCloseAutoFocus={event => {
-                  event.preventDefault()
-                  grid.current?.ownerDocument.getElementById(headerId(column))?.focus({ preventScroll: true })
-                }}>
+                <MenuContent data-slot="analytical-table-header-menu" id={`${headerId(column)}-menu`} aria-labelledby={headerId(column)} className={classNames?.["header-menu"]} onCloseAutoFocus={restoreFocus}>
                   {extra.map(menuItem => <MenuItem key={menuItem.id} onSelect={menuItem.onSelect}>{menuItem.text}</MenuItem>)}
-                  {canFreeze(column) && <MenuItem icon={configuredPin ? pushpinOff : pushpinOn} onSelect={() => {
-                    toggleStickyColumn(column.id)
-                    onStickyColumnsChange?.({ column, sticky: !configuredPin,
-                      stickyColumns: configuredPin ? pinning.start.filter(key => key !== column.id) : [...pinning.start, column.id] })
-                  }}>{configuredPin ? texts.unfreezeColumn : texts.freezeColumn}</MenuItem>}
+                  {canFreeze(column) && <MenuItem icon={configuredPin ? pushpinOff : pushpinOn} onSelect={freeze}>{configuredPin ? texts.unfreezeColumn : texts.freezeColumn}</MenuItem>}
                 </MenuContent>
               </Menu> : host}
               {isResizable(column) && <div {...part("resizer", "fiori-at-resizer")} role="separator" aria-hidden="true"
@@ -695,7 +876,7 @@ export function AnalyticalTable<T extends RowData>({
                 <div data-slot="analytical-table-placeholder-row" key={index}>
                   {ordered.map(column => <div key={column.id} style={{ width: column.getSize() }}><span /></div>)}
                 </div>)}
-            </div> : NoDataComponent ? <NoDataComponent {...info(noData)} noDataText={noData} noDataReason={noDataReason} /> : noData}
+            </div> : NoDataComponent ? <NoDataComponent {...info(noData)} noDataText={noData} noDataReason={emptyReason} /> : noData}
           </div>
         </div>}
         {footer && <div {...part("footer-row", "fiori-at-footer")} role="row" style={{ width: totalWidth }}>

@@ -1,134 +1,107 @@
-# Integration card (for Codex)
+# Review and merge (reviewer)
 
-Merge finished task-card branches into `main`, prove the result works, clean up, and hand back one report.
-Run this in a **fresh Codex session** in the main checkout (not in a card's worktree). Read `/AGENTS.md` first.
+How a returned card branch is checked, merged into local `main`, or turned into a follow-up card. Agent-neutral.
+Run it in the orchestrator's checkout (a worktree on its own branch), never by editing the main checkout's working
+tree; `main` only moves by fast-forward from there. Read [AGENTS.md](../../AGENTS.md) and [RUN.md](RUN.md) first.
 
-Prompt: `Read AGENTS.md and docs/plan/INTEGRATION.md, then integrate the pending codex/* branches.`
+## 1. Verify the claims (before believing the final message)
 
-## 0. Preconditions
+On the card's branch / worktree:
 
-```bash
-git switch main && git status --short          # must be empty; if not, stop and report what is there
-node scripts/integrate.mjs status              # lists codex/* branches, their worktrees, merged or PENDING
+1. `git status --short` (clean), `git log --oneline main..<branch>`, `git diff --stat main...<branch>`.
+2. Read `docs/plan/returns/<ID>.md` if present and the card's acceptance.
+3. Open the summary logs the final message names (`test-results/summary-*.log`) and list the failing tests
+   (`grep '✘'`, skip retries). Never trust a count you haven't seen in a log.
+4. Scope: `node scripts/integrate.mjs scope <branch>`. Every file outside the card's component(s) needs a reason
+   (shared inventories, generated files and the backlog are expected).
+
+## 2. Check what was added to make tests pass
+
+- New `a11yDiff`, `ui5FormHosts`, focus-scaffolding or other allowances in `tests/a11y-tree-normalize.ts` or fixtures:
+  each must name exact paths, verify the node shape it removes, and be limited to the card's cases. Reuse of an existing
+  mechanism (form hosts, pinned popup shell) is fine; a blanket "ignore" is not.
+- Tree-baseline entries can record only structural differences owned by the component's P card under
+  [AGENTS.md](../../AGENTS.md#definition-of-done-every-card). Return the card for any role/name/state/text entry.
+- Forbidden shortcuts: raised `tolerance`, `skipCompare` without a P-card reason, `retries`, `waitForTimeout`/sleeps,
+  `test.skip`, hard-coded colours/sizes that have a `--sap*`/`--fiori-*` parameter
+  (`grep -nE '#[0-9a-f]{3,6}\b|[0-9]+px' <changed files>`).
+
+## 3. Classify each remaining failure (if the card isn't green)
+
+For every failing check, find the cause before writing anything:
+
+- **Accessibility tree:** read the case's capture (`test-results/a11y-tree-wcr/<dir>-<case>.json` or
+  `test-results/a11y-latest/a11y-tree-report.json` when using `pnpm test:summary`), group by kind
+  (role/name/state vs. wrapper/nesting), and
+  locate the reference template (`node_modules/@ui5/webcomponents*/dist/<Name>Template.js`, WCR
+  `dist/components/<Name>/**`). Structural-only → may be recorded under the new-component rule. Semantic → must be fixed.
+- **Pixels:** isolated (`only=`) vs. full grid. If only the full grid fails, or unrelated components fail on the
+  branch, suspect a popup painted outside its cell (cause 2 below). Check the same cells on clean `main` before
+  blaming the branch.
+- **Console/page errors** in the reference (e.g. WCR `NaN` width) are fixture inputs, not pixels.
+- Existing precedent first: search `registry/ui` and `tests/a11y-tree-normalize.ts` for how another component already
+  solved the same thing, and point to it (file:line).
+
+## 4a. Not done → write the follow-up card
+
+Add `docs/plan/tasks/<ID>b-<slug>.md` (or the next letter) and its line in `docs/plan/README.md` under the parent card:
+
+```markdown
+# <ID>b — <what is left>
+
+Continue on `codex/<ID>` in `.worktrees/<ID>`. Budget: 2 hypotheses per failing check, about <n> h, 0 pushes.
+
+## Review findings
+1. <failing check> — <cause, with evidence: capture path / log line> — <where to fix, with precedent file:line>.
+2. …
+
+## Acceptance
+- <the checks that must pass>; tier 2; installed-consumer check if not done; tick <ID> and <ID>b.
 ```
 
-If a card's branch has uncommitted work in its worktree, **don't touch it** — report it and integrate the others.
-Branches that aren't `codex/*` are not yours: report them, don't delete them.
+Commit it to local `main` (bookkeeping only, no tests needed) and give the owner the one-line follow-up prompt from
+RUN.md. A card that keeps coming back on the same kind of problem is a signal to raise a rule question with the owner
+(record the answer in `decisions.md`), not to write a third follow-up.
 
-## 1. Review each branch (before merging)
+## 4b. Done → merge
 
-For every pending branch, in backlog order (A1, A2, … see `docs/plan/README.md`):
+1. In the orchestrator checkout (up to date with local `main`): `git merge --no-ff --no-commit <branch>`. Conflicts are
+   almost always appended lines in shared inventories: keep both sides, then `pnpm generate && pnpm registry:build`
+   instead of hand-merging generated files. A real conflict in a component file means two cards touched it: keep both
+   behaviours and run both cards' specs.
+2. Repeat scoped Tier 2 before merging where it applies. Check what the merge could have changed by running the
+   card's specs plus the inventory specs (`tests/a11y-tree*.spec.ts`, `tests/i18n.spec.ts`,
+   `tests/usage-guidance.spec.ts`) with `pnpm test:summary`. Reserve the full-suite repeat for the milestone.
+3. `node scripts/plan-check.mjs --fix` moves ticked cards to `tasks/done/` and return notes to `returns/done/`; fix the
+   relative links it then reports, update the Status table, run plan-check again (0 errors).
+4. Commit, check the main checkout is clean, `git -C <main checkout> merge --ff-only <orchestrator branch>`.
 
-1. `node scripts/integrate.mjs scope <branch>` — every file must be `ok` (listed in the card / owned by the card's
-   component) or `called-out` (named in a commit message). For each `UNLISTED` file decide:
-   - justified (e.g. a needed export from a shared component, a fixture index line) → keep, explain in the report;
-   - not justified (unrelated edits, reformatting, scratch files, generated files) → **don't merge** the branch; list
-     the files in the report as "returned to the card author".
-2. **Fidelity review** (this is the step Claude used to do — be skeptical, the author can't review itself):
-   read the card's "Behaviour" section and, for each bullet, find the code that implements it and the reference source
-   it ports (`node_modules/@ui5/...` or OpenUI5 1.154, see the card). Check constants, defaults, keyboard keys, texts and
-   edge cases against the reference, not against the card's wording. Spot-check at least 5 behaviours per card,
-   including every number/limit/text the card mentions. Also check that each bullet has a test.
-   Record mismatches in the report as `mismatch: <behaviour> — ours <x>, reference <y> (<file>:<line>)`.
-   A mismatch that changes behaviour blocks the merge of that branch; cosmetic ones go in the report.
-3. Re-run **tier 2** before merging: `pnpm test:changed --repeat-each=2` + `pnpm test:smoke` once (about 5 minutes).
-   A **shared-file card** (anything `test:changed` reports as shared, including `.storybook/**`, Storybook helpers,
-   shared styles/libs, Playwright configs, docs entry points or CI) runs full main and Storybook once through
-   `test:summary` instead; the second full verification is the milestone/CI. Old "main ×2, Storybook ×2" card text
-   means tier 2 under this rule. Tier 1 while implementing is `pnpm test:changed` (specs, visuals, stories; 1–3 minutes).
-   Only `docs/plan/README.md`, `docs/plan/tasks/**`, `docs/plan/returns/**` and `docs/plan/handoff/**` are ignored
-   bookkeeping: such a branch alone prints "bookkeeping only: no tests needed" and exits 0. Other `docs/plan/` files
-   stay shared, including the Storybook-read `a11y-audit.md` and `i18n-audit.md`.
-4. Look for forbidden shortcuts: `tolerance` raised, `skipCompare` without a concrete reason comment, `retries`,
-   `waitForTimeout`/sleeps in tests, `test.skip`, `!important` added outside harness files, hard-coded colours/sizes that
-   have a `--sap*`/`--fiori-*` variable (`grep -nE '#[0-9a-f]{3,6}\b|[0-9]+px' <changed files>`).
+## 5. When something fails after merging (it passed on each branch alone)
 
-## 2. Merge
+Check in this order, fix the cause, and say which one it was in the commit message:
 
-```bash
-node scripts/integrate.mjs merge <branch…>       # in backlog order; refuses on UNLISTED files unless --accept-scope
-```
+1. **Over-broad locator** now that more demos are on the page: scope to `#<name>-demo …` / `[data-slot=…]`.
+2. **A popup painted outside its fixture cell** covering another cell (compare `test-results/visual*/…-ours.png`,
+   `-ui5.png`, `-diff.png`): pin it in place (`docs/src/fixtures/ui5-popup-in-place.ts`, `wcr-popup-in-place.ts`).
+3. **Focus stolen by another fixture** closing a popup or changing `:focus-visible`.
+4. **Acting before async state settled**: wait for the state (`expect.poll`, `toBeFocused`), never sleeps or retries.
+5. **Fractional layout** shifting later cells by 1 px: whole-pixel slots.
+6. **Load-dependent reference rendering** (only with several workers): confirm with `--workers=1` runs; if the
+   reference varies, run that spec serially and say so.
 
-### Conflicts
+Two honest attempts and still unexplained: stop, roll back the merge if `main` was clean before it, and report.
 
-They are almost always index/registry files several cards append to. Keep **both** sides:
-- `docs/plan/README.md`: tick every merged card, move its file to `docs/plan/tasks/done/` (and its return note to
-  `docs/plan/returns/done/`), fix the link, and run `node scripts/plan-check.mjs`.
-- `sapui5/webapp/fixtures.js`, `docs/src/fixtures*/index.ts`, `registry/items/*.json` dependency lists: union of entries.
-- A real code conflict in a component file means two cards touched the same component: resolve by keeping both
-  behaviours, then make sure both cards' tests pass; explain it in the report.
-
-Then `git add <files> && git commit --no-edit` and re-run `merge` for the remaining branches.
-
-## 3. Verify
-
-Follow AGENTS.md's verification budget: at most two local fix hypotheses per failing test, two CI pushes if
-authorized, and about two hours per task. Stop and write `docs/plan/returns/<card>.md` when a limit is reached.
-Keep logs on disk and report compact summaries; background long runs and notify only on completion.
-
-**Tier 3** is the reviewer's job at the end of a wave, every 3–5 merged cards, or a release: full main + Storybook
-once, then push + CI when authorized (about 20 minutes local / 12 minutes CI).
+## 6. Milestone (end of a wave / every 3–5 merged cards / owner asks to publish)
 
 ```bash
-node scripts/integrate.mjs verify                # milestone, main + Storybook once; then installed consumer + recorded pages
-node scripts/integrate.mjs verify --runs=2       # release: both suites twice
-# Direct milestone verification, without merging or network consumer installation:
-pnpm test:milestone
+pnpm test:milestone              # fresh builds, full main + Storybook once, stored-baseline tree comparisons (macOS)
+node scripts/integrate.mjs cleanup   # deletes merged codex/* branches and their clean worktrees
 ```
 
-`verify` installs frozen dependencies, delegates to `pnpm test:milestone` (`--runs` defaults to **1**), and preserves
-the installed-consumer smoke and recorded usage build checks. The milestone runs generate/typecheck/registry build,
-a fresh Storybook build, and both full suites through `test:summary`, with retries off. It writes
-`.integration/milestone-<date>/REPORT.md` with summaries, durations and ten slowest spec files per suite;
-`verify` also writes `.integration/REPORT.md`. PASS requires every check green and **0 failed, 0 flaky**.
-Run with the **default workers** (no `--workers` flag). `--workers=1` is only a diagnostic for cause 6;
-a final PASS with one worker doesn't count. The second full verification is milestone/CI for shared-file cards.
+Then push `main` only if the owner authorized it (it publishes). CI is a reminder; a Linux-only failure goes into the
+milestone report, not a card.
 
-### When something fails after merging (it passed on each branch alone)
+## 7. Report to the owner
 
-The cause is almost always one of these. Check them in this order, fix the **cause**, commit with a message that says
-which one it was, and re-run `verify`:
-
-1. **Over-broad locator** in a test now that more demos are on the page (`getByRole("listbox")`, `getByText("Save")`,
-   duplicate demo ids). Fix: scope to the component's demo (`#<name>-demo …`, `[data-slot=…]`), rename duplicate ids.
-2. **A popup painted outside its fixture cell** covering another cell (look at `test-results/visual*/…-ours.png` /
-   `-ui5.png` / `-sapui5.png` / `-diff.png` with an image viewer). Fix in the fixture/harness: hide replaced parents,
-   pin placement (`sapui5/webapp/popup-in-place.js`, `docs/src/fixtures/ui5-popup-in-place.ts`).
-3. **Focus stolen by another fixture** closing a dialog/popover or changing a field's look (`:focus-visible`). Fix the
-   component if the reference doesn't close on focus-out (e.g. message boxes), otherwise the fixture.
-4. **Test acting before async state settled** (focus moving into a list, value re-formatting, listeners attaching):
-   wait for the state (`expect.poll`, `toBeFocused`, a page round-trip) — never `waitForTimeout`, never retries.
-5. **Fractional layout** shifting later cells (sizes off by 1px): cells must sit in whole-pixel slots (`snapSlots`).
-6. **Load-dependent reference rendering** (only fails with several workers): confirm by running the spec with
-   `--workers=1` several times; if it's the reference (not ours) that varies, run that spec serially and say so.
-
-**Known intermittent reference artifact** (seen once, 2026-11-11, not reproduced in 3+3 later full runs):
-`visual-sapui5` cell `variant-management-error-open`, where the **SAPUI5 reference** PNG shows an empty white popover body
-(ours is correct). Diagnosis is archived in `.integration/run-C1-E1-20261111-180213/integration-diagnosis/DIAGNOSIS.md`.
-If it is the only failure and the reference image (not ours) is the blank one: re-run `verify` once; if it passes, note
-"known reference artifact recurred" in the report and continue. If it recurs twice in a row, stop and report — then it
-needs a real fix in `sapui5/fixtures/variant-management.js` readiness.
-
-If after two honest attempts a failure is still unexplained, stop: leave the branch merged if it was clean before,
-otherwise roll back with the command `merge` printed first (`git reset --hard <main before merging>`, also in
-`.integration/main-before.txt` and the report), and describe the failure in the report.
-
-## 4. Clean up
-
-```bash
-node scripts/integrate.mjs cleanup               # deletes merged codex/* branches and their clean worktrees
-```
-
-Also delete temp files you created. Push + CI only when the owner has authorized this milestone.
-
-## 5. Report (paste this back to the owner)
-
-Fill the "Notes" section at the end of `.integration/REPORT.md`:
-
-- per branch: merged / returned (why), scope exceptions accepted (file → reason), fidelity mismatches found,
-  forbidden shortcuts found;
-- conflicts and how they were resolved;
-- fixes made after merging: file → which of the six causes → one line;
-- anything that needs the owner's decision.
-
-Then print the whole report as your final message. Keep it short; the owner reviews it, not your process.
+Per card: merged / follow-up written (one line why) / returned. Any allowance or baseline entry accepted and why.
+Anything that needs the owner's decision. Short: the owner reads the result, not the process.

@@ -647,6 +647,7 @@
   "wcr:NUMERICCONTENT_DEVIATION_UP": "Ascending",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "Please wait",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "Press ARROW keys to move",
   "wcr:RETRY": "Retry",
   "wcr:ROW_COLLAPSED": "Row collapsed",
   "wcr:ROW_DESELECTED": "Row deselected",

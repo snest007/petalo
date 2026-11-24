@@ -650,6 +650,7 @@ const texts = {
   "wcr:NUMERICCONTENT_DEVIATION_UP": "昇順",
   "wcr:OK": "OK",
   "wcr:PLEASE_WAIT": "お待ちください",
+  "wcr:PRESS_ARROW_KEYS_TO_MOVE": "矢印キーを押して移動",
   "wcr:RETRY": "再試行",
   "wcr:ROW_COLLAPSED": "行が圧縮されました",
   "wcr:ROW_DESELECTED": "行の選択が解除されました",
