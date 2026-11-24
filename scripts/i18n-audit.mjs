@@ -77,7 +77,7 @@ function keyReferences(file, text = readFileSync(file, 'utf8')) {
   referenceCache.set(file, refs)
   return refs
 }
-const scan = (file, seen = new Set()) => {
+const scan = (file, seen = new Set(), followImports = true) => {
   if (!existsSync(file) || seen.has(resolve(file))) return []
   seen.add(resolve(file))
   const text = readFileSync(file, 'utf8')
@@ -85,7 +85,7 @@ const scan = (file, seen = new Set()) => {
   keyReferences(relative(process.cwd(), file), text)
   const keys = [...text.matchAll(/import\s*\{([^}]+)\}\s*from\s*["'].*?generated\/i18n\/i18n-defaults\.js["']/g)].flatMap(m => m[1].split(',').map(k => k.trim()).filter(Boolean))
   keys.push(...[...text.matchAll(/\.getText\("([^"]+)"/g)].map(match => match[1]).filter(key => key in defaults))
-  for (const m of text.matchAll(/from\s*["'](\.\/[^"']+\.js)["']/g)) {
+  if (followImports) for (const m of text.matchAll(/from\s*["'](\.\/[^"']+\.js)["']/g)) {
     const next = resolve(dirname(file), m[1])
     // Function-only i18n helpers are behavior owners too. CustomAnnouncement.js
     // is invoked by ListItemCustom._onfocusin and TableCustomAnnouncement; skipping
@@ -100,13 +100,15 @@ const nativeKeys = name => {
   const sources = packages.flatMap(pkg => existsSync(`node_modules/@ui5/${pkg}/dist/${native}.js`) ? [`node_modules/@ui5/${pkg}/dist/${native}.js`] : [])
   if (name === 'illustrated-message') sources.push(...readdirSync('node_modules/@ui5/webcomponents-fiori/dist/illustrations').filter(file => file.endsWith('.js')).map(file => `node_modules/@ui5/webcomponents-fiori/dist/illustrations/${file}`))
   // Public subcomponents owned by the same registry item; fixture wrapper imports are not audit roots.
-  const children = { card: ['CardHeader'], calendar: ['CalendarLegend', 'CalendarLegendItem'], table: ['TableHeaderRow','TableHeaderCell','TableRow','TableCell','TableGroupRow','TableSelectionMulti','TableSelectionSingle','TableGrowing','TableRowAction','TableRowActionNavigation'], list: ['ListItemStandard','ListItemCustom','ListItemGroup'], tree: ['TreeItem'], 'notification-list': ['NotificationListItem','NotificationListGroupItem'], 'upload-collection': ['UploadCollectionItem'], tabs: ['Tab','TabSeparator'], menu: ['MenuItem','MenuItemGroup'], tokenizer: ['Token'] }
+  const children = { card: ['CardHeader'], calendar: ['CalendarLegend', 'CalendarLegendItem'], table: ['TableHeaderRow','TableHeaderCell','TableRow','TableCell','TableGroupRow','TableSelectionMulti','TableSelectionSingle','TableGrowing','TableRowAction','TableRowActionNavigation'], list: ['ListItemStandard','ListItemCustom','ListItemGroup'], tree: ['TreeItem'], 'notification-list': ['NotificationListItem','NotificationListGroupItem'], 'upload-collection': ['UploadCollectionItem'], tabs: ['Tab','TabSeparator'], menu: ['MenuItem','MenuItemGroup'], 'navigation-menu': ['NavigationMenuItem','Menu','MenuItem','ListItem','ResponsivePopover'], tokenizer: ['Token'] }
   for (const child of children[name] ?? []) for (const pkg of packages) if (existsSync(`node_modules/@ui5/${pkg}/dist/${child}.js`)) sources.push(`node_modules/@ui5/${pkg}/dist/${child}.js`)
   if (name === 'input') for (const file of ['features/InputSuggestions', 'SuggestionItem', 'SuggestionItemGroup']) {
     sources.push(`node_modules/@ui5/webcomponents/dist/${file}.js`)
   }
   const seen = new Set()
-  const keys = sources.flatMap(file => scan(file, seen))
+  // NavigationMenu's direct inherited text owners are listed above. Their
+  // unrelated popup, selection and end-content implementations have separate inventories.
+  const keys = sources.flatMap(file => scan(file, seen, name !== 'navigation-menu'))
   const related = {
     'variant-management': ['sap.m/src/sap/m/VariantManagement.js'],
     'filter-bar': ['sap.ui.mdc/src/sap/ui/mdc/FilterBar.js', 'sap.ui.mdc/src/sap/ui/mdc/filterbar/FilterBarBase.js'],
@@ -346,6 +348,14 @@ for (const [component, reason] of [
   ['split-button', 'SplitButtonTemplate only renders decorative Button icons.'],
   ['numeric-input', 'NumericInputTemplate hides private step icons; InputPopoverTemplate uses a decorative state icon.'],
 ]) unrendered(component, ['ICON_ARIA_TYPE_IMAGE', 'ICON_ARIA_TYPE_INTERACTIVE'], reason)
+unrendered('navigation-menu', ['NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT'],
+  'NavigationMenuItem.js only assigns this text when an associated SideNavigation item is selectable. The standalone menu has no associated item or duplicated selectable parent.')
+unrendered('navigation-menu', ['MENU_POPOVER_ACCESSIBLE_NAME', 'MENU_ITEM_END_CONTENT_ACCESSIBLE_NAME'],
+  'NavigationMenuTemplate.js uses the Fiori dialog name and NavigationMenuItemTemplate.js replaces the inherited end-content slot with a tag and indicator.')
+unrendered('navigation-menu', ['MENU_ITEM_LOADING'],
+  'The standalone destination item has no loading prop or asynchronously loaded submenu in the H10 card.')
+unrendered('navigation-menu', ['DELETE', 'ARIA_LABEL_LIST_ITEM_CHECKBOX', 'ARIA_LABEL_LIST_ITEM_RADIO_BUTTON', 'LIST_ITEM_SELECTED', 'LIST_ITEM_NOT_SELECTED'],
+  'NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions.')
 unrendered('input', ['POPOVER_ARIA_DESCRIBEDBY_RESIZABLE', 'POPOVER_HANDLE_ARIA_ROLEDESCRIPTION',
   'POPOVER_RESIZE_HANDLE_ARIA_LABEL', 'POPOVER_RESIZE_HANDLE_TOOLTIP'],
   'InputSuggestionsTemplate and InputPopoverTemplate leave their Popup resize handles disabled.')

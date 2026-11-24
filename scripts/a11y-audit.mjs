@@ -67,6 +67,10 @@ verify("TreeItem", "accessibilityAttributes", "aria-haspopup on the owned treeit
 for (const component of ["TreeItem", "TreeItemCustom"]) verify(component, "accessibleRole", "role=treeitem owned on the row; UI5 TreeItemBase.js:_accInfo overrides inherited accessibleRole", "tests/tree.spec.ts: Tree [RTL] custom content cannot replace owned role, states, ids or tab stops (shared TreeNode owner)")
 verified["TreeItemCustom.accessibleName"] = { equivalent: "aria-label composes with the native active hint on the shared TreeNode owner; dedicated custom-name pair still pending", status: "gap" }
 verified["TreeItemCustom.accessibilityAttributes"] = { equivalent: "aria-haspopup reaches the shared TreeNode row; dedicated custom-popup pair still pending", status: "gap" }
+const h10Proof = "tests/a11y-tree-customizations.spec.ts: NavigationMenu protects disclosure roles, name references, descriptions and roving focus"
+verify("NavigationMenuItem", "accessibleName", "accessibleName and LIST_ITEM_ACTIVE name the owned menuitem", h10Proof)
+verify("NavigationMenuItem", "accessibleRole", "NavigationMenuItem.js _accInfo overrides the inherited ListItem role. Petalo owns the required menuitem role on the focus target.", h10Proof)
+verify("NavigationMenuItem", "accessibilityAttributes", "popup and disabled semantics on the owned menuitem with native aria-describedby and aria-keyshortcuts", h10Proof)
 const h8NativeProof = "tests/a11y-tree-customizations.spec.ts: H8 native names, relationships and text overrides reach their owning controls"
 for (const [component, member, equivalent] of [
   ["SplitButton", "accessibleName", "aria-label augments the group’s name in its owned hidden label"],
@@ -169,6 +173,17 @@ for (const [key, equivalent] of [
   ["VALUE_STATE_TYPE_ERROR", "negativeType"], ["VALUE_STATE_TYPE_WARNING", "criticalType"],
   ["VALUE_STATE_TYPE_SUCCESS", "positiveType"], ["VALUE_STATE_TYPE_INFORMATION", "informationType"],
 ]) verifiedTexts[`input.${key}`] = { equivalent: `Input.texts.${equivalent}`, proof: inputSuggestionsProof, status: "ok" }
+
+for (const [key, equivalent] of [
+  ["NAVIGATION_MENU_POPOVER_HIDDEN_TEXT", "menuLabel"],
+  ["LIST_ITEM_ACTIVE", "active"], ["MENU_BACK_BUTTON_ARIA_LABEL", "back"],
+  ["MENU_CANCEL_BUTTON_TEXT", "cancel"], ["RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON", "close"],
+]) verifiedTexts[`navigation-menu.${key}`] = { equivalent: `NavigationMenu.texts.${equivalent}`, proof: h10Proof, status: "ok" }
+verifiedTexts["navigation-menu.NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT"] = {
+  equivalent: "NavigationMenuItem.js only adds this text to the associated selectable SideNavigation row. Raw standalone NavigationMenu has no associated item.",
+  status: "ok",
+  proof: "NavigationMenuItem.js _accInfo requires associatedItem.isSelectable, only set by SideNavigationPopoverTemplate.js.",
+}
 
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {

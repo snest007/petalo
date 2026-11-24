@@ -1025,6 +1025,17 @@
       "SIDE_NAVIGATION_POPOVER_HIDDEN_TEXT"
     ]
   },
+  "navigation-menu": {
+    "owner": "P4",
+    "gapCount": 0,
+    "okKeys": [
+      "LIST_ITEM_ACTIVE",
+      "MENU_BACK_BUTTON_ARIA_LABEL",
+      "MENU_CANCEL_BUTTON_TEXT",
+      "NAVIGATION_MENU_POPOVER_HIDDEN_TEXT",
+      "RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON"
+    ]
+  },
   "notification-list": {
     "owner": "P6",
     "gapCount": 0,

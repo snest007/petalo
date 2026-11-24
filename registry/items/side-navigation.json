@@ -16,6 +16,7 @@
       "Label the first destination Home and link it to the entry page; keep any footer action focused on the essential task."
     ],
     "avoidWhen": [
+      { "when": "Offer related destinations from a single opener without a persistent sidebar.", "use": ["navigation-menu"] },
       {
         "when": "Switch facets of content within one page rather than application destinations.",
         "use": [
@@ -39,10 +40,6 @@
         "use": [
           "navigation-layout"
         ]
-      },
-      {
-        "when": "Offer only a single navigation target.",
-        "use": []
       }
     ],
     "source": "sap-fiori-guidelines"

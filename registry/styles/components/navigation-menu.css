@@ -1,0 +1,102 @@
+/* UI5 NavigationMenu.css.js, NavigationMenuItem.css.js and ListItem.css.js. */
+.fiori-navigation-menu-surface {
+  min-width: 10rem;
+  background: var(--sapGroup_ContentBackground);
+}
+.fiori-navigation-menu-list {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fiori-side-navigation-item-bottom-margin);
+  overflow: auto;
+  min-height: 0;
+  padding: var(--fiori-side-navigation-popup-padding);
+}
+.fiori-navigation-menu-item {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  position: relative;
+  flex-shrink: 0;
+  height: var(--fiori-side-navigation-item-height);
+  padding: var(--fiori-menu-item-padding);
+  /* ListItemBase lays the row content above its one-pixel separator area. */
+  padding-block-end: var(--sapList_BorderWidth);
+  border-radius: var(--fiori-side-navigation-item-border-radius);
+  color: var(--sapList_TextColor);
+  font-family: var(--fiori-side-navigation-parent-item-font-family);
+  font-size: var(--sapFontSize);
+  line-height: normal;
+  text-decoration: none;
+  cursor: pointer;
+  transition: var(--fiori-side-navigation-item-transition);
+  outline: none;
+}
+/* NavigationMenuItem.css overrides the physical left padding in both directions.
+   Map that override to the corresponding logical edge. */
+.fiori-navigation-menu-item:dir(ltr) { padding-inline-start: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
+.fiori-navigation-menu-item:dir(rtl) { padding-inline-end: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
+.fiori-navigation-menu-surface[data-submenu] .fiori-navigation-menu-item {
+  font-family: var(--sapFontFamily);
+}
+.fiori-navigation-menu-item[data-design="action"] { color: var(--sapButton_TextColor); }
+.fiori-navigation-menu-item[data-state="open"] { background: var(--sapList_SelectionBackgroundColor); }
+.fiori-navigation-menu-item:not([data-disabled]):hover { background: var(--sapList_Hover_Background); }
+.fiori-navigation-menu-item[data-state="open"]:hover { background: var(--sapList_Hover_SelectionBackground); }
+.fiori-navigation-menu-item:not([data-disabled]):active {
+  color: var(--sapList_Active_TextColor);
+  background: var(--sapList_Active_Background);
+}
+.fiori-navigation-menu-item[data-disabled] {
+  opacity: var(--fiori-x-listitembase-disabled-opacity);
+  cursor: default;
+}
+.fiori-navigation-menu-item:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+  border-radius: inherit;
+  pointer-events: none;
+}
+.fiori-navigation-menu-text {
+  flex: auto;
+  padding-inline-end: .25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fiori-navigation-menu-icon,
+.fiori-navigation-menu-icon-placeholder {
+  flex-shrink: 0;
+  width: var(--fiori-list-item-icon-size);
+  height: var(--fiori-list-item-icon-size);
+  margin-inline-end: var(--fiori-list-item-icon-padding-inline-end);
+}
+.fiori-navigation-menu-item .fiori-navigation-menu-indicator {
+  flex-shrink: 0;
+  box-sizing: content-box;
+  width: 1rem;
+  height: 1rem;
+  padding-inline-start: .5rem;
+}
+.fiori-navigation-menu-item .fiori-navigation-menu-external {
+  width: 1rem;
+  height: .875rem;
+  padding-inline-start: 0;
+}
+.fiori-navigation-menu-tag {
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: .5rem;
+  min-width: 1.375rem;
+  height: 1.375rem;
+}
+.fiori-navigation-menu-hidden {
+  position: absolute;
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  white-space: nowrap;
+}

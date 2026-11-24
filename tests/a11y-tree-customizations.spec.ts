@@ -270,6 +270,12 @@ const customizationProofs = {
   "NotificationListItem.children": "notification-list",
   "NotificationListItem.className": "notification-list",
   "NotificationListItem.footnotes": "notification-list",
+  "NavigationMenu.children": "navigation-menu",
+  "NavigationMenu.className": "navigation-menu",
+  "NavigationMenu.trigger": "navigation-menu",
+  "NavigationMenuItem.children": "navigation-menu",
+  "NavigationMenuItem.className": "navigation-menu",
+  "NavigationMenuItem.tag": "navigation-menu",
   "NotificationListItem.menu": "notification-list",
   "ObjectAttribute.className": "object-status",
   "ObjectAttribute.text": "object-status",
@@ -609,7 +615,7 @@ for (const file of program.getSourceFiles().filter((source) => /registry\/ui\/[^
 }
 let code: string, css: string
 const names = fixtureFiles.map((file) => file.slice(0, -4))
-const supplementalNames = ["analytical-table-custom", "data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels", "h7-input-custom", "h7-message-box-custom", "h7-hostile", "h7-value-state-links"]
+const supplementalNames = ["analytical-table-custom", "data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels", "h7-input-custom", "h7-message-box-custom", "h7-hostile", "h7-value-state-links", "navigation-menu-hostile"]
 test.beforeAll(async () => {
   const imports = Object.keys(metadata).map((file, index) => `import * as M${index} from ${JSON.stringify(resolve(`registry/ui/${file}`))};`).join("\n")
   const fixtures = fixtureFiles.map((file, index) => `import F${index} from ${JSON.stringify(resolve(`docs/src/fixtures/${file}`))};`).join("\n")
@@ -706,6 +712,10 @@ test.beforeAll(async () => {
       'render-helpers-custom':()=>h(React.Fragment,{},C('Popover',{defaultOpen:true},C('PopoverTrigger',{},'Open popover'),C('PopoverContent',{portal:false,'aria-label':'Custom popover'},C('PopoverClose',{},'Close popover'))),C('Toolbar',{'aria-label':'Custom toolbar'},C('ToolbarItem',{},button('Custom toolbar item'))),C('FilterBarToggle',{},'Toggle filters'),C('ShellBarBadge',{},'Custom badge'),C('List',{selectionMode:'single',defaultSelectedValues:['custom']},C('ListItemStandard',{value:'custom',text:text('Custom text'),description:text('Custom description'),additionalText:text('Custom additional'),image:text('Custom image')})),C('MultiInput',{'aria-label':'Custom suggestions',defaultOpen:true},h(modules.find(m=>m.MultiInput).SuggestionItem,{text:'Custom suggestion'})),C('Table',{'aria-label':'Custom empty table',noData:text('Custom table no data')},C('TableHeaderRow',{},C('TableHeaderCell',{action:button('Custom header action')},'Name')))),
       'adapt-filter-custom':()=>C('AdaptFiltersDialog',{open:true,onOpenChange:()=>{},filters:[{key:'name',label:'Custom filter',required:true,render:({id,disabled,valueState,valueStateMessage})=>h('div',{'data-custom-filter':'name'},C('Input',{id,disabled,valueState,valueStateMessage,'aria-label':'Custom filter field',defaultValue:'Ada'}))}],values:{name:[]},visibleKeys:['name'],onApply:()=>{},portal:false,modal:false,className:'custom-filter-dialog'}),
       'responsive-custom':()=>C('ResponsivePopover',{defaultOpen:true},C('ResponsivePopoverTrigger',{},'Open responsive'),C('ResponsivePopoverAnchor',{},text('Responsive anchor')),C('ResponsivePopoverContent',{portal:false,headerText:'Owned responsive title',phoneHeader:text('Custom phone header'),phoneFooter:button('Custom phone footer'),phoneClassName:'custom-phone'},button('Custom responsive content'))),
+      'navigation-menu-hostile':()=>C('NavigationMenu',{defaultOpen:true,trigger:'Navigate',portal:false,texts:{menuLabel:'Other destinations',active:'Available'},classNames:{item:'custom-navigation-row'},triggerProps:{role:'presentation',id:'foreign-trigger',tabIndex:17,'aria-expanded':false,'aria-controls':'missing'}},
+        C('NavigationMenuItem',{role:'presentation',id:'foreign-item',tabIndex:20,'aria-expanded':false,'aria-haspopup':'grid','aria-controls':'missing','aria-disabled':true,'aria-label':'Wrong name','aria-labelledby':'missing','aria-describedby':'custom-description','aria-keyshortcuts':'Control+W',accessibleName:'Workspace',text:'Workspace',defaultOpen:true},
+          C('NavigationMenuItem',{text:'Settings'})),
+        h('span',{id:'custom-description'},'Business workspace')),
       'select-slots-custom':()=>h(React.Fragment,{},C('Select',{defaultOpen:true},C('SelectTrigger',{'aria-label':'Custom select'},C('SelectValue',{placeholder:text('Custom placeholder')},text('Custom value'))),C('SelectContent',{portal:false},C('SelectItem',{value:'first'},'First'),C('SelectSeparator',{},text('Custom separator')),C('SelectItem',{value:'second'},'Second'))),C('MenuSeparator',{},text('Custom menu separator')),C('PickerPopoverBody',{valueState:'negative',message:text('Custom body message')},text('Custom body content')),C('List',{selectionMode:'single',defaultSelectedValues:['custom']},C('ListItemStandard',{value:'custom'},text('Custom child title'))),C('Toolbar',{'aria-label':'Custom separator toolbar'},C('ToolbarSpacer',{},text('Custom spacer')),C('ToolbarSeparator',{},text('Custom separator'))),C('TabsSeparator',{},text('Custom tab separator')),C('ShellBarSearch',{'aria-label':'Custom shell suggestions',defaultOpen:true,defaultValue:'Ada'},C('SearchItem',{text:'Ada'}))),
       'variant-custom':()=>C('VariantManagement',{items:[{key:'standard',title:'Standard',favorite:true}],selectedKey:'standard',defaultOpen:'list',portal:false}),
     };
@@ -1031,4 +1041,33 @@ test("H7 value-state links announce a shortcut and lead back into the suggestion
   await expect(input).toBeFocused()
   await expect(input).toHaveValue("Berlin")
   await expect(page.getByRole("option", { name: "Berlin" })).toHaveAttribute("aria-selected", "true")
+})
+
+test("NavigationMenu protects disclosure roles, name references, descriptions and roving focus", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", (message) => { if (message.type() === "warning") warnings.push(message.text()) })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("navigation-menu-hostile", "navigation-menu-hostile", true))
+  const opener = page.getByRole("button", { name: "Navigate" })
+  const owner = page.getByRole("menuitem", { name: "Workspace Available" })
+  const child = page.getByRole("menuitem", { name: "Settings Available" })
+  await expect(page.getByRole("dialog", { name: "Other destinations" })).toBeVisible()
+  await expect(opener).toHaveAttribute("aria-expanded", "true")
+  await expect(opener).not.toHaveAttribute("id", "foreign-trigger")
+  await expect(owner).not.toHaveAttribute("id", "foreign-item")
+  await expect(owner).not.toHaveAttribute("tabindex", "20")
+  await expect(owner).toHaveAccessibleDescription("Business workspace")
+  await expect(owner).toHaveAttribute("aria-keyshortcuts", "Control+W")
+  await expect(owner).toHaveAttribute("aria-expanded", "true")
+  await expect(owner).toHaveAttribute("aria-haspopup", "menu")
+  await expect(owner).toHaveClass(/custom-navigation-row/)
+  const submenu = page.getByRole("dialog", { name: "Workspace" }).getByRole("menu")
+  await expect(owner).toHaveAttribute("aria-controls", (await submenu.getAttribute("id"))!)
+  await child.focus()
+  await expect(child).toHaveAttribute("tabindex", "0")
+  await page.keyboard.press("Escape")
+  await expect(owner).toBeFocused()
+  for (const prop of ["role", "id", "tabIndex", "aria-expanded", "aria-haspopup", "aria-controls", "aria-disabled", "aria-label", "aria-labelledby"]) {
+    expect(warnings.some((warning) => warning.includes("NavigationMenu.Item: ignored ownership prop " + prop))).toBe(true)
+  }
 })
