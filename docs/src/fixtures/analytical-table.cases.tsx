@@ -6,7 +6,29 @@ export const inventory = [
   { product: "Summit Pack", category: "Packs", stock: "12" },
   { product: "Ridge Mat", category: "Sleeping", stock: "27" },
 ]
-export type Inventory = { product: string; category: string; stock: string | number; reserve?: number }
+export type Inventory = {
+  product: string; category: string; stock: string | number; reserve?: number
+  subRows?: Inventory[]
+  blocked?: boolean
+  highlight?: "None" | "Positive" | "Negative" | "Critical" | "Information"
+}
+export const treeInventory: Inventory[] = [
+  { product: "Camping", category: "Outdoors", stock: 40, subRows: [
+    { product: "Shelter", category: "Outdoors", stock: 24, subRows: [
+      { product: "Alpine Tent", category: "Outdoors", stock: 24 },
+    ] },
+    { product: "Trail Stove", category: "Cooking", stock: 16 },
+  ] },
+  { product: "Camp Lantern", category: "Lighting", stock: 12 },
+]
+export const highlightedInventory = inventory.map((row,index) => ({
+  ...row,
+  highlight: (["None","Positive","Negative","Critical","Information"] as const)[index],
+}))
+export const detailStyle = { padding: ".375rem .5rem", whiteSpace: "nowrap" as const }
+export function inventoryDetail(product: string) {
+  return <div style={detailStyle}><button type="button" style={{ padding: 0, border: 0, background: "transparent", color: "inherit", font: "inherit" }}>Inspect {product}</button></div>
+}
 export const groupInventory: Inventory[] = [
   { product: "Alpine Tent", category: "Shelter", stock: 1299.5, reserve: 24.25 },
   { product: "Ridge Mat", category: "Shelter", stock: 260.75, reserve: 19.25 },
@@ -44,6 +66,15 @@ type Case = {
   groupBy?: string[]
   expanded?: Record<string, boolean>
   aggregates?: boolean
+  tree?: boolean
+  selectionMode?: "None" | "Single" | "Multiple"
+  selectionBehavior?: "Row" | "RowOnly" | "RowSelector"
+  selected?: Record<string, boolean>
+  indeterminate?: boolean
+  disableSelection?: boolean
+  detail?: "Expandable" | "Visible" | "IncludeHeight" | "IncludeHeightExpandable"
+  highlight?: boolean
+  navigation?: boolean
 }
 
 const cases: [string, Case][] = [
@@ -80,6 +111,23 @@ const cases: [string, Case][] = [
     data: groupInventory.map(row => ({ ...row, product: row.product.split(" ").at(-1)! })) }],
   ["group-de-aggregates", { groupable: true, groupBy: ["category"], aggregates: true, german: true, data: groupInventory }],
   ["group-menu-open", { groupable: true, openHeaderMenu: true }],
+  ["tree-collapsed", { tree: true, data: treeInventory }],
+  ["tree-expanded", { tree: true, data: treeInventory, expanded: { 0: true, "0.0": true } }],
+  ...(["None", "Single", "Multiple"] as const).flatMap(selectionMode =>
+    (["Row", "RowOnly", "RowSelector"] as const).map(selectionBehavior =>
+      [`select-${selectionMode.toLowerCase()}-${selectionBehavior.toLowerCase()}`, {
+        selectionMode, selectionBehavior, selected: selectionMode === "None" ? undefined : { "1": true },
+      }] satisfies [string, Case])),
+  ["select-tree-partial", { tree: true, data: treeInventory, expanded: { 0: true, "0.0": true },
+    selectionMode: "Multiple", selected: { "0.1": true }, indeterminate: true }],
+  ["select-disabled", { selectionMode: "Multiple", selectionBehavior: "RowSelector", selected: { "1": true },
+    disableSelection: true, data: inventory.map((row, index) => ({ ...row, blocked: index === 0 })) }],
+  ["details-expanded", { detail: "Expandable", expanded: { "0": true } }],
+  ["details-visible", { detail: "Visible" }],
+  ["details-included-height", { detail: "IncludeHeight", data: inventory.slice(0, 3) }],
+  ["details-included-expandable", { detail: "IncludeHeightExpandable", expanded: { "0": true } }],
+  ["row-highlight", { highlight: true, data: highlightedInventory }],
+  ["row-navigation", { navigation: true }],
   ["empty-cell", { emptyCell: true, data: [{ ...inventory[0], category: "" }, ...inventory.slice(1)] }],
 ]
 export const fixtureInputs = {

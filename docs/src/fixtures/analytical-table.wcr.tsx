@@ -1,10 +1,11 @@
 import * as React from "react"
 import { AnalyticalTable } from "@ui5/webcomponents-react/AnalyticalTable"
-import { useAnnounceEmptyCells, useStickyColumns } from "@ui5/webcomponents-react/AnalyticalTableHooks"
+import { useAnnounceEmptyCells, useStickyColumns, useRowDisableSelection, useIndeterminateRowSelection } from "@ui5/webcomponents-react/AnalyticalTableHooks"
+import { AnalyticalTableSelectionMode, AnalyticalTableSelectionBehavior, AnalyticalTableSubComponentsBehavior } from "@ui5/webcomponents-react"
 import { Cell } from "@ui5/webcomponents-react/dist/components/AnalyticalTable/defaults/Column/Cell.js"
 import { ColumnHeaderModal } from "@ui5/webcomponents-react/dist/components/AnalyticalTable/defaults/Column/ColumnHeaderModal.js"
 import { defineFixtures } from "../fixture-types"
-import { fixtureInputs, headersFor, inventory } from "./analytical-table.cases"
+import { fixtureInputs, headersFor, inventory, inventoryDetail } from "./analytical-table.cases"
 
 import { pinWcrPopup } from "./wcr-popup-in-place"
 
@@ -42,6 +43,8 @@ function OpenColumnMenu({ children }: { children: React.ReactNode }) {
 
 const sticky = [useStickyColumns()]
 const announceEmpty = [useAnnounceEmptyCells]
+const disableSelection = [useRowDisableSelection("blocked")]
+const indeterminate = [useIndeterminateRowSelection()]
 
 function AfterFonts({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = React.useState(false)
@@ -85,9 +88,19 @@ export default defineFixtures({
           ...(props.groupBy ? { groupBy: props.groupBy } : {}),
           ...(props.expanded ? { expanded: Object.fromEntries(Object.entries(props.expanded).map(([id, value]) => [decodeURIComponent(id), value])) } : {}),
           ...(props.sorting ? { sortBy: props.sorting } : {}),
+          ...(props.selected ? { selectedRowIds: props.selected } : {}),
+          // The plugin derives this on selection changes. Seed the initial oracle state for a selected leaf.
+          ...(props.indeterminate ? { indeterminateRows: { "0": true } } : {}),
           ...(props.columnFilters ? { filters: props.columnFilters } : {}),
         } }}
-        tableHooks={props.frozen ? sticky : props.emptyCell ? announceEmpty : undefined}
+        tableHooks={props.frozen ? sticky : props.emptyCell ? announceEmpty : props.disableSelection ? disableSelection : props.indeterminate ? indeterminate : undefined}
+        isTreeTable={props.tree}
+        selectionMode={props.selectionMode ? AnalyticalTableSelectionMode[props.selectionMode] : undefined}
+        selectionBehavior={props.selectionBehavior ? AnalyticalTableSelectionBehavior[props.selectionBehavior] : undefined}
+        subComponentsBehavior={props.detail ? AnalyticalTableSubComponentsBehavior[props.detail] : undefined}
+        renderRowSubComponent={props.detail ? row => inventoryDetail(row.original.product) : undefined}
+        withRowHighlight={props.highlight} highlightField="highlight"
+        withNavigationHighlight={props.navigation} markNavigatedRow={props.navigation ? row => row.id === "1" : undefined}
         groupable={props.groupable} sortable={props.sortable} filterable={props.filterable} alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
         visibleRows={5} minRows={3} onLoadMore={() => {}} visibleRowCountMode={props.countMode} loading={props.loading}
         noDataText={props.german ? "Keine Daten" : undefined} />

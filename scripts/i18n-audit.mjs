@@ -368,14 +368,6 @@ unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STA
 
 for (const [card, keys] of [
   ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
-  ['H4 tree, selection and row states', [
-    'ALL_ROWS_DESELECTED', 'ALL_ROWS_DESELECTED_FILTERED', 'ALL_ROWS_SELECTED', 'ALL_ROWS_SELECTED_FILTERED',
-    'COLLAPSE_NODE', 'DESELECT_ALL', 'EXPAND_NODE',
-    'HIGHLIGHT_COLUMN', 'NAVIGATION_COLUMN', 'ROW_COLLAPSED', 'ROW_DESELECTED', 'ROW_DESELECTED_MULTI',
-    'ROW_DESELECTED_MULTI_FILTERED', 'ROW_EXPANDED', 'ROW_SELECTED', 'ROW_SELECTED_MULTI',
-    'ROW_SELECTED_MULTI_FILTERED', 'SELECT_ALL',
-    'SELECTION_COLUMN',
-  ]],
   ['H5 overlay', ['INVALID_TABLE']],
 ]) unrendered('analytical-table', keys.map(key => `wcr:${key}`), `Native channel activates with ${card}.`)
 

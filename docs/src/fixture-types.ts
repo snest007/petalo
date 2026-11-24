@@ -35,6 +35,10 @@ export type FixtureSet<P = any> = {
 type FixtureA11yDiff = {
   ignore: string[]
   reason: string
+  /** Zero-based AnalyticalTable body rows whose WCR detail regions lack the required gridcell role. */
+  analyticalTableDetailRows?: number[]
+  /** The pinned WCR disabled-selection plugin leaves an inactive header instruction. */
+  analyticalTableDisabledSelection?: true
   /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
   ui5FormHosts?: string[]
   /** Exact empty UI5 popup/List focus sentinels and the anonymous UI5 popup host. */

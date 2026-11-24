@@ -2,10 +2,11 @@ import * as React from "react"
 import {
   AnalyticalTable, useAnalyticalTable, type AnalyticalTableBodyProps,
   type AnalyticalTableColumnDef, type AnalyticalTableInstance, type AnalyticalTableProps,
-  type ColumnFiltersState, type ExpandedState, type GroupingState, type SortingState,
+  type AnalyticalTableSelectedRows, type ColumnFiltersState, type ExpandedState, type GroupingState, type SortingState,
 } from "@/components/ui/analytical-table"
 import { FioriLocaleProvider } from "@/lib/fiori-locale"
 import { defineDemo } from "./types"
+import { treeInventory, type Inventory as TreeInventory } from "../fixtures/analytical-table.cases"
 
 type Inventory = { product: string; category: string; stock: number }
 export const inventory: Inventory[] = Array.from({ length: 75 }, (_, index) => ({
@@ -60,6 +61,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
   const [sizing, setSizing] = React.useState<Record<string, number>>({})
   const [pinning, setPinning] = React.useState({ start: [] as string[], end: [] as string[] })
   const [empty, setEmpty] = React.useState(false)
+  const [showDetails, setShowDetails] = React.useState(false)
   const [feedback, setFeedback] = React.useState("")
   const tools = { onColumnResize: ({ columnWidth }: { columnWidth: number }) => setFeedback(String(columnWidth)),
     onAutoResize: ({ width }: { width: number }) => setFeedback(String(width)),
@@ -70,6 +72,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
       <button type="button" onClick={() => tableRef.current?.resetColumnSizing()}>Reset widths</button>
       <button type="button" onClick={() => setVisibility(current => ({ category: current.category === false }))}>Toggle category</button>
       <button type="button" onClick={() => setEmpty(previous => !previous)}>Toggle products</button>
+      <button type="button" onClick={() => setShowDetails(previous => !previous)} aria-pressed={showDetails}>Toggle details</button>
       <button type="button" onClick={() => setGroupBy(previous => previous.length ? [] : ["category"])}
         aria-pressed={groupBy.length > 0}>Group categories</button>
     </div>
@@ -78,6 +81,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
         tableRef={tableRef} tableOptions={{ getRowId: (_, index) => `product-${index}`, meta: { source: "inventory" } }}
         sorting={sorting} onSortingChange={setSorting} columnFilters={filters} onColumnFiltersChange={setFilters}
         groupBy={groupBy} onGroupByChange={setGroupBy}
+        renderRowSubComponent={showDetails ? ({ row }) => <p>Inspect stock for {row.original.product}</p> : undefined}
         onSort={({ sortDirection }) => setFeedback(sortDirection)}
         onFilter={({ value }) => setFeedback(String(value ?? ""))}
         columnVisibility={visibility} onColumnVisibilityChange={setVisibility}
@@ -183,6 +187,39 @@ export function AnalyticalTableGroupingDemo({ dir, hostile = false }: Pick<Analy
   </div>
 }
 
+const treeColumns: AnalyticalTableColumnDef<TreeInventory>[] = [
+  { accessorKey: "product", header: "Product", width: 174 },
+  { accessorKey: "category", header: "Category", width: 128 },
+  { accessorKey: "stock", header: "Stock", width: 120 },
+]
+const featureRows = treeInventory.map((row, index) => ({ ...row, blocked: index === 1, highlight: index === 0 ? "Positive" : "Information" } as const))
+
+export function AnalyticalTableRowFeaturesDemo({ dir, hostile = false }: Pick<AnalyticalTableProps<TreeInventory>, "dir"> & { hostile?: boolean }) {
+  const [selected, setSelected] = React.useState<AnalyticalTableSelectedRows>({})
+  const [expanded, setExpanded] = React.useState<ExpandedState>({})
+  const [navigated, setNavigated] = React.useState("1")
+  const [event, setEvent] = React.useState("")
+  return <div id={`analytical-table-row-demo-${dir ?? "ltr"}`} className="grid w-full max-w-xl gap-2">
+    <AnalyticalTable data={featureRows} columns={treeColumns} aria-label="Inventory hierarchy" dir={dir}
+      isTreeTable getSubRows={row => row.subRows} selectionMode="Multiple" selectionBehavior="Row"
+      selectedRowIds={selected} onSelectedRowIdsChange={setSelected} expanded={expanded} onExpandedChange={setExpanded}
+      selectSubRows indeterminateRowSelection withRowHighlight withNavigationHighlight markNavigatedRow={row => row.id === navigated}
+      isRowSelectable={row => !row.original.blocked} defaultVisibleRows={5} minRows={3}
+      shouldIgnoreRowClick={event => (event.target as Element).closest("[data-inventory-action]") !== null}
+      onRowClick={({ row }) => setNavigated(row.id)}
+      onRowSelect={detail => setEvent(detail.row ? `Selected ${detail.row.original.product}` : "Changed all rows")}
+      onRowContextMenu={({ row, column, event }) => { event.preventDefault(); setEvent(`${row.original.product}: ${column?.id}`) }}
+      renderRowSubComponent={({ row }) => row.depth === 0 && !row.original.blocked ?
+        <div className="p-2"><button type="button" data-inventory-action="">Inspect {row.original.product}</button></div> : null}
+      subComponentsBehavior="IncludeHeightExpandable"
+      getRowProps={row => hostile && row.id === "0" ? { role: "button", "aria-level": 9, "aria-expanded": true, id: "fake-tree-row", tabIndex: 8 } : {}}
+      getCellProps={cell => hostile && cell.row.id === "0" && cell.column.id === "product" ?
+        { role: "button", "aria-expanded": true, id: "fake-tree-cell", tabIndex: 9 } : {}} />
+    <output aria-label="Selected row IDs">{Object.keys(selected).sort().join(",")}</output>
+    <output aria-label="Row event">{event}</output>
+  </div>
+}
+
 export default defineDemo({
   category: "Data", title: "AnalyticalTable", order: 55,
   docs: [{
@@ -207,6 +244,8 @@ export default defineDemo({
     <AnalyticalTableSortFilterDemo dir="rtl" />
     <AnalyticalTableGroupingDemo />
     <AnalyticalTableGroupingDemo dir="rtl" hostile />
+    <AnalyticalTableRowFeaturesDemo />
+    <AnalyticalTableRowFeaturesDemo dir="rtl" hostile />
     <section className="grid gap-2">
       <h3>Customise</h3>
       <p>Use <code>classNames</code> with the typed slot names or the <code>analytical-table-*</code> data attributes. Pinned and dragged columns expose <code>data-frozen</code> and <code>data-dragging</code>. ARIA names and descriptions target the inner grid.</p>
@@ -214,6 +253,7 @@ export default defineDemo({
       <p>Copy the Custom example into an app after installing <code>@petalo/analytical-table</code>. Import its parts and types from <code>components/ui/analytical-table</code>. Keep the replacement at the Body boundary when updating the registry item.</p>
       <p>The experimental column <code>Filter</code> slot receives the current value, a setter, the default editor and the label reference. The Custom example supplies a category selector and sorts stock by its final digit.</p>
       <p>Use the experimental column <code>Grouped</code>, <code>RepeatedValue</code> and <code>Aggregated</code> renderers to customize content inside the grid cells. The table owns the group disclosure, expanded states, level, names and keyboard handling. Add a built-in <code>aggregate</code> or a function. <code>aggregateValue</code> can transform leaf values before the outermost aggregate. The group example computes localized stock totals.</p>
+      <p>The experimental <code>renderRowSubComponent</code> slot receives the owning row and table context. Its host handles measured height. The Custom example activates it with Toggle details. Select rows with controlled <code>selectedRowIds</code>, or supply <code>defaultSelectedRowIds</code>. Use <code>isRowSelectable</code> to protect ineligible rows and <code>shouldIgnoreRowClick</code> to reserve activation for embedded actions.</p>
       <h4>Custom</h4>
       <CustomAnalyticalTable />
     </section>

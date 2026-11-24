@@ -3,7 +3,7 @@ import { AnalyticalTable, type AnalyticalTableColumnDef } from "@/components/ui/
 import { FioriLocaleProvider } from "@/lib/fiori-locale"
 import de from "../../../registry/i18n/de"
 import { defineFixtures } from "../fixture-types"
-import { fixtureInputs, headersFor, inventory, type Inventory } from "./analytical-table.cases"
+import { fixtureInputs, headersFor, inventory, inventoryDetail, type Inventory } from "./analytical-table.cases"
 
 function OpenColumnMenu({ children }: { children: React.ReactNode }) {
   const frame = React.useRef<HTMLDivElement>(null)
@@ -51,7 +51,182 @@ function OpenColumnMenu({ children }: { children: React.ReactNode }) {
 
 export default defineFixtures({
   ...fixtureInputs,
+  a11yDiffGroups: [
+    {
+      "cases": [
+        "analytical-table-select-single-row",
+        "analytical-table-select-single-rowselector",
+        "analytical-table-row-highlight"
+      ],
+      "diff": {
+        "ignore": [
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0/children/0"
+        ],
+        "reason": "ColumnHeader/index.js adds two unnamed generic wrappers for a synthetic column. Compare the same heading, text and checkbox semantics after removing those inert wrappers."
+      }
+    },
+    {
+      "cases": [
+        "analytical-table-select-multiple-row",
+        "analytical-table-select-multiple-rowselector"
+      ],
+      "diff": {
+        "ignore": [
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0/children/1"
+        ],
+        "reason": "ColumnHeader/index.js adds two unnamed generic wrappers for a synthetic column. Compare the same heading, text and checkbox semantics after removing those inert wrappers."
+      }
+    },
+    {
+      "cases": [
+        "analytical-table-details-expanded",
+        "analytical-table-details-included-expandable"
+      ],
+      "diff": {
+        "ignore": [
+          "/ax/0/children/0/children/1/children/0/children/0/children/1/children/0/children/0/name",
+          "/snapshot/0/children/1/children/0/children/1/children/0/name",
+          "/ax/0/children/0/children/1/children/0/children/1/children/0/children/0/children/0/name",
+          "/snapshot/0/children/1/children/1/children/0/children/0/name",
+          "/ax/0/children/0/children/1/children/0/children/1/children/0/children/0/children/0/properties/expanded",
+          "/ax/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0/name",
+          "/snapshot/0/children/1/children/2/children/0/children/0/name",
+          "/ax/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0/properties/expanded",
+          "/ax/0/children/0/children/1/children/0/children/3/children/0/children/0/children/0/name",
+          "/snapshot/0/children/1/children/3/children/0/children/0/name",
+          "/ax/0/children/0/children/1/children/0/children/3/children/0/children/0/children/0/properties/expanded",
+          "/ax/0/children/0/children/1/children/0/children/4/children/0/children/0/children/0/name",
+          "/snapshot/0/children/1/children/4/children/0/children/0/name",
+          "/ax/0/children/0/children/1/children/0/children/4/children/0/children/0/children/0/properties/expanded"
+        ],
+        "reason": "Expandable.js names the UI5 Button only on focus and supplies expanded only when true. Petalo keeps a name and both expansion states. Cell text, description and expansion still compare. The generic form-associated shadow host is inert. RowSubComponent.js leaves a focusable div directly under the row. Petalo uses a gridcell to give it the required role and compares its full interactive contents.",
+        "ui5FormHosts": [
+          "/ui5/ax/0/children/0/children/1/children/0/children/0/children/1/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1/children/0/children/1/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1/children/0/children/3/children/0/children/0/children/0",
+          "/ui5/ax/0/children/0/children/1/children/0/children/4/children/0/children/0/children/0"
+        ],
+        "analyticalTableDetailRows": [
+          0
+        ]
+      }
+    }
+  ],
   a11yDiff: {
+      "analytical-table-row-navigation": {
+      "ignore": [
+        "/ui5/ax/0/children/0/children/0/children/3/children/0/children/0",
+        "/ui5/ax/0/children/0/children/0/children/3/children/0/children/0/children/0"
+      ],
+      "reason": "ColumnHeader/index.js adds two unnamed generic wrappers for a synthetic column. Compare the same heading, text and checkbox semantics after removing those inert wrappers."
+    },
+    "analytical-table-select-disabled": {
+      "ignore": [
+        "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+        "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0/children/0",
+        "/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/properties/invalid",
+        "/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/name",
+        "/snapshot/0/children/1/children/0/children/0/children/0/name",
+        "/ui5/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0"
+      ],
+      "reason": "useRowDisableSelection removes the Select All action but leaves its instruction. The UI5 disabled checkbox has no name and holds an inert shadow wrapper. Petalo names it with its column name and removes the inactive instruction. Chromium sets implicit invalid=false on the native button; checked and disabled still compare.",
+      "analyticalTableDisabledSelection": true
+    },
+    "analytical-table-tree-collapsed": {
+      "ignore": [
+        "/ax/0/children/0/children/1/children/0/children/0/properties/expanded",
+        "/ax/0/children/0/children/1/children/0/children/0/properties/level",
+        "/snapshot/0/children/1/children/0/states/0",
+        "/ax/0/children/0/children/1/children/0/children/1/properties/level",
+        "/snapshot/0/children/1/children/1/states/0",
+        "/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0/name",
+        "/snapshot/0/children/1/children/0/children/0/children/0/name",
+        "/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0/properties/expanded"
+      ],
+      "reason": "useStyling.getRowProps omits tree hierarchy on rows. Petalo exposes level and expansion at the treegrid row, verified against both implementations by the paired tree-row spec. Expandable.js names the UI5 Button only on focus and supplies expanded only when true. Petalo keeps a name and both expansion states. Cell text, description and expansion still compare. The generic form-associated shadow host is inert.",
+      "ui5FormHosts": [
+        "/ui5/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0"
+      ]
+    },
+    "analytical-table-tree-expanded": {
+      "ignore": [
+        "/ax/0/children/0/children/1/children/0/children/0/properties/expanded",
+        "/snapshot/0/children/1/children/0/states/0",
+        "/ax/0/children/0/children/1/children/0/children/0/properties/level",
+        "/snapshot/0/children/1/children/0/states/1",
+        "/ax/0/children/0/children/1/children/0/children/1/properties/expanded",
+        "/snapshot/0/children/1/children/1/states/0",
+        "/ax/0/children/0/children/1/children/0/children/1/properties/level",
+        "/snapshot/0/children/1/children/1/states/1",
+        "/ax/0/children/0/children/1/children/0/children/2/properties/level",
+        "/snapshot/0/children/1/children/2/states/0",
+        "/ax/0/children/0/children/1/children/0/children/3/properties/level",
+        "/snapshot/0/children/1/children/3/states/0",
+        "/ax/0/children/0/children/1/children/0/children/4/properties/level",
+        "/snapshot/0/children/1/children/4/states/0",
+        "/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0/name",
+        "/snapshot/0/children/1/children/0/children/0/children/0/name",
+        "/ax/0/children/0/children/1/children/0/children/1/children/0/children/0/children/0/name",
+        "/snapshot/0/children/1/children/1/children/0/children/0/name"
+      ],
+      "reason": "useStyling.getRowProps omits tree hierarchy on rows. Petalo exposes level and expansion at the treegrid row, verified against both implementations by the paired tree-row spec. Expandable.js names the UI5 Button only on focus and supplies expanded only when true. Petalo keeps a name and both expansion states. Cell text, description and expansion still compare. The generic form-associated shadow host is inert.",
+      "ui5FormHosts": [
+        "/ui5/ax/0/children/0/children/1/children/0/children/0/children/0/children/0/children/0",
+        "/ui5/ax/0/children/0/children/1/children/0/children/1/children/0/children/0/children/0"
+      ]
+    },
+    "analytical-table-select-tree-partial": {
+      "ignore": [
+        "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0",
+        "/ui5/ax/0/children/0/children/0/children/0/children/0/children/0/children/1",
+        "/ax/0/children/0/children/1/children/0/children/0/properties/expanded",
+        "/snapshot/0/children/1/children/0/states/0",
+        "/ax/0/children/0/children/1/children/0/children/0/properties/level",
+        "/snapshot/0/children/1/children/0/states/1",
+        "/ax/0/children/0/children/1/children/0/children/1/properties/expanded",
+        "/snapshot/0/children/1/children/1/states/0",
+        "/ax/0/children/0/children/1/children/0/children/1/properties/level",
+        "/snapshot/0/children/1/children/1/states/1",
+        "/ax/0/children/0/children/1/children/0/children/2/properties/level",
+        "/snapshot/0/children/1/children/2/states/0",
+        "/ax/0/children/0/children/1/children/0/children/3/properties/level",
+        "/snapshot/0/children/1/children/3/states/0",
+        "/ax/0/children/0/children/1/children/0/children/4/properties/level",
+        "/snapshot/0/children/1/children/4/states/0",
+        "/ax/0/children/0/children/1/children/0/children/0/children/1/children/0/children/0/name",
+        "/snapshot/0/children/1/children/0/children/1/children/0/name",
+        "/ax/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0/name",
+        "/snapshot/0/children/1/children/1/children/1/children/0/name"
+      ],
+      "reason": "useStyling.getRowProps omits tree hierarchy on rows. Petalo exposes level and expansion at the treegrid row, verified against both implementations by the paired tree-row spec. Expandable.js names the UI5 Button only on focus and supplies expanded only when true. Petalo keeps a name and both expansion states. Cell text, description and expansion still compare. The generic form-associated shadow host is inert.",
+      "ui5FormHosts": [
+        "/ui5/ax/0/children/0/children/1/children/0/children/0/children/1/children/0/children/0",
+        "/ui5/ax/0/children/0/children/1/children/0/children/1/children/1/children/0/children/0"
+      ]
+    },
+    "analytical-table-details-visible": {
+      "ignore": [],
+      "reason": "RowSubComponent.js leaves a focusable div directly under the row. Petalo uses a gridcell to give it the required role and compares its full interactive contents.",
+      "analyticalTableDetailRows": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    "analytical-table-details-included-height": {
+      "ignore": [],
+      "reason": "RowSubComponent.js leaves a focusable div directly under the row. Petalo uses a gridcell to give it the required role and compares its full interactive contents.",
+      "analyticalTableDetailRows": [
+        0,
+        1,
+        2
+      ]
+    },
     "analytical-table-group-collapsed": {
       "ignore": [
         "/ax/0/children/0/role",
@@ -127,6 +302,13 @@ export default defineFixtures({
     const grid = <AnalyticalTable<Inventory> aria-label="Inventory" data={props.filtered ? [] : props.data ?? inventory} columns={columns}
       dir={props.rtl || props.aggregates && document.documentElement.dir === "rtl" ? "rtl" : undefined} initialState={{ hiddenColumns: props.hidden }}
       groupable={props.groupable} defaultGroupBy={props.groupBy} defaultExpanded={props.expanded}
+      isTreeTable={props.tree} selectionMode={props.selectionMode} selectionBehavior={props.selectionBehavior}
+      defaultSelectedRowIds={props.selected} indeterminateRowSelection={props.indeterminate}
+      isRowSelectable={props.disableSelection ? row => !row.original.blocked : undefined}
+      subComponentsBehavior={props.detail}
+      renderRowSubComponent={props.detail ? ({ row }) => inventoryDetail(row.original.product) : undefined}
+      withRowHighlight={props.highlight} withNavigationHighlight={props.navigation}
+      markNavigatedRow={props.navigation ? row => row.id === "1" : undefined}
       sortable={props.sortable} filterable={props.filterable} defaultSorting={props.sorting} defaultColumnFilters={props.columnFilters}
       alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
       defaultVisibleRows={5} minRows={3} visibleRowCountMode={props.countMode} loading={props.loading}
