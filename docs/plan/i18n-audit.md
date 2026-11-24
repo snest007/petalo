@@ -2432,12 +2432,18 @@ Owner: H9
 
 | SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| wcr:CANCEL | Cancel | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
-| wcr:CLEAR | Clear | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
-| wcr:SEARCH | Search | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
-| wcr:SELECT | Select | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
-| wcr:SELECTED | Selected | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
-| wcr:SELECTED_ITEMS | Selected Items {0} | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:CANCEL | Cancel | select-dialog: texts/labels.cancel | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:CLEAR | Clear | select-dialog: texts/labels.clear | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SEARCH | Search | select-dialog: texts/labels.search | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECT | Select | select-dialog: texts/labels.select | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECTED | Selected | select-dialog: texts/labels.selected | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| wcr:SELECTED_ITEMS | Selected Items {0} | select-dialog: texts/labels.selectedItems | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js:15 (WCR key import) | wcr |
+| BUTTON_ARIA_TYPE_EMPHASIZED | Default Action | select-dialog: texts/labels.confirmDescription | ok |  |  | node_modules/@ui5/webcomponents/dist/Button.js:372 | ui5 |
+| DIALOG_CONTENT_ARIA_LABEL | Content | select-dialog: texts/labels.body | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:335 | ui5 |
+| DIALOG_FOOTER_ARIA_LABEL | Footer | select-dialog: texts/labels.footer | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:338 | ui5 |
+| DIALOG_HEADER_ARIA_LABEL | Header | select-dialog: texts/labels.header | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:332 | ui5 |
+| INPUT_CLEAR_ICON_ACC_NAME | Clear | select-dialog: texts/labels.clearSearch | ok |  |  | node_modules/@ui5/webcomponents/dist/Input.js:1157 | ui5 |
+| LIST_ITEM_ACTIVE | Is Active | select-dialog: texts/labels.itemActive | ok |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:320 | ui5 |
 
 ## shell-bar
 

@@ -296,6 +296,27 @@ function wcrRows(component, name) {
   })
 }
 
+
+function selectDialogDelegateRows() {
+  // SelectDialog/index.js supplies the slots and design that activate these
+  // Web Component channels. Keep their UI5 domain in the WCR owner's inventory.
+  return Object.entries({
+    BUTTON_ARIA_TYPE_EMPHASIZED: 'Button.js:372',
+    DIALOG_CONTENT_ARIA_LABEL: 'Dialog.js:335',
+    DIALOG_FOOTER_ARIA_LABEL: 'Dialog.js:338',
+    DIALOG_HEADER_ARIA_LABEL: 'Dialog.js:332',
+    INPUT_CLEAR_ICON_ACC_NAME: 'Input.js:1157',
+    LIST_ITEM_ACTIVE: 'ListItem.js:320',
+  }).map(([key, path]) => {
+    const nativeReferences = [`node_modules/@ui5/webcomponents/dist/${path}`]
+    const property = resolveKey('select-dialog', key)
+    return {
+      key, ...englishDefinition('select-dialog', key, nativeReferences, property ?? ''),
+      nativeReferences, property: property ?? 'No implemented provider/override text owner', status: property ? 'ok' : 'gap',
+    }
+  })
+}
+
 // Keep scanned keys visible when the pinned component's template cannot reach them.
 const unreachable = {}
 function unrendered(component, keys, reason) {
@@ -346,7 +367,9 @@ const audit = shipped.filter(component => !wcrComponents[component]).map(compone
   return { key, ...definition, property, status, ...(status === 'gap' ? triage.get(`${component}/${key}`) ?? { triage: 'owner-review', triageNote: 'Newly inventoried native channel requires owning P-card review.' } : {}), nativeReferences }
 }) }))
 for (const [component, [native, owner]] of Object.entries(wcrComponents)) {
-  audit.push({ component, owner, reference: 'wcr', rows: wcrRows(component, native) })
+  const rows = wcrRows(component, native)
+  if (component === 'select-dialog' && shipped.includes(component)) rows.push(...selectDialogDelegateRows())
+  audit.push({ component, owner, reference: 'wcr', rows })
 }
 audit.sort((a, b) => a.component.localeCompare(b.component))
 const escape = s => String(s).replaceAll('|', '\\|').replaceAll('\n', '<br>')

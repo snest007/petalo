@@ -1653,6 +1653,24 @@
       "WIZARD_STEP_INACTIVE"
     ]
   },
+  "select-dialog": {
+    "owner": "H9",
+    "gapCount": 0,
+    "okKeys": [
+      "BUTTON_ARIA_TYPE_EMPHASIZED",
+      "DIALOG_CONTENT_ARIA_LABEL",
+      "DIALOG_FOOTER_ARIA_LABEL",
+      "DIALOG_HEADER_ARIA_LABEL",
+      "INPUT_CLEAR_ICON_ACC_NAME",
+      "LIST_ITEM_ACTIVE",
+      "wcr:CANCEL",
+      "wcr:CLEAR",
+      "wcr:SEARCH",
+      "wcr:SELECT",
+      "wcr:SELECTED",
+      "wcr:SELECTED_ITEMS"
+    ]
+  },
   "splitter-layout": {
     "owner": "H9",
     "gapCount": 0,

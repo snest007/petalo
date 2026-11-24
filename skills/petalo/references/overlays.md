@@ -7,6 +7,7 @@
 | [menu](#menu) | Let users choose commands from an opened hierarchy of menu items. |
 | [popover](#popover) | Show information or actions tied to an opener without leaving the current page. |
 | [responsive-popover](#responsive-popover) | Keep contextual content anchored on desktop and tablet, then show it in a full-screen phone dialog. |
+| [select-dialog](#select-dialog) | Search and select from a list with its own dialog and confirmation flow. |
 | [toast](#toast) | Confirm a completed action or provide information in a non-disruptive message that disappears automatically. |
 | [use-is-phone](#use-is-phone) | Reactive UI5-style touch/phone detection with a data-fiori-device override. |
 | [user-menu](#user-menu) | Expose signed-in user information, user-specific actions and sign out from the profile entry point. |
@@ -128,6 +129,26 @@ Main exports: `ResponsivePopover`, `ResponsivePopoverAnchor`, `ResponsivePopover
 npx shadcn add @petalo/responsive-popover
 ```
 
+## select-dialog
+
+Search and select from a list with its own dialog and confirmation flow.
+
+### Use when
+
+- Choose one list item immediately or confirm several choices together.
+- Show a focused list of suggestions with a separate search task.
+
+### Don't use when
+
+- Search several attributes in a results table or define conditions and ranges. → [value-help-dialog](overlays.md#value-help-dialog)
+- Pick a suggestion by typing from an inline field. → [combobox](forms.md#combobox)
+
+Main exports: `SelectDialog`.
+
+```bash
+npx shadcn add @petalo/select-dialog
+```
+
 ## toast
 
 Confirm a completed action or provide information in a non-disruptive message that disappears automatically.
@@ -199,7 +220,7 @@ Find business values through a searchable result table or define filter conditio
 
 - Pick one of 2–12 predefined values without other attributes (sort alphabetically above 8), or enter text without a selection/search task. → [select](forms.md#select), [input](forms.md#input)
 - Choose one suggestion by type-ahead across 20–200 options or accept free text without a separate search task. → [combobox](forms.md#combobox)
-- Select several predefined values from fewer than 200 options without conditions. → [multi-combobox](forms.md#multi-combobox)
+- Choose simple records in a searchable list dialog, or select several predefined values inline without conditions. → [multi-combobox](forms.md#multi-combobox), [select-dialog](overlays.md#select-dialog)
 - Enter several caller-validated tokens, including values from datasets above 200, without a separate multiattribute search task. → [multi-input](forms.md#multi-input)
 - Personalize which filter fields appear, their order and conditions across fields rather than select values for one field. → [adapt-filters-dialog](overlays.md#adapt-filters-dialog)
 

@@ -37,6 +37,10 @@ type FixtureA11yDiff = {
   reason: string
   /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
   ui5FormHosts?: string[]
+  /** Only exact, closed PopupTemplate shells painted in place by the fixture. */
+  pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }
+  /** Fixed SelectDialog capture topology, after verifying the pinned Dialog shell. */
+  selectDialogShape?: "single" | "multiple" | "selected" | "empty"
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */

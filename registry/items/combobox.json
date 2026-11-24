@@ -16,14 +16,14 @@
   "usage": {
     "summary": "Choose one suggested value by typing, with filtering and optional free-text entry.",
     "useWhen": [
-      "Let users find one suggested value by typing, typically across 20\u2013200 options.",
+      "Let users find one suggested value by typing, typically across 20–200 options.",
       "Accept a custom value alongside suggestions when the task permits free text.",
       "Keep selection in a field when one suggestion label is enough to identify the value.",
       "Choose filter for the supplied ComboBoxItem entries; onCommit receives text and onSelectionChange reports a matched item or null."
     ],
     "avoidWhen": [
       {
-        "when": "Choose one of 2\u201312 predefined options without typing or free text; sort alphabetically above 8. Use Input for text without suggestions.",
+        "when": "Choose one of 2–12 predefined options without typing or free text; sort alphabetically above 8. Use Input for text without suggestions.",
         "use": [
           "select",
           "input"
@@ -37,9 +37,10 @@
         ]
       },
       {
-        "when": "Find a value above 200 entries, search several attributes, or define conditions in a separate search task.",
+        "when": "Open SelectDialog to choose from a searchable list. Use ValueHelpDialog for more than 200 entries, several searchable attributes, or conditions.",
         "use": [
-          "value-help-dialog"
+          "value-help-dialog",
+          "select-dialog"
         ]
       },
       {

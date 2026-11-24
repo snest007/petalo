@@ -18,6 +18,8 @@ const customizationProofs = {
   "AnalyticalTableCell.children": "analytical-table-custom",
   "AnalyticalTableHeaderCell.className": "analytical-table-custom",
   "AnalyticalTableHeaderCell.children": "analytical-table-custom",
+  "SelectDialog.className": "select-dialog",
+  "SelectDialog.renderItem": "select-dialog",
   "SplitterLayout.className": "splitter-layout",
   "SplitterLayout.children": "splitter-layout",
   "SplitterElement.className": "splitter-layout",
@@ -819,6 +821,13 @@ test("repaired semantic custom hosts warn when hostile ownership props are ignor
     warnings.length = 0
     await page.evaluate(({ name, id }) => (window as any).e4Customization.mount(name, id, true), { name, id })
     await expect.poll(() => warnings.some((warning) => warning.includes(`${part}: ignored custom host ownership prop`))).toBe(true)
+  }
+  warnings.length = 0
+  await page.evaluate(() => (window as any).e4Customization.mount("select-dialog", "select-dialog-custom", true))
+  const row = page.getByRole("listitem").filter({ hasText: "In review" })
+  await expect(row).not.toHaveAttribute("id", "foreign")
+  for (const prop of ["role", "id", "tabIndex", "aria-selected"]) {
+    expect(warnings.some(warning => warning.includes("SelectDialog: ignored item ownership prop " + prop))).toBe(true)
   }
   warnings.length = 0
   await page.evaluate(() => (window as any).e4Customization.mount("render-helpers-custom", "render-helpers-custom", true))
