@@ -1,16 +1,14 @@
 # Run cards (orchestrator)
 
-How the owner's cards get from "open" to "merged". Agent-neutral: any agent (Claude, Codex, …) can be the
-orchestrator or a card session. Read `/AGENTS.md` first. Review and merge are in [INTEGRATION.md](INTEGRATION.md);
-why things are this way is in [decisions.md](decisions.md).
+How to select, dispatch and hand off a card. Any agent can take either session role. Read
+[AGENTS.md](../../AGENTS.md) first. See [INTEGRATION.md](INTEGRATION.md) for review and merge and
+[decisions.md](decisions.md) for the rationale.
 
 ## Roles
 
-- **Card session** — one agent session per card, in its own worktree `.worktrees/<id>` on branch `codex/<id>`.
-  Implements exactly one card, commits, never pushes or merges. Ends with the final message AGENTS.md asks for.
-- **Orchestrator / reviewer** — one session in a separate checkout (a worktree on its own branch, never the main
-  checkout's working tree). Picks the next cards, writes the one-line prompts, reviews returned branches
-  ([INTEGRATION.md](INTEGRATION.md)), merges into local `main`, writes follow-up cards. Doesn't write component code.
+- **Card session** — implements one card and hands back a committed branch from its own worktree.
+- **Orchestrator / reviewer** — picks cards, writes prompts and follow-up cards, reviews isolated merge candidates
+  and advances local `main`. Component implementation belongs to the card session.
 - **Owner** — starts sessions, pastes prompts and final messages between them, decides anything marked
   "owner's decision", authorizes pushes.
 
@@ -38,15 +36,19 @@ Read AGENTS.md, then do card <ID> (docs/plan/tasks/<file>.md). Worktree .worktre
 Read AGENTS.md, then continue on codex/<ID> in .worktrees/<ID> with card <IDb> (merge local main first; the card's Review findings section says where to start).
 ```
 
-Test scripts choose free ports. Leave port numbers out of prompts.
+Test scripts choose free ports. Prompts need the card path and branch.
 
 ## Card session flow (summary of AGENTS.md)
 
-1. Create the worktree from local `main`; `pnpm install --frozen-lockfile && pnpm generate`. Leave the main checkout alone.
-2. Tier 1 while working (`pnpm test:changed`). New components register in the shared inventories before the final runs;
-   E10's preflight reports a missing registration in seconds.
-3. Before tier 2: merge local `main`, regenerate (`pnpm generate && pnpm registry:build`), never hand-merge generated files.
-4. Tier 2 at done, installed-consumer check for new items, tick the card in `docs/plan/README.md`.
+1. Open the new worktree from local `main` or reuse the worktree named by the follow-up card. Set it up using
+   [Environment](../../AGENTS.md#environment).
+2. Run [Tier 1](../../AGENTS.md#verification-budget) while working. Register new components before final verification
+   so the preflight can catch missing inventory entries.
+3. Before Tier 2, merge local `main` into the card branch, resolve conflicts in source, and rebuild generated files
+   with `pnpm generate && pnpm registry:build`.
+4. Follow the card's acceptance and the [definition of done](../../AGENTS.md#definition-of-done-every-card),
+   including the installed-consumer check for new items. Tick the card in the completion commit and hand back
+   the branch and verification summary.
 5. At a limit, commit the work in progress and write `docs/plan/returns/<ID>.md` with failing test names, what each
    round changed and why, remaining hypotheses and the next thing to try. Propose a small `<ID>b` scoped to the
    remaining items. Stop this run and leave the follow-up for a separate run.
@@ -54,17 +56,9 @@ Test scripts choose free ports. Leave port numbers out of prompts.
 
 ## After a card returns
 
-The reviewer follows [INTEGRATION.md](INTEGRATION.md): verify the claims on the branch, then either merge, or write the
-follow-up card with a "Review findings" section, commit it to local `main`, and hand the owner the one-line prompt.
+The reviewer follows [INTEGRATION.md](INTEGRATION.md) to verify the branch. If a follow-up is needed, hand the owner
+its one-line prompt once the card and its findings are on local `main`.
 
 ## Milestones and pushing
 
-At a milestone (end of a wave, about every 3–5 merged cards, or when the owner asks to publish), the reviewer runs
-`pnpm test:milestone` once on macOS with fresh builds and both full suites. Run the stored-baseline
-`tests/a11y-tree*.spec.ts` comparisons on macOS at milestones only. A release can use `--runs=2`. Target about
-20 minutes locally and 12 minutes in CI. Follow the [milestone checklist](README.md#milestone-checklist-reviewer-at-the-end-of-a-wave-or-when-the-owner-asks-to-publish).
-
-Push `main` only at a verified milestone with owner authorization. GitHub Pages then redeploys the registry and docs.
-CI serves as a reminder and never gates a card. Linux push CI runs behaviour, live pixel comparisons and
-Storybook. Its keyboard behaviour is closer to Windows. Fix failures only if they reproduce on macOS or in a behaviour test.
-Document Linux-only failures in the milestone report without opening a card for them.
+Follow the reviewer's [milestone and publishing checklist](INTEGRATION.md#6-milestone-and-publishing).

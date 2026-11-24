@@ -14,6 +14,8 @@ Read [README.md](README.md) and [CONTRIBUTING.md](CONTRIBUTING.md) before any ta
 - Tick the completed card in the backlog in the completion commit. Leave its file in place for the reviewer to move.
   Run `node scripts/plan-check.mjs` after editing the backlog.
 - See [RUN.md](docs/plan/RUN.md) for card scheduling and [INTEGRATION.md](docs/plan/INTEGRATION.md) for review and merge.
+- Update shared instructions in their owning section and link to it elsewhere. Put the rationale in
+  [decisions.md](docs/plan/decisions.md), the task's scope in its card and return evidence in the return note.
 
 ## Environment
 
@@ -23,31 +25,16 @@ run `pnpm exec playwright install chromium`. Report any sandbox block on network
 
 ## Commands
 
-The verification scripts choose free ports. For direct Playwright commands, set a `PORT` other than 4173/5173
-so Playwright builds and serves its own copy.
 ```bash
-pnpm generate && pnpm typecheck && pnpm registry:build       # build inputs, check types, generate registry.json and public/r
-pnpm build                                                 # docs → dist/
-PORT=4310 pnpm exec playwright test                        # full main suite, or append tests/<name>.spec.ts
-pnpm test:summary tests/<name>.spec.ts                     # compact output, full log on disk
-pnpm test:changed                                          # tier 1
-pnpm test:changed --repeat-each=2                          # tier 2 scoped runs
-pnpm test:smoke                                            # tier 2 shared-path smoke
-pnpm test:milestone                                        # tier 3, release option --runs=2
-VISUAL_ONLY=<prefix>[,<prefix>…] pnpm test:summary tests/visual.spec.ts
-PORT=4310 pnpm exec playwright test tests/visual.spec.ts    # UI5 pixels, 4 themes × 2 densities
-scripts/ci-local.sh tests/toolbar.spec.ts                   # reproduce Linux CI in Docker
-pnpm check                                                 # full repository checks in order
-pnpm storybook                                             # http://localhost:6006
-pnpm storybook:build                                       # storybook-static/
-PORT=4320 pnpm test:storybook                              # render, globals, Controls and axe
-STORYBOOK_ONLY=toolbar pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts
-pnpm dev                                                   # http://localhost:5173, /?fixtures, /ui5.html, /wcr.html, /block.html?name=<block>
-node scripts/smoke-install.mjs                             # fresh shadcn app, install every block, build and render
-node scripts/integrate.mjs …                               # reviewer commands
-node scripts/plan-check.mjs                                # backlog, cards, returns and links, --fix moves finished cards
+pnpm generate && pnpm typecheck && pnpm registry:build  # prepare and build the registry
+pnpm test:summary tests/toolbar.spec.ts                # focused check, full log on disk
+pnpm test:changed                                     # tier 1
+pnpm test:changed --repeat-each=2 && pnpm test:smoke    # scoped tier 2
+node scripts/plan-check.mjs                            # check backlog, cards, returns and links
 ```
-Use `node scripts/a11y-baseline.mjs --list P<n>` to inspect entries and `--prune P<n>` after a complete capture.
+
+See [verification and preview recipes](CONTRIBUTING.md#verification-and-preview-recipes) for direct suite
+commands and port selection, and [INTEGRATION.md](docs/plan/INTEGRATION.md) for reviewer commands and tier 3.
 
 ## Hard rules
 
@@ -117,8 +104,8 @@ Use `node scripts/a11y-baseline.mjs --list P<n>` to inspect entries and `--prune
 
 ## Verification budget
 
-**Current phase** prioritizes new components ahead of polish. All cards and agents follow these limits and
-[RUN.md's milestone and CI rules](docs/plan/RUN.md#milestones-and-pushing).
+See the [Backlog](docs/plan/README.md#status-updated-at-each-milestone) for current priorities. All cards and
+agents follow these limits and the [milestone and CI rules](docs/plan/INTEGRATION.md#6-milestone-and-publishing).
 
 - At most two authorized CI pushes and two local hypotheses per failing test. Stop at about two hours or the card's own limit,
   even with rounds left. No fifth or later attempt. After a second failed CI round or local hypothesis, commit and
@@ -133,7 +120,7 @@ Use `node scripts/a11y-baseline.mjs --list P<n>` to inspect entries and `--prune
   helpers, shared styles/libs, Playwright configs, docs entry points and CI. The next full run belongs to tier 3.
   Add a CI shard in the same card if it adds many tests, after checking the timing warning.
 - **Tier 3** is the reviewer milestone on macOS with fresh builds, both full suites and stored accessibility baseline
-  comparisons. See RUN.md for CI and publishing.
+  comparisons. See the [milestone and publishing procedure](docs/plan/INTEGRATION.md#6-milestone-and-publishing).
 - Keep full logs on disk. Use `test:summary` or filter to at most ~50 summary/failure lines. For CI use one
   `gh run watch` without polling, then `gh run view --log-failed | grep` for failing tests.
 - Put long runs in the background and notify once at completion, with no intermediate checks.
