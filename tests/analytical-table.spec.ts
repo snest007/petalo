@@ -154,7 +154,34 @@ for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_
         await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
         const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
-        expect(result.violations, path).toEqual([])
+        if (!path.startsWith("/wcr.html")) {
+          expect(result.violations, path).toEqual([])
+          continue
+        }
+        // WCR RowSubComponent.js has a focusable div as a direct row child,
+        // useRowDisableSelection exposes an unnamed checkbox, and Expandable.js
+        // names the Horizon buttons only after focus. Keep those failures visible
+        // by checking the raw rule IDs, counts and offending markup.
+        const regularHorizon = theme === "sap_horizon" || theme === "sap_horizon_dark"
+        expect(result.violations.map(({ id, nodes }) => [id, nodes.length]), path).toEqual([
+          ["aria-required-children", 10], ["aria-toggle-field-name", 1], ...(regularHorizon ? [["button-name", 15]] : []),
+        ])
+        for (const { id, nodes } of result.violations) {
+          for (const node of nodes) {
+            if (id === "aria-required-children") {
+              expect(node.html).toMatch(/^<div role="row" .*data-virtual-row-index=/)
+              const related = node.any.flatMap(rule => rule.relatedNodes)
+              expect(related).toHaveLength(1)
+              expect(related[0]?.html).toMatch(/^<div data-subcomponent="true" data-subcomponent-row-index="\d+" tabindex="-1"/)
+            } else if (id === "aria-toggle-field-name") {
+              expect(node.html).toMatch(/^<div class="ui5-checkbox-root" role="checkbox" part="root" aria-checked="false" aria-disabled="true"/)
+              expect(node.target.flat().join(" ")).toContain('[data-name="internal_selection_column"]')
+            } else {
+              expect(node.html).toMatch(/^<button [^>]*class="ui5-button-root" [^>]*aria-label=""/)
+              expect(JSON.stringify(node.target)).toMatch(/navigation-(?:right|down)-arrow/)
+            }
+          }
+        }
       }
     })
   }
@@ -471,6 +498,129 @@ for (const dir of ["ltr", "rtl"]) {
             await expect(pivot).toHaveAccessibleName(/\(\d+\)/)
           }
         }
+      }
+    } finally {
+      await reference.close()
+    }
+  })
+}
+
+for (const dir of ["ltr", "rtl"] as const) {
+  test(`tree rows keep owned hierarchy, row details and selection in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-row-demo-${dir}`)
+    const grid = demo.getByRole("treegrid", { name: "Inventory hierarchy" })
+    const camping = grid.getByRole("gridcell", { name: /^Camping(?: Product)?$/ })
+    const parent = grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Camping(?: Product)?$/ }) })
+    await expect(parent).toHaveAttribute("aria-level", "1")
+    await expect(parent).toHaveAttribute("aria-expanded", "false")
+    await expect(parent).toHaveAttribute("aria-setsize", "2")
+    await expect(parent).toHaveAttribute("aria-posinset", "1")
+    await expect(camping).toHaveAttribute("aria-expanded", "false")
+    await expect(demo.locator("#fake-tree-row, #fake-tree-cell")).toHaveCount(0)
+    await camping.focus()
+    await camping.press(dir === "rtl" ? "ArrowLeft" : "ArrowRight")
+    const shelter = grid.getByRole("gridcell", { name: /^Shelter(?: Product)?$/ })
+    await expect(shelter).toBeVisible()
+    await expect(camping).toBeFocused()
+    await expect(parent).toHaveAttribute("aria-expanded", "true")
+    const inspector = grid.getByRole("button", { name: "Inspect Camping" })
+    await expect(inspector).toBeVisible()
+    await camping.press("ArrowDown")
+    const panel = inspector.locator("xpath=ancestor::*[@data-slot='analytical-table-sub-component']")
+    await expect(panel).toBeFocused()
+    await panel.press("F2")
+    await expect(inspector).toBeFocused()
+    await inspector.press("F2")
+    await expect(panel).toBeFocused()
+    await panel.press("ArrowUp")
+    await expect(camping).toBeFocused()
+    await inspector.click()
+    await expect(demo.getByLabel("Selected row IDs")).toBeEmpty()
+    await expect(demo.locator('[data-slot="analytical-table-announcement"]')).toContainText("Row expanded")
+    await shelter.focus()
+    await shelter.press("+")
+    await expect(grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })).toBeVisible()
+    await expect(grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ }) })).toHaveAttribute("aria-level", "3")
+    await shelter.press("-")
+    await expect(grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })).toHaveCount(0)
+    await camping.press(dir === "rtl" ? "ArrowRight" : "ArrowLeft")
+    await expect(parent).toHaveAttribute("aria-expanded", "false")
+    await expect(inspector).toHaveCount(0)
+    const selector = parent.locator('[data-selection-cell="true"]')
+    await selector.press("Space")
+    await expect(selector).toHaveAttribute("aria-selected", "true")
+    await expect(demo.getByLabel("Selected row IDs")).toHaveText("0,0.0,0.0.0,0.1")
+    await expect(demo.getByLabel("Row event")).toHaveText("Selected Camping")
+    const disabled = grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Camp Lantern(?: Product)?$/ }) }).locator("[data-selection-disabled]")
+    await expect(disabled).toHaveAttribute("aria-disabled", "true")
+    await disabled.press("Enter")
+    await expect(demo.getByLabel("Selected row IDs")).toHaveText("0,0.0,0.0.0,0.1")
+    const header = grid.getByRole("columnheader", { name: "Selection Column" })
+    await expect(header).not.toHaveAttribute("data-selection-cell")
+    await header.press("Enter")
+    await expect(selector).toHaveAttribute("aria-selected", "true")
+    await selector.press("Space")
+    await expect(selector).toHaveAttribute("aria-selected", "false")
+    await expect(demo.getByLabel("Selected row IDs")).toBeEmpty()
+    await expect(demo.locator('[data-slot="analytical-table-announcement"]')).toContainText("deselected")
+    await camping.click({ button: "right" })
+    await expect(demo.getByLabel("Row event")).toHaveText("Camping: product")
+  })
+}
+
+test("fixtures: select all, shift range, partial and single selection retain distinct modes", async ({ page }) => {
+  const query = "/index.html?fixtures&ref=wcr&only=analytical-table-"
+  const grid = page.getByRole("grid", { name: "Inventory" })
+  await page.goto(query + "select-multiple-rowselector")
+  const selectors = grid.locator('[role="gridcell"][data-selection-cell]')
+  const countSelected = () => grid.locator('[role="row"][data-is-selected]')
+  await expect(countSelected()).toHaveCount(1)
+  await expect(grid.getByRole("columnheader", { name: "Selection Column" }).locator("[data-state=indeterminate]")).toBeVisible()
+  await grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ }).click()
+  await expect(countSelected()).toHaveCount(1)
+  await selectors.nth(0).press("Enter")
+  await expect(selectors.nth(0)).toHaveAttribute("aria-selected", "true")
+  await selectors.nth(3).press("Shift+Space")
+  await expect(countSelected()).toHaveCount(4)
+  await grid.getByRole("columnheader", { name: "Selection Column" }).press("Space")
+  await expect(countSelected()).toHaveCount(5)
+  await page.goto(query + "select-single-rowonly")
+  await expect(grid.getByRole("columnheader", { name: "Selection Column" })).toHaveCount(0)
+  await expect(countSelected()).toHaveCount(1)
+  const alpine = grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })
+  await alpine.press("Space")
+  await expect(alpine).toHaveAttribute("aria-selected", "true")
+  await expect(countSelected()).toHaveCount(1)
+})
+
+for (const dir of ["ltr", "rtl"] as const) {
+  test(`fixtures: paired tree rows expose their hierarchy and disclosure names in ${dir}`, async ({ page, context }) => {
+    const reference = await context.newPage()
+    try {
+      const fixture = "analytical-table-tree-expanded"
+      const query = `theme=sap_horizon&dir=${dir}&only=${fixture}`
+      await Promise.all([page.goto(`/index.html?fixtures&ref=wcr&${query}`), reference.goto(`/wcr.html?${query}`)])
+      const canvas = [page, reference]
+      for (const target of canvas) await expect(target.locator("html")).toHaveAttribute("data-ready", "true")
+      const [actual, native] = canvas.map(target => target.locator(`[data-fixture="${fixture}"]`).getByRole("treegrid").getByRole("row"))
+      for (const [index, [level, setsize, posinset]] of [[1, 2, 1], [2, 2, 1], [3, 1, 1], [2, 2, 2], [1, 2, 2]].entries()) {
+        const row = actual.nth(index + 1)
+        const nativeRow = native.nth(index + 1)
+        await expect(row).toHaveAttribute("aria-level", String(level))
+        await expect(row).toHaveAttribute("aria-setsize", String(setsize))
+        await expect(row).toHaveAttribute("aria-posinset", String(posinset))
+        await expect(nativeRow).not.toHaveAttribute("aria-level")
+        await expect(nativeRow).not.toHaveAttribute("aria-expanded")
+        if (index > 1) continue
+        await expect(row).toHaveAttribute("aria-expanded", "true")
+        const firstActual = row.getByRole("gridcell").first()
+        const firstNative = nativeRow.getByRole("gridcell").first()
+        for (const cell of [firstActual, firstNative]) await expect(cell).toHaveAttribute("aria-expanded", "true")
+        await expect(firstActual.getByRole("button")).toHaveAccessibleName("Collapse Node")
+        const nativeButton = firstNative.locator("ui5-button").getByRole("button")
+        await expect(nativeButton).toHaveAccessibleName("")
+        await nativeButton.focus()
+        await expect(nativeButton).toHaveAccessibleName("Collapse Node")
       }
     } finally {
       await reference.close()

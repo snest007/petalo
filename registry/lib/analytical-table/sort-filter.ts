@@ -80,13 +80,6 @@ function testValue(value: unknown, query: unknown, locale: string, filter: Filte
   }
 }
 
-type FilteredModel<T extends RowData> = ReturnType<AnalyticalTableEngine<T>["getPreFilteredRowModel"]>
-
-function filteredModel<T extends RowData>(model: FilteredModel<T>, rows: AnalyticalTableRowModel<T>[]): FilteredModel<T> {
-  if (model.rows === rows) return model
-  return { rows, flatRows: rows, rowsById: Object.fromEntries(rows.map(row => [row.id, row])) }
-}
-
 export function createAnalyticalFilterModel<T extends RowData>(table: AnalyticalTableEngine<T>) {
   let previous: readonly unknown[] | undefined
   let result: ReturnType<typeof table.getPreFilteredRowModel>
@@ -99,29 +92,42 @@ export function createAnalyticalFilterModel<T extends RowData>(table: Analytical
     const dependencies = [source, filters, global, columns, locale, disableGlobalFilter, table.options.globalFilterFn]
     if (previous && dependencies.every((value, i) => Object.is(value, previous![i]))) return result
     previous = dependencies
-    let rows = source.rows
-    // useFilters applies each filter to the result of the previous one. A WCR-style
-    // custom filter receives that entire set and may compare different rows.
-    for (const { id, value } of filters ?? []) {
-      const column = columns.find(column => column.id === id)
-      if (!column) continue
-      const def = column.columnDef as AnalyticalTableColumnDef<T>
-      const filter = def.filter ?? def.filterType
-      if (removeAnalyticalFilter(filter, value)) continue
-      if (typeof filter === "function") rows = filter(rows, [id], value)
-      else if (def.filterFn && def.filterFn !== "auto") {
-        const match = column.getFilterFn()
-        if (match) rows = rows.filter(row => match(row, id, value))
-      } else rows = rows.filter(row => testValue(row.getValue(id), value, locale, filter ?? "text"))
+    if (!filters?.length && (disableGlobalFilter || global == null || global === "")) return result = source
+    const flatRows: AnalyticalTableRowModel<T>[] = []
+    function filterRows(rows: AnalyticalTableRowModel<T>[]): AnalyticalTableRowModel<T>[] {
+      // useFilters applies each filter to the result of the previous one. A WCR-style
+      // custom filter receives that entire set and may compare different rows.
+      for (const { id, value } of filters ?? []) {
+        const column = columns.find(column => column.id === id)
+        if (!column) continue
+        const def = column.columnDef as AnalyticalTableColumnDef<T>
+        const filter = def.filter ?? def.filterType
+        if (removeAnalyticalFilter(filter, value)) continue
+        if (typeof filter === "function") rows = filter(rows, [id], value)
+        else if (def.filterFn && def.filterFn !== "auto") {
+          const match = column.getFilterFn()
+          if (match) rows = rows.filter(row => match(row, id, value))
+        } else rows = rows.filter(row => testValue(row.getValue(id), value, locale, filter ?? "text"))
+      }
+      if (!disableGlobalFilter && global != null && global !== "") {
+        // useGlobalFilter checks all eligible fields, including hidden ones.
+        const ids = columns.filter(column => column.accessorFn && column.columnDef.enableGlobalFilter !== false).map(column => column.id)
+        const filterFn = table.options.globalFilterFn
+        const match = filterFn && filterFn !== "auto" ? table.getGlobalFilterFn() : undefined
+        rows = rows.filter(row => ids.some(id => match ? match(row, id, global) : testValue(row.getValue(id), global, locale, "text")))
+      }
+      // WCR useFilters and useGlobalFilter recurse within retained parents.
+      return rows.map(row => {
+        const index = flatRows.push(row) - 1
+        if (!row.subRows.length) return row
+        const filtered = copyInstancePropertiesWithoutMemos(Object.create(Object.getPrototypeOf(row)), row) as typeof row
+        filtered.subRows = filterRows(row.subRows)
+        flatRows[index] = filtered
+        return filtered
+      })
     }
-    if (!disableGlobalFilter && global != null && global !== "") {
-      // useGlobalFilter checks all eligible fields, including hidden ones.
-      const ids = columns.filter(column => column.accessorFn && column.columnDef.enableGlobalFilter !== false).map(column => column.id)
-      const filterFn = table.options.globalFilterFn
-      const match = filterFn && filterFn !== "auto" ? table.getGlobalFilterFn() : undefined
-      rows = rows.filter(row => ids.some(id => match ? match(row, id, global) : testValue(row.getValue(id), global, locale, "text")))
-    }
-    result = filteredModel(source, rows)
+    const rows = filterRows(source.rows)
+    result = { rows, flatRows, rowsById: Object.fromEntries(flatRows.map(row => [row.id, row])) }
     return result
   }
 }

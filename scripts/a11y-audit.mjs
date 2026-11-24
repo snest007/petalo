@@ -241,6 +241,26 @@ for (const [key, field, source] of [
   ["INPUT_CLEAR_ICON_ACC_NAME", "clearFilter", "node_modules/@ui5/webcomponents/dist/Input.js"],
 ]) textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source })
 
+const h4Proof = "tests/analytical-table.spec.ts: paired tree rows expose their hierarchy and disclosure names; tree rows keep owned hierarchy, row details and selection; select all, shift range, partial and single selection retain distinct modes"
+for (const [file, texts] of [
+  ["defaults/Column/Expandable.js", [["EXPAND_NODE", "expandNode"], ["COLLAPSE_NODE", "collapseNode"]]],
+  ["hooks/useA11y.js", [["SELECTION_COLUMN", "selectionColumn"], ["HIGHLIGHT_COLUMN", "highlightColumn"], ["NAVIGATION_COLUMN", "navigationColumn"]]],
+  ["hooks/useRowSelectionColumn.js", [["SELECT_ALL", "selectAllLabel"], ["DESELECT_ALL", "deselectAllLabel"]]],
+  ["hooks/useToggleRowExpand.js", [["ROW_EXPANDED", "rowExpanded"], ["ROW_COLLAPSED", "rowCollapsed"]]],
+  ["hooks/useSelectionChangeCallback.js", [
+    ["ROW_SELECTED", "rowSelected"], ["ROW_DESELECTED", "rowDeselected"],
+    ["ROW_SELECTED_MULTI", "rowSelectedMulti"], ["ROW_DESELECTED_MULTI", "rowDeselectedMulti"],
+    ["ROW_SELECTED_MULTI_FILTERED", "rowSelectedFiltered"], ["ROW_DESELECTED_MULTI_FILTERED", "rowDeselectedFiltered"],
+    ["ALL_ROWS_SELECTED", "allRowsSelected"], ["ALL_ROWS_DESELECTED", "allRowsDeselected"],
+    ["ALL_ROWS_SELECTED_FILTERED", "visibleRowsSelected"], ["ALL_ROWS_DESELECTED_FILTERED", "visibleRowsDeselected"],
+  ]],
+]) {
+  for (const [key, field] of texts) {
+    textRows.push({ owner: "analytical-table", key: `wcr:${key}`, equivalent: `AnalyticalTable.texts.${field}`,
+      status: "ok", proof: h4Proof, source: `${h1Source}/${file}` })
+  }
+}
+
 // The allowed consumer spec owns the exact runtime proof map and source-backed
 // nonfunctional classifications; unknown public points stay gap.
 const consumerSpec = read("tests/a11y-tree-customizations.spec.ts")

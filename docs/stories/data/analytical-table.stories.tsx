@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AnalyticalTable } from "@/components/ui/analytical-table"
-import { AnalyticalTableGroupingDemo, AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
+import { AnalyticalTableGroupingDemo, AnalyticalTableRowFeaturesDemo, AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
 import { fioriMeta } from "../_lib/meta"
 
 const base = fioriMeta({ name: "analytical-table", component: AnalyticalTable<(typeof inventory)[number]> })
@@ -54,3 +54,12 @@ export const SortFilterRTL: Story = { render: () => <AnalyticalTableSortFilterDe
 export const Grouped: Story = { render: () => <AnalyticalTableGroupingDemo /> }
 export const GroupedRTL: Story = { render: () => <AnalyticalTableGroupingDemo dir="rtl" /> }
 export const ExpandedGroups: Story = { args: { groupable: true, defaultGroupBy: ["category"], defaultExpanded: true } }
+
+
+export const RowFeatures: Story = { render: () => <AnalyticalTableRowFeaturesDemo /> }
+export const RowFeaturesRTL: Story = { render: () => <AnalyticalTableRowFeaturesDemo dir="rtl" /> }
+export const RowSelector: Story = { args: { selectionMode: "Multiple", selectionBehavior: "RowSelector", defaultSelectedRowIds: { 1: true } } }
+export const RowDetails: Story = { args: {
+  defaultExpanded: { 0: true }, subComponentsBehavior: "IncludeHeightExpandable",
+  renderRowSubComponent: ({ row }) => <p className="p-2">Stock details for {row.original.product}</p>,
+} }

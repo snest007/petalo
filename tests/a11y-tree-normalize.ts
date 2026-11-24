@@ -296,7 +296,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** As with the in-place SplitButton/Menu fixture, the closed reference is
  * painted inside its cell without opening a modal surface. Verify PopupTemplate's
  * owning host, closed block layer and both exact focus guards, then compare all
@@ -449,6 +449,69 @@ function reconcileInputSuggestionBanner(ours: any, ui5: any, paths: NonNullable<
   }
 }
 
+/** WCR RowSubComponent.js places a focusable div directly under the row.
+ * Petalo supplies the required gridcell role. Check the two hosts and prepend
+ * that role in the oracle snapshot, retaining the original button and AX children.
+ */
+function reconcileAnalyticalTableDetails(ours: any, ui5: any, rows: number[]) {
+  for (const index of rows) {
+    const actualRow = ours.ax[0]?.children[0]?.children[1]?.children[0]?.children[index]
+    const nativeRow = ui5.ax[0]?.children[0]?.children[1]?.children[0]?.children[index]
+    const actual = actualRow?.children[0], native = nativeRow?.children[0]
+    const inspector = native?.children[0]?.children[0]
+    const actualSnapshotRow = ours.snapshot[0]?.children[1]?.children[index]
+    const nativeSnapshotRow = ui5.snapshot[0]?.children[1]?.children[index]
+    const actualSnapshot = actualSnapshotRow?.children[0]
+    const nativeSnapshot = nativeSnapshotRow?.children[0]
+    const name = inspector?.name
+
+    expect(actualRow.role).toBe("row")
+    expect(nativeRow.role).toBe("row")
+    expect(inspector.role).toBe("button")
+    expect(name).toMatch(/^Inspect .+/)
+    expect(actual).toMatchObject({ role: "gridcell", name })
+    expect(actual.properties).toEqual({ focusable: true, readonly: false, required: false })
+    expect(native).toMatchObject({ role: "generic", name: "" })
+    expect(native.properties).toEqual({ focusable: true })
+    expect(nativeSnapshot).toMatchObject({ role: "button", name })
+    expect(actualSnapshot).toEqual({ role: "gridcell", name, states: [], children: [nativeSnapshot] })
+
+    native.role = "gridcell"
+    native.name = name
+    native.properties = actual.properties
+    nativeSnapshotRow.children[0] = { role: "gridcell", name, states: [], children: [nativeSnapshot] }
+  }
+}
+
+/** useRowDisableSelection removes the select-all action but useA11y still
+ * describes it on the header. Verify exactly that stale instruction in WCR. */
+function reconcileAnalyticalTableDisabledHeader(ours: any, ui5: any) {
+  const header = (capture: any) => capture.ax[0]?.children[0]?.children[0]?.children[0]?.children[0]
+  const actual = header(ours), native = header(ui5)
+  for (const node of [actual, native]) expect(node).toMatchObject({ role: "columnheader", name: "Selection Column" })
+  expect(actual.description).toBeUndefined()
+  expect(actual.properties.describedby).toBeUndefined()
+  expect(native.description).toBe("To select all rows, press the spacebar.")
+  expect(native.properties.describedby).toEqual([{ text: native.description, valid: true }])
+  delete native.description
+  delete native.properties.describedby
+}
+
+/** ColumnHeader/index.js names synthetic headers with an ARIA label alone.
+ * Petalo also supplies real text matching that exact name, as required by axe.
+ * Compare the original name and all other AX channels. */
+function reconcileAnalyticalTableHeaderText(ours: any, ui5: any, index: number) {
+  const header = (capture: any) => capture.ax[0]?.children[0]?.children[0]?.children[index]?.children[0]
+  const actual = header(ours), native = header(ui5)
+  expect(native.role).toBe("columnheader")
+  expect(native.name).toMatch(/^(Selection|Highlight|Navigation) Column$/)
+  expect(actual).toMatchObject({ role: native.role, name: native.name })
+  const text = { role: "StaticText", name: native.name, properties: {}, children: [] }
+  expect(native.children).toEqual([])
+  expect(actual.children).toEqual([text])
+  native.children.push(text)
+}
+
 /** Read only the literal a11yDiff object, without running fixture React modules or broadening main.tsx ownership. */
 export function allowedDifferences(directory: string): Record<string, Allowed> {
   const result: Record<string, Allowed> = {}
@@ -570,6 +633,22 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.splitButtonMenu) {
       if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")
       reconcileSplitButtonMenu(adjusted.ours, native, allowed.splitButtonMenu)
+    }
+    if (allowed?.analyticalTableHeaderText !== undefined) {
+      if (!/^analytical-table-(?:select-single-row(?:selector)?|select-disabled|row-highlight|row-navigation)$/.test(id)) {
+        throw new Error("Header text allowance applies only to the paired synthetic AnalyticalTable headers")
+      }
+      reconcileAnalyticalTableHeaderText(adjusted.ours, native, allowed.analyticalTableHeaderText)
+    }
+    if (allowed?.analyticalTableDisabledSelection) {
+      if (id !== "analytical-table-select-disabled") throw new Error("Disabled selection allowance is specific to analytical-table-select-disabled")
+      reconcileAnalyticalTableDisabledHeader(adjusted.ours, native)
+    }
+    if (allowed?.analyticalTableDetailRows) {
+      if (!/^analytical-table-details-(?:expanded|visible|included-height|included-expandable)$/.test(id)) {
+        throw new Error("Detail-cell allowance applies only to the paired AnalyticalTable detail states")
+      }
+      reconcileAnalyticalTableDetails(adjusted.ours, native, allowed.analyticalTableDetailRows)
     }
     if (allowed?.numericInputMessage) {
       if (id !== "numeric-input-information") throw new Error("Nested value-state slot allowance is specific to numeric-input-information")
