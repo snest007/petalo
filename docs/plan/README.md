@@ -13,11 +13,11 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H3, H4, H5, H7 (+H7b), H8 (+H8b), H9 (+H9b–H9d) | H6, H9e, H10 and follow-ups | **H10 next, split by component.** H6 follows P2a. H9e returned for open-editor accessibility review. |
+| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H3, H4, H5, H7 (+H7b), H8 (+H8b), H9 (+H9b–H9d) | H6, H9e, H10–H14 and follow-ups | **H10 NavigationMenu next.** H6 follows P2a. H9e returned for open-editor accessibility review. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
-order → **H10**; **P2a** only right before **H6/H6b/H6c**. The remaining P cards, X cards and S5 follow once the new
+order → **H10–H14**; **P2a** only right before **H6/H6b/H6c**. The remaining P cards, X cards and S5 follow once the new
 components are in. CI serves as a reminder. See the [milestone and CI rules](RUN.md#milestones-and-pushing).
 Cancelled cards are kept in `tasks/cancelled/` with the reason.
 
@@ -304,7 +304,7 @@ full. Components UI5 Web Components lacks are ported from **UI5 Web Components f
 into a pixel / accessibility-tree / locale reference.
 
 Order (2026-11-20): E4 and E5 are done. H0 first. H1–H5 (AnalyticalTable) edit the same files and run strictly in order;
-H7–H10 run in parallel with them and with each other, except cards that touch the same existing file (noted in each card).
+H7–H14 run in parallel with them and with each other, except cards that touch the same existing file (noted in each card).
 H6/H6b/H6c wait for P2a.
 
 - [x] [H0 WCR reference harness + WCR texts in the i18n pipeline](tasks/done/H0-wcr-reference-harness.md) — M (**next**; adds devDependencies)
@@ -329,7 +329,11 @@ H6/H6b/H6c wait for P2a.
 - [x] [H9c SelectDialog parity](tasks/done/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
 - [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
 - [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
-- [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
+- [ ] [H10 NavigationMenu](tasks/H10-navigation-menu.md) — M (after H0, E4, E5)
+- [ ] [H11 AnalyticalCardHeader and NumericSideIndicator](tasks/H11-analytical-card-header.md) — M (after H0, E4, E5)
+- [ ] [H12 ActionSheet](tasks/H12-action-sheet.md) — M (after H0, E4, E5)
+- [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
+- [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
 
 Not planned from issue #1 (proposed; owner to confirm): **FlexBox** and **Grid** (layout utilities WCR adds for apps
 without a CSS framework — Tailwind's `flex`/`grid` already cover them), **imperative Modals API** (H7's
