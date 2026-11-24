@@ -314,7 +314,7 @@ H6/H6b/H6c wait for P2a.
 - [x] [H2b AnalyticalTable: finish sort and filter acceptance](tasks/done/H2b-analytical-table-acceptance.md) — S (continue the [H2 return](returns/done/H2.md) before H3)
 - [x] [H2c AnalyticalTable: match the filter-item tree](tasks/done/H2c-filter-item-tree.md) — S (after H2b, before H3)
 - [x] [H2d AnalyticalTable: restore built-in filter parity](tasks/done/H2d-analytical-table-filter-parity.md) — S (same branch as H2; after E11)
-- [ ] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2–H2d merge)
+- [x] [H3 AnalyticalTable: grouping and aggregation](tasks/H3-analytical-table-group-aggregate.md) — L (after H2–H2d merge)
 - [ ] [H4 AnalyticalTable: tree, selection, sub-components, row states](tasks/H4-analytical-table-tree-select-subcomponents.md) — L (after H3)
 - [ ] [H5 AnalyticalTable: virtualisation, infinite scroll, F2 editing, pop-in](tasks/H5-analytical-table-virtual-infinite-edit.md) — L (after H4)
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
