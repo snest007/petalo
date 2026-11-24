@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Kullanılabilir değerler",
   "FORM_TEXTFIELD_REQUIRED": "Bu alanı doldurun.",
   "GROUP_HEADER_TEXT": "Grup başlığı",
+  "ICON_NAV_BACK": "Dolaşmaya geri dön",
   "IM_SUBTITLE_ACHIEVEMENT": "Mükemmel performansınız ve bağlılığınız için tebrik ederiz.",
   "IM_SUBTITLE_ADDCOLUMN": "Tablo ayarlarında daha fazla sütun ekleyebilirsiniz.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Grafiğinizi tamamlamak için daha fazla boyut ekleyin.",

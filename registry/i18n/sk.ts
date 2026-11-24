@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Dostupné hodnoty",
   "FORM_TEXTFIELD_REQUIRED": "Vyplňte toto pole.",
   "GROUP_HEADER_TEXT": "Hlavička skupiny",
+  "ICON_NAV_BACK": "Prejsť späť",
   "IM_SUBTITLE_ACHIEVEMENT": "Gratulujeme vám k vynikajúcemu výkonu a odhodlaniu!",
   "IM_SUBTITLE_ADDCOLUMN": "V nastaveniach tabuľky môžete pridať ďalšie stĺpce.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Na dokončenie grafu pridajte ďalšie dimenzie.",

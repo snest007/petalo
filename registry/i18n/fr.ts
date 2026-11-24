@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Valeurs disponibles",
   "FORM_TEXTFIELD_REQUIRED": "Renseignez cette zone.",
   "GROUP_HEADER_TEXT": "En-tête du groupe",
+  "ICON_NAV_BACK": "Naviguer en arrière",
   "IM_SUBTITLE_ACHIEVEMENT": "Félicitations pour votre performance et votre détermination exceptionnelles.",
   "IM_SUBTITLE_ADDCOLUMN": "Vous pouvez ajouter plus de colonnes dans les options de table.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Ajoutez davantage de dimensions pour compléter votre diagramme.",

@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Giá trị có sẵn",
   "FORM_TEXTFIELD_REQUIRED": "Vui lòng điền vào trường này.",
   "GROUP_HEADER_TEXT": "Tiêu đề nhóm",
+  "ICON_NAV_BACK": "Điều hướng quay lại",
   "IM_SUBTITLE_ACHIEVEMENT": "Xin chúc mừng về thành tích xuất sắc và sự tận tụy của bạn!",
   "IM_SUBTITLE_ADDCOLUMN": "Bạn có thể thêm nhiều cột hơn trong phần thiết lập bảng.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Thêm quy cách khác để hoàn thành biểu đồ của bạn.",

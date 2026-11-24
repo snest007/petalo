@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Dostupne vrijednosti",
   "FORM_TEXTFIELD_REQUIRED": "Popunite ovo polje.",
   "GROUP_HEADER_TEXT": "Zaglavlje grupe",
+  "ICON_NAV_BACK": "Usmjeri nazad",
   "IM_SUBTITLE_ACHIEVEMENT": "Čestitamo vam na odlično obavljenom poslu i posvećenosti!",
   "IM_SUBTITLE_ADDCOLUMN": "Možete da dodate još kolona u podešavanju tabele.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Dodajte više dimenzija da popunite dijagram.",

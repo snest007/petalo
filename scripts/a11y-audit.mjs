@@ -175,10 +175,13 @@ for (const [key, equivalent] of [
 ]) verifiedTexts[`input.${key}`] = { equivalent: `Input.texts.${equivalent}`, proof: inputSuggestionsProof, status: "ok" }
 
 for (const [key, equivalent] of [
-  ["NAVIGATION_MENU_POPOVER_HIDDEN_TEXT", "menuLabel"],
-  ["LIST_ITEM_ACTIVE", "active"], ["MENU_BACK_BUTTON_ARIA_LABEL", "back"],
-  ["MENU_CANCEL_BUTTON_TEXT", "cancel"], ["RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON", "close"],
+  ["NAVIGATION_MENU_POPOVER_HIDDEN_TEXT", "menuLabel"], ["LIST_ITEM_ACTIVE", "active"],
 ]) verifiedTexts[`navigation-menu.${key}`] = { equivalent: `NavigationMenu.texts.${equivalent}`, proof: h10Proof, status: "ok" }
+for (const [key, equivalent] of [
+  ["ICON_NAV_BACK", "back"], ["MENU_BACK_BUTTON_ARIA_LABEL", "back"],
+  ["MENU_CANCEL_BUTTON_TEXT", "cancel"], ["RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON", "close"],
+  ["DIALOG_HEADER_ARIA_LABEL", "header"], ["DIALOG_CONTENT_ARIA_LABEL", "content"], ["DIALOG_FOOTER_ARIA_LABEL", "footer"],
+]) verifiedTexts[`navigation-menu.${key}`] = { equivalent: `NavigationMenu.texts.${equivalent}`, proof: "tests/navigation-menu.spec.ts: names the dialog actions and can return from a submenu", status: "ok" }
 verifiedTexts["navigation-menu.NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT"] = {
   equivalent: "NavigationMenuItem.js only adds this text to the associated selectable SideNavigation row. Raw standalone NavigationMenu has no associated item.",
   status: "ok",
@@ -237,6 +240,16 @@ for (const [file, owner] of sourceFiles) {
       proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" })
     if (file.endsWith("/ListItemCustom.js")) Object.assign(row, { equivalent: "ListItemCustom focus name/connected label targets verified for custom text + Fiori Button; other widget/state hooks still gap", proof: "tests/list.spec.ts: List custom focus description matches UI5 content and controls and clears on blur" })
   }
+}
+for (const [key, file] of [
+  ["ICON_NAV_BACK", "webcomponents-icons/dist/v4/nav-back.js"],
+  ["DIALOG_HEADER_ARIA_LABEL", "webcomponents/dist/Dialog.js"],
+  ["DIALOG_CONTENT_ARIA_LABEL", "webcomponents/dist/Dialog.js"],
+  ["DIALOG_FOOTER_ARIA_LABEL", "webcomponents/dist/Dialog.js"],
+]) {
+  const source = `node_modules/@ui5/${file}`
+  const line = read(source).split("\n").findIndex((value) => value.includes(`getText(${key}`) || value.includes(`accData = ${key}`)) + 1
+  textRows.push({ owner: "navigation-menu", key, source: `${source}:${line}`, ...verifiedTexts[`navigation-menu.${key}`] })
 }
 // Use exported component signatures, not broad implementation-line regexes.
 for (const [member, equivalent, file] of h1Members) {

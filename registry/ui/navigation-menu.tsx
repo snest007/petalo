@@ -9,27 +9,33 @@ import { Icon } from "@/components/ui/icon"
 import { ResponsivePopover, ResponsivePopoverAnchor, ResponsivePopoverContent } from "@/components/ui/responsive-popover"
 import { isF6NavigationKey } from "@/lib/fiori-f6"
 import { arrowRight, decline, navBack, slimArrowRight, type FioriIconData } from "@/lib/fiori-icons"
-import { useFioriLocale, useFioriTexts, type FioriDirection } from "@/lib/fiori-locale"
+import { useFioriLocale, useFioriTexts, type FioriDirection, type FioriTextKeys } from "@/lib/fiori-locale"
 import { useIsPhone } from "@/lib/use-is-phone"
 import { cn } from "@/lib/utils"
 
 declare const process: { env: { NODE_ENV?: string } }
 
-type NavigationMenuTexts = { menuLabel: string; active: string; back: string; cancel: string; close: string }
-const defaultTexts: NavigationMenuTexts = {
+type NavigationMenuTexts = { menuLabel: string; active: string; back: string; cancel: string; close: string; header?: string; content?: string; footer?: string }
+const defaultTexts: Required<NavigationMenuTexts> = {
   menuLabel: "Additional Navigation Items", // UI5 NAVIGATION_MENU_POPOVER_HIDDEN_TEXT
   active: "Is Active", // UI5 LIST_ITEM_ACTIVE
-  back: "Back", // UI5 MENU_BACK_BUTTON_ARIA_LABEL
+  back: "Navigate Back", // UI5 ICON_NAV_BACK (MenuItemTemplate.js back button's effective label)
   cancel: "Cancel", // UI5 MENU_CANCEL_BUTTON_TEXT
   close: "Decline", // UI5 RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON
+  header: "Header", // UI5 DIALOG_HEADER_ARIA_LABEL
+  content: "Content", // UI5 DIALOG_CONTENT_ARIA_LABEL
+  footer: "Footer", // UI5 DIALOG_FOOTER_ARIA_LABEL
 }
-const textKeys = {
+const textKeys: FioriTextKeys<Required<NavigationMenuTexts>> = {
   menuLabel: "NAVIGATION_MENU_POPOVER_HIDDEN_TEXT",
   active: "LIST_ITEM_ACTIVE",
-  back: "MENU_BACK_BUTTON_ARIA_LABEL",
+  back: (t, fallback) => t("ICON_NAV_BACK", () => t("MENU_BACK_BUTTON_ARIA_LABEL", fallback)),
   cancel: "MENU_CANCEL_BUTTON_TEXT",
   close: "RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON",
-} as const
+  header: "DIALOG_HEADER_ARIA_LABEL",
+  content: "DIALOG_CONTENT_ARIA_LABEL",
+  footer: "DIALOG_FOOTER_ARIA_LABEL",
+}
 
 /** @experimental Styling slots apply to each corresponding part, including nested popovers. */
 type NavigationMenuSlot = "root" | "trigger" | "surface" | "menu" | "item" | "text" | "icon" | "tag" | "indicator" | "back" | "cancel" | "close"
@@ -72,7 +78,8 @@ type NavigationMenuItemProps = Omit<React.HTMLAttributes<HTMLElement>, "children
 type MenuState = {
   scope: string
   dir: FioriDirection
-  texts: NavigationMenuTexts
+  texts: Required<NavigationMenuTexts>
+  phone: boolean
   classes: NavigationMenuProps["classNames"]
   portal: boolean
   dismissals: Map<string, { depth: number; close: () => void }>
@@ -135,7 +142,7 @@ function NavigationMenu({
   React.useLayoutEffect(() => {
     const node = rootRef.current
     if (explicitDir || !node) return
-    const update = () => setInheritedDir(node.matches(":dir(rtl)") ? "rtl" : "ltr")
+    const update = () => setInheritedDir(getComputedStyle(node).direction === "rtl" ? "rtl" : "ltr")
     update()
     const observer = new MutationObserver(update)
     for (let parent: HTMLElement | null = node; parent; parent = parent.parentElement) {
@@ -143,7 +150,7 @@ function NavigationMenu({
     }
     return () => observer.disconnect()
   }, [explicitDir])
-  const texts = useFioriTexts(defaultTexts, textKeys, textOverrides, locale)
+  const texts = useFioriTexts<Required<NavigationMenuTexts>>(defaultTexts, textKeys, textOverrides, locale)
   const { className: triggerClassName, onClick, ref: passedTriggerRef, ...buttonProps } = protectedProps(triggerProps ?? {}, "Trigger", ownedTrigger)
   const { ref, ...rootProps } = props
   const setRoot = React.useCallback((node: HTMLDivElement | null) => {
@@ -171,7 +178,7 @@ function NavigationMenu({
     document.addEventListener("keydown", onEscape, true)
     return () => document.removeEventListener("keydown", onEscape, true)
   }, [dismissals, close, phone, scope])
-  const state = { scope, dir: direction, texts, classes: classNames, portal, dismissals, close, onItemClick }
+  const state = { scope, dir: direction, texts, phone, classes: classNames, portal, dismissals, close, onItemClick }
   const menuId = `${scope}-menu`
   return (
     <div {...rootProps} ref={setRoot} dir={explicitDir} data-slot="navigation-menu" className={cn(classNames?.root, className)}>
@@ -204,6 +211,7 @@ function NavigationMenuSurface({ id, title, owner, close, submenu = false, preve
   children: React.ReactNode
 }) {
   const root = React.useContext(MenuContext)!
+  const phone = root.phone
   const parent = React.useContext(LevelContext)
   const depth = parent ? parent.depth + 1 : 0
   const list = React.useRef<HTMLDivElement>(null)
@@ -258,20 +266,35 @@ function NavigationMenuSurface({ id, title, owner, close, submenu = false, preve
     items[Math.max(0, Math.min(next, items.length - 1))]?.focus()
   }
 
+  const visibleTitle = phone && submenu
+  const desktopSubmenu = submenu && !phone
+  const content = <>
+    {!submenu && <span id={titleId} className="fiori-navigation-menu-hidden">{title}</span>}
+    <LevelContext.Provider value={{ depth, hasIcons, submenu, close, submenus }}>
+      <div id={id} ref={list} data-slot="navigation-menu-menu" className={cn("fiori-navigation-menu-list", root.classes?.menu)}
+        role="menu" onKeyDown={onKeyDown} onFocus={(event) => {
+          const items = rows(event.currentTarget)
+          if (items.some((row) => row === event.target)) items.forEach((row) => { row.tabIndex = row === event.target ? 0 : -1 })
+        }}>{children}</div>
+    </LevelContext.Provider>
+  </>
   return (
-    <ResponsivePopoverContent ref={setSurface} data-slot="navigation-menu-surface" data-navigation-menu-scope={root.scope} data-submenu={submenu ? "" : undefined}
+    <ResponsivePopoverContent ref={setSurface} data-slot="navigation-menu-surface" data-navigation-menu-scope={root.scope}
+      data-navigation-menu-dir={root.dir} data-submenu={submenu ? "" : undefined} data-phone={phone ? "" : undefined}
       className={cn("fiori-navigation-menu-surface", root.classes?.surface)} portal={root.portal}
-      side={submenu ? (root.dir === "rtl" ? "left" : "right") : "bottom"} align={submenu ? "start" : "center"} hideArrow
-      aria-labelledby={titleId} headerText="" closeLabel={root.texts.close}
-      phoneHeader={submenu ? <div className="fiori-menu-phone__header">
+      // Popover.js defaults to End. MenuItemTemplate.js differs only in its Top alignment.
+      side={root.dir === "rtl" ? "left" : "right"} align={submenu ? "start" : "center"} hideArrow
+      aria-labelledby={desktopSubmenu ? undefined : titleId} aria-label={desktopSubmenu ? title : undefined}
+      headerText="" closeLabel={root.texts.close}
+      phoneHeader={submenu ? <div className="fiori-menu-phone__header" role="region" aria-label={root.texts.header}>
         <Button variant="transparent" data-slot="navigation-menu-back" className={root.classes?.back} aria-label={root.texts.back} onClick={close}><Icon icon={navBack} /></Button>
-        <div className="fiori-menu-phone__title">{title}</div>
-      </div> : <div className="fiori-responsive-popover__default-header">
+        <div id={visibleTitle ? titleId : undefined} className="fiori-menu-phone__title">{title}</div>
+      </div> : <div className="fiori-responsive-popover__default-header" role="region" aria-label={root.texts.header}>
         <Button variant="transparent" data-slot="navigation-menu-close" className={root.classes?.close} aria-label={root.texts.close} onClick={close}><Icon icon={decline} /></Button>
       </div>}
-      phoneFooter={submenu ? <div className="fiori-menu-phone__footer">
+      phoneFooter={submenu ? <div className="fiori-menu-phone__footer" role="region" aria-label={root.texts.footer}>
         <Button variant="transparent" data-slot="navigation-menu-cancel" className={root.classes?.cancel} onClick={root.close}>{root.texts.cancel}</Button>
-      </div> : undefined}
+      </div> : <div role="region" aria-label={root.texts.footer} />}
       onOpenAutoFocus={(event) => { event.preventDefault(); closeOnDismiss.current = true; if (!preventInitialFocus) focusRow() }}
       onCloseAutoFocus={(event) => {
         event.preventDefault()
@@ -295,14 +318,7 @@ function NavigationMenuSurface({ id, title, owner, close, submenu = false, preve
       onEscapeKeyDown={(event) => {
         if (hasModifiers(event)) event.preventDefault()
       }}>
-      <span id={titleId} className="fiori-navigation-menu-hidden">{title}</span>
-      <LevelContext.Provider value={{ depth, hasIcons, submenu, close, submenus }}>
-        <div id={id} ref={list} data-slot="navigation-menu-menu" className={cn("fiori-navigation-menu-list", root.classes?.menu)}
-          role="menu" onKeyDown={onKeyDown} onFocus={(event) => {
-            const items = rows(event.currentTarget)
-            if (items.some((row) => row === event.target)) items.forEach((row) => { row.tabIndex = row === event.target ? 0 : -1 })
-          }}>{children}</div>
-      </LevelContext.Provider>
+      {phone ? <div role="region" aria-label={root.texts.content}>{content}</div> : content}
     </ResponsivePopoverContent>
   )
 }

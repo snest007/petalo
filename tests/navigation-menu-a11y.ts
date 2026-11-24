@@ -26,13 +26,111 @@ function separateRowContent(node: Node) {
   return node.role === "generic" ? childrenOf(node) : [node]
 }
 
-/** NavigationMenuItemTemplate.js leaves the native LI inside its anchor; the
- * same source forces role none even on a focusable nonlink LI. Verify the
- * precise role violation before comparing each corrected item as menuitem.
- * Popup.js adds aria-modal to the nonmodal desktop Popup and resolves the
- * hidden name to aria-label. The actual hidden title text remains compared.
- */
-export function reconcileNavigationMenuFixture(ours: Capture, ui5: Capture) {
+function nativeList(content: Node, wrapperCount: number) {
+  let layout = content
+  for (let i = 0; i < wrapperCount; i++) {
+    const children = childrenOf(layout)
+    expect(children).toHaveLength(1)
+    layout = children[0]
+  }
+  const entries = childrenOf(layout)
+  expect(entries).toHaveLength(3)
+  const [start, list, end] = entries
+  expect([start, end]).toEqual([sentinel, sentinel])
+  expect(list).toEqual(ax("menu", "", { orientation: "vertical" }, list.children))
+  return list
+}
+
+function reconcileRow(ours: Node, native: Node, actualSnapshot: Node, nativeSnapshot: Node, text: string, link: boolean) {
+  const active = "Is Active"
+  const name = `${text} ${active}`
+  const tagged = text === "Home"
+  const disabled = text === "Archive"
+  const expanded = text === "Workspace" && ours.properties?.expanded === true
+  if (link) expect(native).toEqual(ax("menuitem", name, { focusable: true }, native.children))
+  const row = link ? native.children[0] : native
+  expect(row.role).toBe("listitem")
+  expect(row.name).toBe(name)
+  expect(row.properties?.level).toBe(1)
+  expect(row.properties?.describedby).toEqual(tagged ? [label(""), label("Tag New")] : [label("")])
+  const nativeText = row.children.flatMap(separateRowContent)
+  const actualText = ours.children.flatMap(separateRowContent)
+  if (tagged) {
+    // The redundant child text is hidden from the name computation. The
+    // description target still resolves with its full text.
+    expect(nativeText).toEqual([nodeText(text), nodeText("Tag"), nodeText("New"), nodeText(active)])
+    expect(actualText).toEqual([nodeText(text), nodeText(active)])
+    expect(row.description).toBe("Tag New")
+    expect(ours.description).toBe("Tag New")
+    expect(ours.properties!.describedby).toEqual([label("")])
+    expect(row.properties!.labelledby).toEqual([label(text), label(active)])
+    expect(ours.properties!.labelledby).toBeUndefined()
+    delete row.properties!.labelledby
+    row.properties!.describedby = [label("")]
+  } else {
+    delete row.properties!.describedby
+    expect(actualText).toEqual(nativeText)
+  }
+  delete row.properties!.level
+  if (expanded) {
+    // Native MenuItemTemplate sets hasPopup/expanded but doesn't link the
+    // composed popup. Verify our link resolves to the named submenu's menu.
+    expect(row.properties!.hasPopup).toBe("menu")
+    expect(row.properties!.expanded).toBe(true)
+    expect(row.properties!.controls).toBeUndefined()
+    expect(ours.properties!.controls).toEqual([{ role: "menu", name: "", ignored: false, valid: true }])
+    row.properties!.controls = ours.properties!.controls
+  }
+  row.children = ours.children
+  row.role = "menuitem"
+
+  const snapshot = { role: "listitem", name, states: [], children: [], ...(tagged ? { text: "Home Tag New Is Active" } : {}) }
+  if (link) {
+    expect(nativeSnapshot).toEqual({ role: "menuitem", name, states: [], children: [snapshot] })
+    nativeSnapshot.children = []
+  } else {
+    // Chromium's snapshot omits menu states while the native role is listitem.
+    expect(nativeSnapshot).toEqual(snapshot)
+    nativeSnapshot.role = "menuitem"
+    if (disabled) {
+      expect(row.properties!.disabled).toBe(true)
+      nativeSnapshot.states = ["[disabled]"]
+    }
+    if (expanded) nativeSnapshot.states = ["[expanded]"]
+  }
+  expect(actualSnapshot).toEqual(nativeSnapshot)
+  return row
+}
+
+function reconcileSubmenu(ours: Node, native: Node, actualSnapshot: Node, nativeSnapshot: Node) {
+  const [actual] = childrenOf(ours)
+  const [dialog] = childrenOf(native, { focusable: true })
+  expect(actual).toEqual(ax("dialog", "Workspace", { focusable: true, modal: false }, actual.children))
+  expect(dialog).toEqual(ax("dialog", "Workspace", { modal: true }, dialog.children))
+  expect(actual.children).toHaveLength(1)
+  expect(dialog.children).toHaveLength(3)
+  const [start, content, end] = dialog.children
+  expect([start, end]).toEqual([sentinel, sentinel])
+  const [actualMenu] = actual.children
+  const menu = nativeList(content, 4)
+  const [referenceMenuSnapshot] = nativeSnapshot.children
+  const [actualMenuSnapshot] = actualSnapshot.children
+  expect(actualMenu).toEqual(ax("menu", "", { orientation: "vertical" }, actualMenu.children))
+  for (const node of [menu, actualMenu, referenceMenuSnapshot, actualMenuSnapshot]) expect(node.children).toHaveLength(2)
+  for (const [index, text] of ["Settings", "More"].entries()) {
+    const [row] = childrenOf(menu.children[index])
+    menu.children[index] = reconcileRow(actualMenu.children[index], row, actualMenuSnapshot.children[index], referenceMenuSnapshot.children[index], text, index === 0)
+  }
+  dialog.properties = actual.properties
+  dialog.children = [menu]
+  expect(actualSnapshot).toEqual(nativeSnapshot)
+  return generic([dialog])
+}
+
+/** NavigationMenuItemTemplate leaves the native LI inside its anchor and
+ * forces role none on a focusable LI. Popup.js adds aria-modal to nonmodal
+ * popovers. Verify exact topology, property values and names on both sides. */
+export function reconcileNavigationMenuFixture(ours: Capture, ui5: Capture, expanded: boolean) {
   const title = "Additional Navigation Items"
   expect(ours.ax).toHaveLength(1)
   expect(ui5.ax).toHaveLength(1)
@@ -45,84 +143,42 @@ export function reconcileNavigationMenuFixture(ours: Capture, ui5: Capture) {
   const [start, heading, content, end] = dialog.children
   expect([start, end]).toEqual([sentinel, sentinel])
   expect(heading).toEqual(nodeText(title))
-  let layout = content
-  for (let i = 0; i < 3; i++) {
-    const children = childrenOf(layout)
-    expect(children).toHaveLength(1)
-    layout = children[0]
-  }
-  const [listStart, nativeMenu, listEnd] = childrenOf(layout)
-  expect([listStart, listEnd]).toEqual([sentinel, sentinel])
-  expect(nativeMenu).toEqual(ax("menu", "", { orientation: "vertical" }, nativeMenu.children))
+  const nativeMenu = nativeList(content, 3)
 
   const actualDialog = ours.ax[0]
   expect(actualDialog).toEqual(ax("dialog", title, { focusable: true, labelledby: [label(title)], modal: false }, actualDialog.children))
-  expect(actualDialog.children).toHaveLength(2)
-  expect(separateRowContent(actualDialog.children[0])).toEqual([heading])
-  const actualMenu = actualDialog.children[1]
+  // With the nested surface inline, the root layout wrapper is represented
+  // as an extra unnamed AX generic around the root label and menu.
+  if (expanded) expect(actualDialog.children).toHaveLength(1)
+  const actualContent = expanded ? childrenOf(actualDialog.children[0]) : actualDialog.children
+  expect(actualContent).toHaveLength(2)
+  expect(separateRowContent(actualContent[0])).toEqual([heading])
+  const actualMenu = actualContent[1]
   expect(actualMenu).toEqual(ax("menu", "", { orientation: "vertical" }, actualMenu.children))
-  expect(actualMenu.children).toHaveLength(4)
+  expect(actualMenu.children).toHaveLength(expanded ? 5 : 4)
   expect(nativeMenu.children).toHaveLength(4)
 
   const nativeSnapshot = ui5.snapshot[0].children[1]
   const actualSnapshot = ours.snapshot[0].children[1]
   for (const snapshot of [nativeSnapshot, actualSnapshot]) {
     expect(snapshot.role).toBe("menu")
-    expect(snapshot.children).toHaveLength(4)
+    expect(snapshot.children).toHaveLength(expanded ? 5 : 4)
   }
+  const adjustedRows: Node[] = []
   for (const [index, text] of ["Home", "Workspace", "Help", "Archive"].entries()) {
-    const name = `${text} Is Active`
-    const link = index === 0 || index === 2
-    const [inner] = childrenOf(nativeMenu.children[index])
-    if (link) expect(inner).toEqual(ax("menuitem", name, { focusable: true }, inner.children))
-    const row = link ? inner.children[0] : inner
-    expect(row.role).toBe("listitem")
-    expect(row.name).toBe(name)
-    expect(row.properties?.level).toBe(1)
-    expect(row.properties?.describedby).toEqual(index === 0 ? [label(""), label("Tag New")] : [label("")])
-    delete row.properties!.level
-    row.properties!.describedby = index === 0 ? [label("Tag New")] : undefined
-    if (index !== 0) delete row.properties!.describedby
-    const actualRow = actualMenu.children[index]
-    const nativeText = row.children.flatMap(separateRowContent)
-    const actualText = actualRow.children.flatMap(separateRowContent)
-    if (index === 0) {
-      // The tag is an accessible description on the same host. The redundant
-      // child text is hidden from the accessible name computation for axe.
-      expect(nativeText).toEqual([nodeText(text), nodeText("Tag"), nodeText("New"), nodeText("Is Active")])
-      expect(row.description).toBe("Tag New")
-      expect(actualText).toEqual([nodeText(text), nodeText("Is Active")])
-      expect(actualRow.description).toBe("Tag New")
-      // The ignored tag still resolves and contributes the complete AX
-      // description. CDP omits the ignored target's own text projection.
-      expect(actualRow.properties!.describedby).toEqual([label("")])
-      row.properties!.describedby = [label("")]
-      expect(row.properties!.labelledby).toEqual([label(text), label("Is Active")])
-      expect(actualRow.properties!.labelledby).toBeUndefined()
-      delete row.properties!.labelledby
-    } else expect(actualText).toEqual(nativeText)
-    row.children = actualRow.children
-    row.role = "menuitem"
-    nativeMenu.children[index] = row
-
-    const native = nativeSnapshot.children[index], actual = actualSnapshot.children[index]
-    if (link) {
-      expect(native).toEqual({ role: "menuitem", name, states: [], children: [
-        { role: "listitem", name, states: [], children: [], ...(index === 0 ? { text: "Home Tag New Is Active" } : {}) },
-      ] })
-      expect(actual).toEqual({ role: "menuitem", name, states: [], children: [] })
-      native.children = []
-    } else {
-      expect(native).toEqual({ role: "listitem", name, states: [], children: [] })
-      if (index === 3) {
-        expect(row.properties!.disabled).toBe(true)
-        expect(actual.states).toEqual(["[disabled]"])
-        native.states = ["[disabled]"]
-      }
-      native.role = "menuitem"
+    const children = childrenOf(nativeMenu.children[index])
+    expect(children).toHaveLength(expanded && index === 1 ? 2 : 1)
+    const actualIndex = expanded && index > 1 ? index + 1 : index
+    adjustedRows.push(reconcileRow(actualMenu.children[actualIndex], children[0], actualSnapshot.children[actualIndex], nativeSnapshot.children[actualIndex], text, index === 0 || index === 2))
+    // Native nests the open dialog under its owner host. The React positioner
+    // is the following sibling in the static fixture; compare the full dialog.
+    if (expanded && index === 1) {
+      adjustedRows.push(reconcileSubmenu(actualMenu.children[2], children[1], actualSnapshot.children[2], nativeSnapshot.children[2]))
     }
   }
+  nativeMenu.children = adjustedRows
   dialog.properties = actualDialog.properties
-  dialog.children = [actualDialog.children[0], nativeMenu]
+  const children = [actualContent[0], nativeMenu]
+  dialog.children = expanded ? [generic(children)] : children
   ui5.ax[0] = dialog
 }

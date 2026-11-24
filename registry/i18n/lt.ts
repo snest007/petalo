@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Prieinamos reikšmės",
   "FORM_TEXTFIELD_REQUIRED": "Užpildykite šį lauką.",
   "GROUP_HEADER_TEXT": "Grupės antraštė",
+  "ICON_NAV_BACK": "Grįžti atgal",
   "IM_SUBTITLE_ACHIEVEMENT": "Sveikiname pasiekus išskirtinių rezultatų!",
   "IM_SUBTITLE_ADDCOLUMN": "Lentelės parametruose galite pridėti daugiau stulpelių.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Kad užbaigtumėte diagramą, pridėkite daugiau dimensijų",

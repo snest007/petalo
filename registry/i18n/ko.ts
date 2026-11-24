@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "사용 가능한 값",
   "FORM_TEXTFIELD_REQUIRED": "이 필드를 입력하십시오.",
   "GROUP_HEADER_TEXT": "그룹 헤더",
+  "ICON_NAV_BACK": "뒤로 이동",
   "IM_SUBTITLE_ACHIEVEMENT": "뛰어난 성과와 헌신에 감사드립니다!",
   "IM_SUBTITLE_ADDCOLUMN": "테이블 설정에 열을 추가할 수 있습니다.",
   "IM_SUBTITLE_ADDDIMENSIONS": "차트를 완료하려면 더 많은 차원을 추가합니다.",

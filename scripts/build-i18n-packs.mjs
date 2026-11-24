@@ -14,7 +14,7 @@ for (const file of readdirSync(source).filter(file => /^messagebundle_.*\.json$/
     const path = `node_modules/@openui5/${pkg}/src/${pkg.replaceAll('.', '/')}/messagebundle_${lang}.properties`
     if (existsSync(path)) Object.assign(table, properties(readFileSync(path, 'utf8')))
   }
-  for (const pkg of ['webcomponents', 'webcomponents-fiori']) {
+  for (const pkg of ['webcomponents', 'webcomponents-fiori', 'webcomponents-icons']) {
     const path = `node_modules/@ui5/${pkg}/dist/generated/assets/i18n/messagebundle_${lang}.json`
     if (existsSync(path)) Object.assign(table, JSON.parse(readFileSync(path, 'utf8')))
   }

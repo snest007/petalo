@@ -8,7 +8,7 @@ const defaults = {}, sourceHashes = {}, definitionSources = {}, componentSources
 const defaultTables = {}, definitionTables = {}, componentDomains = {}
 export const auditEvidencePath = '.integration/E5-evidence/fourth-20261118/audit.json'
 const referenceCache = new Map()
-for (const pkg of packages) {
+for (const pkg of [...packages, 'webcomponents-icons']) {
   const domain = `@ui5/${pkg}`
   const table = defaultTables[domain] = {}, definitions = definitionTables[domain] = {}
   const file = `node_modules/@ui5/${pkg}/dist/generated/i18n/i18n-defaults.js`
@@ -109,6 +109,12 @@ const nativeKeys = name => {
   // NavigationMenu's direct inherited text owners are listed above. Their
   // unrelated popup, selection and end-content implementations have separate inventories.
   const keys = sources.flatMap(file => scan(file, seen, name !== 'navigation-menu'))
+  if (name === 'navigation-menu') {
+    // MenuItemTemplate uses the Back icon's localized accessible name in the phone dialog.
+    keys.push(...scan('node_modules/@ui5/webcomponents-icons/dist/v4/nav-back.js', seen, false))
+    keys.push('DIALOG_HEADER_ARIA_LABEL', 'DIALOG_CONTENT_ARIA_LABEL', 'DIALOG_FOOTER_ARIA_LABEL')
+    scan('node_modules/@ui5/webcomponents/dist/Dialog.js', seen, false)
+  }
   const related = {
     'variant-management': ['sap.m/src/sap/m/VariantManagement.js'],
     'filter-bar': ['sap.ui.mdc/src/sap/ui/mdc/FilterBar.js', 'sap.ui.mdc/src/sap/ui/mdc/filterbar/FilterBarBase.js'],

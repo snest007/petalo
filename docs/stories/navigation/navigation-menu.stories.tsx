@@ -33,6 +33,19 @@ export const Open: Story = {
     await expect(within(canvasElement.ownerDocument.body).getByRole("dialog", { name: "Additional Navigation Items" })).toBeVisible()
   },
 }
+export const Expanded: Story = {
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body)
+    await userEvent.click(within(canvasElement).getByRole("button", { name: "Navigate" }))
+    await expect(page.getByRole("menuitem", { name: "Home Is Active" })).toHaveFocus()
+    await userEvent.keyboard("{ArrowDown}")
+    const workspace = page.getByRole("menuitem", { name: "Workspace Is Active" })
+    await expect(workspace).toHaveFocus()
+    await userEvent.keyboard(getComputedStyle(workspace).direction === "rtl" ? "{ArrowLeft}" : "{ArrowRight}")
+    await expect(page.getByRole("dialog", { name: "Workspace" })).toBeVisible()
+    await expect(page.getByRole("menuitem", { name: "Settings Is Active" })).toHaveFocus()
+  },
+}
 export const Customise: Story = {
   render: function Controlled(args) {
     const [open, setOpen] = React.useState(false)

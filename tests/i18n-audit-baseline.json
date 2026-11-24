@@ -1029,6 +1029,10 @@
     "owner": "P4",
     "gapCount": 0,
     "okKeys": [
+      "DIALOG_CONTENT_ARIA_LABEL",
+      "DIALOG_FOOTER_ARIA_LABEL",
+      "DIALOG_HEADER_ARIA_LABEL",
+      "ICON_NAV_BACK",
       "LIST_ITEM_ACTIVE",
       "MENU_BACK_BUTTON_ARIA_LABEL",
       "MENU_CANCEL_BUTTON_TEXT",

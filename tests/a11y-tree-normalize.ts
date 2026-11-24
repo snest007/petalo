@@ -673,8 +673,8 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
       reconcileSelectDialogFixture(adjusted.ours, native, allowed.selectDialogShape)
     }
     if (allowed?.navigationMenu) {
-      if (!/^navigation-menu-(?:default|rtl|customise)$/.test(id)) throw new Error("NavigationMenu allowance is specific to the paired in-place root menu")
-      reconcileNavigationMenuFixture(adjusted.ours, native)
+      if (!/^navigation-menu-(?:default|rtl|customise|expanded(?:-rtl)?)$/.test(id)) throw new Error("NavigationMenu allowance is specific to its paired in-place menus")
+      reconcileNavigationMenuFixture(adjusted.ours, native, id.startsWith("navigation-menu-expanded"))
     }
     if (allowed?.splitButtonMenu) {
       if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")

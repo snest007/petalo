@@ -3,6 +3,26 @@
   min-width: 10rem;
   background: var(--sapGroup_ContentBackground);
 }
+/* MenuItemTemplate.js uses a separate ResponsivePopover for each submenu.
+   Popover.js positions it at the owner's inline edge. MenuItem.css.js adds
+   the block offset and Menu.css.js supplies the submenu radius. */
+.fiori-navigation-menu-surface[data-submenu]:not([data-phone]) {
+  min-width: 6.25rem;
+  border-radius: var(--fiori-menu-popover-border-radius);
+  margin-block-start: .25rem;
+}
+.fiori-navigation-menu-surface[data-phone] .fiori-popup__content,
+.fiori-navigation-menu-surface[data-phone] .fiori-responsive-popover__footer {
+  padding: 0;
+  border: 0;
+}
+.fiori-navigation-menu-surface[data-phone] .fiori-responsive-popover__default-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding-inline: var(--fiori-popup-header-footer-padding-s);
+}
 .fiori-navigation-menu-list {
   box-sizing: border-box;
   display: flex;
@@ -33,9 +53,9 @@
   outline: none;
 }
 /* NavigationMenuItem.css overrides the physical left padding in both directions.
-   Map that override to the corresponding logical edge. */
-.fiori-navigation-menu-item:dir(ltr) { padding-inline-start: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
-.fiori-navigation-menu-item:dir(rtl) { padding-inline-end: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
+   Use the surface's effective dir because the CSS build lowers :dir() to :lang(). */
+[data-navigation-menu-dir="ltr"] .fiori-navigation-menu-item { padding-inline-start: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
+[data-navigation-menu-dir="rtl"] .fiori-navigation-menu-item { padding-inline-end: var(--fiori-side-navigation-item-padding-start-in-overflow-popup); }
 .fiori-navigation-menu-surface[data-submenu] .fiori-navigation-menu-item {
   font-family: var(--sapFontFamily);
 }

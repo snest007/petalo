@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Dostępne wartości",
   "FORM_TEXTFIELD_REQUIRED": "Wypełnij to pole.",
   "GROUP_HEADER_TEXT": "Nagłówek grupy",
+  "ICON_NAV_BACK": "Powrót",
   "IM_SUBTITLE_ACHIEVEMENT": "Gratulujemy doskonałych wyników i zaangażowania!",
   "IM_SUBTITLE_ADDCOLUMN": "Możesz dodać więcej kolumn w ustawieniach tabeli.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Dodaj więcej wymiarów, aby ukończyć swój wykres.",

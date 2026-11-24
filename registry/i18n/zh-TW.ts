@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "可用值",
   "FORM_TEXTFIELD_REQUIRED": "請填寫此欄位。",
   "GROUP_HEADER_TEXT": "群組表頭",
+  "ICON_NAV_BACK": "瀏覽返回",
   "IM_SUBTITLE_ACHIEVEMENT": "恭喜您傑出的表現與付出！",
   "IM_SUBTITLE_ADDCOLUMN": "您可在表格設定中新增其他欄。",
   "IM_SUBTITLE_ADDDIMENSIONS": "新增更多維度以完成您的圖表。",

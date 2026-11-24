@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Nilai Tersedia",
   "FORM_TEXTFIELD_REQUIRED": "Sila isikan medan ini.",
   "GROUP_HEADER_TEXT": "Pengepala Kumpulan",
+  "ICON_NAV_BACK": "Kembali Navigasi",
   "IM_SUBTITLE_ACHIEVEMENT": "Tahniah atas prestasi cemerlang dan dedikasi anda!",
   "IM_SUBTITLE_ADDCOLUMN": "Anda boleh menambahkan lebih lajur dalam tetapan jadual.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Tambah lebih dimensi untuk melengkapkan carta anda.",

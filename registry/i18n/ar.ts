@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "القيم المتوفرة",
   "FORM_TEXTFIELD_REQUIRED": "يرجى ملء هذا الحقل.",
   "GROUP_HEADER_TEXT": "مقدمة المجموعة",
+  "ICON_NAV_BACK": "التنقل للخلف",
   "IM_SUBTITLE_ACHIEVEMENT": "نهنئك على أدائك المتميز وتفانيك في العمل!",
   "IM_SUBTITLE_ADDCOLUMN": "يمكنك إضافة المزيد من الأعمدة في إعدادات الجدول.",
   "IM_SUBTITLE_ADDDIMENSIONS": "أضف المزيد من الأبعاد لإكمال مخططك.",

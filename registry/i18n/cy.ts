@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Gwerthoedd sydd ar gael",
   "FORM_TEXTFIELD_REQUIRED": "Llenwch y maes hwn.",
   "GROUP_HEADER_TEXT": "Pennyn Grŵp",
+  "ICON_NAV_BACK": "Llywio''n ôl",
   "IM_SUBTITLE_ACHIEVEMENT": "Llongyfarchiadau ar eich perfformiad a''ch ymroddiad rhagorol!",
   "IM_SUBTITLE_ADDCOLUMN": "Gallwch ychwanegu rhagor o golofnau yng ngosodiadau''r tabl.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Ychwanegwch fwy o ddimensiynau i gwblhau eich siart.",
