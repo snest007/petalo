@@ -15,12 +15,12 @@
 
 import * as React from "react"
 import {
-  columnFilteringFeature, globalFilteringFeature, rowSortingFeature,
+  columnFilteringFeature, globalFilteringFeature, rowSortingFeature, columnGroupingFeature, rowExpandingFeature,
   columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
-  flexRender, tableFeatures, useTable,
+  createExpandedRowModel, flexRender, tableFeatures, useTable,
   type Cell, type Column, type ColumnDef, type ColumnOrderState, type ColumnPinningState,
   type ColumnSizingState, type Header, type Row, type RowData, type TableOptions,
-  type Updater, type ColumnVisibilityState, type SortingState, type ColumnFiltersState,
+  type Updater, type ColumnVisibilityState, type SortingState, type ColumnFiltersState, type GroupingState, type ExpandedState,
 } from "@tanstack/react-table"
 import { defaultRangeExtractor, useVirtualizer, type ScrollToOptions } from "@tanstack/react-virtual"
 import { BusyIndicator } from "@/components/ui/busy-indicator"
@@ -28,7 +28,8 @@ import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu"
 import { Icon } from "@/components/ui/icon"
 import { Input, InputIcon } from "@/components/ui/input"
 import { AnalyticalHeaderMenu } from "@/lib/analytical-table/header-menu"
-import { decline, filter as filterIcon, pushpinOff, pushpinOn, sortAscending, sortDescending, type FioriIconData } from "@/lib/fiori-icons"
+import { createAnalyticalGroupModel, type AnalyticalTableAggregate } from "@/lib/analytical-table/grouping"
+import { decline, filter as filterIcon, group2, navigationDownArrow, navigationRightArrow, pushpinOff, pushpinOn, sortAscending, sortDescending, type FioriIconData } from "@/lib/fiori-icons"
 import { useFioriLocale, useFioriTexts } from "@/lib/fiori-locale"
 import { formatNumber } from "@/lib/fiori-numbers"
 import { cn } from "@/lib/utils"
@@ -39,7 +40,7 @@ import { analyticalModelOptions, createAnalyticalFilterModel, createAnalyticalSo
 import { mergeHost, type HostProps } from "@/lib/analytical-table/owned-props"
 
 const features = tableFeatures({
-  columnFilteringFeature, globalFilteringFeature, rowSortingFeature,
+  columnFilteringFeature, globalFilteringFeature, rowSortingFeature, columnGroupingFeature, rowExpandingFeature,
   columnOrderingFeature, columnPinningFeature, columnSizingFeature, columnVisibilityFeature,
   columnMeta: {} as AnalyticalTableColumnMeta,
 })
@@ -47,8 +48,8 @@ type Features = typeof features
 type Table<T extends RowData> = ReturnType<typeof useTable<Features, T>>
 export type AnalyticalTableEngine<T extends RowData> = import("@tanstack/react-table").Table<Features, T>
 export type AnalyticalTableRowModel<T extends RowData> = Row<Features, T>
-export type { AnalyticalTableFilter, AnalyticalTableSortType }
-export type { SortingState, ColumnFiltersState } from "@tanstack/react-table"
+export type { AnalyticalTableAggregate, AnalyticalTableFilter, AnalyticalTableSortType }
+export type { SortingState, ColumnFiltersState, GroupingState, ExpandedState } from "@tanstack/react-table"
 type GridColumn<T extends RowData> = Column<Features, T>
 type GridHeader<T extends RowData> = Header<Features, T, unknown>
 type GridRow<T extends RowData> = Row<Features, T>
@@ -57,7 +58,8 @@ type Align = "Start" | "Center" | "End" | "Left" | "Right"
 type VerticalAlign = "Top" | "Middle" | "Bottom"
 export type AnalyticalTableSlot = "grid" | "header-row" | "header-cell" | "header-content" | "header-menu" |
   "body" | "row" | "cell" | "cell-content" | "resizer" | "vertical-resizer" | "empty-row" |
-  "no-data" | "loading" | "header-filter" | "header-indicator" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text"
+  "no-data" | "loading" | "header-filter" | "header-indicator" | "footer-row" | "footer-cell" | "sub-component" | "hidden-text" |
+  "group-toggle" | "announcement"
 
 export type AnalyticalTableColumnMeta = {
   className?: string
@@ -113,6 +115,15 @@ export type AnalyticalTableColumnDef<T extends RowData, V = unknown> = WithoutRe
   autoResizable?: boolean
   sticky?: "start"
   scaleWidthModeOptions?: { cellString?: string; headerString?: string }
+  disableGroupBy?: boolean
+  /** Experimental WCR-compatible group aggregation. */
+  aggregate?: AnalyticalTableAggregate
+  /** Transform an input to the outermost aggregate, following WCR useGroupBy. */
+  aggregateValue?: (value: V, row: GridRow<T>, column: GridColumn<T>) => unknown
+  /** Experimental content-only slots. The grid owns labels and the disclosure button. */
+  Grouped?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
+  RepeatedValue?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
+  Aggregated?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
   aggregatedCell?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
   placeholderCell?: (info: AnalyticalTableCellInfo<T, V>) => React.ReactNode
 }
@@ -152,6 +163,14 @@ const defaultTexts = {
   sortAscending: "Sort Ascending", // WCR SORT_ASCENDING
   sortDescending: "Sort Descending", // WCR SORT_DESCENDING
   clearSorting: "Clear Sorting", // WCR CLEAR_SORTING
+  group: "Group", // WCR GROUP
+  ungroup: "Ungroup", // WCR UNGROUP
+  grouped: "Grouped", // WCR GROUPED
+  expandNode: "Expand Node", // WCR EXPAND_NODE
+  collapseNode: "Collapse Node", // WCR COLLAPSE_NODE
+  rowExpanded: "Row expanded", // WCR ROW_EXPANDED
+  rowCollapsed: "Row collapsed", // WCR ROW_COLLAPSED
+  groupValue: (value: string, count: string) => `${value} (${count})`, // WCR defaults/Column/Cell.js
   filter: "Filter", // WCR FILTER
   filtered: "Filtered", // WCR FILTERED
   menuItemActive: "Is Active", // UI5 LIST_ITEM_ACTIVE, used by WCR ColumnHeaderModal
@@ -169,6 +188,9 @@ const textKeys = {
   sortAscending: "wcr:SORT_ASCENDING", sortDescending: "wcr:SORT_DESCENDING",
   clearSorting: "wcr:CLEAR_SORTING", filter: "wcr:FILTER", filtered: "wcr:FILTERED",
   menuItemActive: "LIST_ITEM_ACTIVE", clearFilter: "INPUT_CLEAR_ICON_ACC_NAME",
+  group: "wcr:GROUP", ungroup: "wcr:UNGROUP", grouped: "wcr:GROUPED",
+  expandNode: "wcr:EXPAND_NODE", collapseNode: "wcr:COLLAPSE_NODE",
+  rowExpanded: "wcr:ROW_EXPANDED", rowCollapsed: "wcr:ROW_COLLAPSED",
   emptyCell: "ARIA_LABEL_EMPTY_CELL", moveToContent: "wcr:MOVE_TO_CONTENT_F2", includesContent: "wcr:INCLUDES_X",
 }
 
@@ -195,6 +217,17 @@ export type AnalyticalTableProps<T extends RowData> = Omit<HostProps, "children"
   columnPinning?: ColumnPinningState
   defaultColumnPinning?: ColumnPinningState
   onColumnPinningChange?: (pinning: ColumnPinningState) => void
+  /** Experimental grouping state. Column IDs are ordered from outer to inner. */
+  groupBy?: GroupingState
+  defaultGroupBy?: GroupingState
+  onGroupByChange?: (groupBy: GroupingState) => void
+  groupable?: boolean
+  disableGroupBy?: boolean
+  onGroup?: (detail: { column: GridColumn<T>; groupedColumns: GroupingState; isGrouped: boolean }) => void
+  expanded?: ExpandedState
+  defaultExpanded?: ExpandedState
+  onExpandedChange?: (expanded: ExpandedState) => void
+  onRowExpandChange?: (detail: { row: GridRow<T>; column: GridColumn<T> | undefined }) => void
   sorting?: SortingState
   defaultSorting?: SortingState
   onSortingChange?: (sorting: SortingState) => void
@@ -256,9 +289,12 @@ export type AnalyticalTableContext<T extends RowData> = {
   model: { readonly rows: readonly GridRow<T>[]; readonly columns: readonly GridColumn<T>[]; readonly locale: string }
   state: Readonly<{ visibleRows: number; columnSizing: Readonly<ColumnSizingState>; columnOrder: readonly string[];
     sorting: ReadonlyArray<Readonly<SortingState[number]>>; columnFilters: ReadonlyArray<Readonly<ColumnFiltersState[number]>>;
+    groupBy: readonly string[]; expanded: true | Readonly<Record<string, boolean>>;
     globalFilter: string; columnVisibility: Readonly<ColumnVisibilityState>; columnPinning: { readonly start: readonly string[]; readonly end: readonly string[] } }>
   actions: Pick<AnalyticalTableInstance<T>, "focusCell" | "scrollToRow" | "scrollToColumn" | "resetColumnSizing" | "toggleStickyColumn"> & {
     setSorting: (sorting: SortingState) => void
+    setGroupBy: (groupBy: GroupingState) => void
+    setExpanded: (expanded: ExpandedState) => void
     setColumnFilters: (filters: ColumnFiltersState) => void
     setGlobalFilter: (value: string) => void
   }
@@ -352,6 +388,8 @@ export function AnalyticalTable<T extends RowData>({
   globalFilter, defaultGlobalFilter, onGlobalFilterChange, globalFilterValue,
   sortable = false, filterable = false, disableGlobalFilter = false, enableMultiSort = false,
   sortPriority, onSort, onFilter,
+  groupBy, defaultGroupBy, onGroupByChange, groupable = false, disableGroupBy = false, onGroup,
+  expanded, defaultExpanded, onExpandedChange, onRowExpandChange,
   retainColumnWidth = false, scaleWidthMode = "Default", rowHeight, headerRowHeight,
   alternateRowColor = false, minRows = 5, visibleRows, defaultVisibleRows = 15, onVisibleRowsChange,
   visibleRowCountMode = "Fixed", loading = false, loadingDelay, alwaysShowBusyIndicator = false,
@@ -379,6 +417,8 @@ export function AnalyticalTable<T extends RowData>({
   const [visibility, setVisibility] = useColumnState(columnVisibility, () => defaultColumnVisibility ??
     tableOptions?.initialState?.columnVisibility ?? Object.fromEntries((initialState?.hiddenColumns ?? []).map(key => [key, false])), onColumnVisibilityChange)
   const [sizing, setSizing] = useColumnState(columnSizing, () => defaultColumnSizing ?? tableOptions?.initialState?.columnSizing ?? {}, onColumnSizingChange)
+  const [groupState, setGrouping] = useColumnState(groupBy, () => defaultGroupBy ?? tableOptions?.initialState?.grouping ?? [], onGroupByChange)
+  const [expandedState, setExpanded] = useColumnState(expanded, () => defaultExpanded ?? tableOptions?.initialState?.expanded ?? {}, onExpandedChange)
   const [sortState, setSorting] = useColumnState(sorting, () => defaultSorting ?? tableOptions?.initialState?.sorting ?? [], onSortingChange)
   const [filterState, setFilters] = useColumnState(columnFilters, () => defaultColumnFilters ?? tableOptions?.initialState?.columnFilters ?? [], onColumnFiltersChange)
   const [globalQuery, setGlobalFilter] = useColumnState(globalFilter ?? globalFilterValue,
@@ -419,13 +459,15 @@ export function AnalyticalTable<T extends RowData>({
     ...column, minSize: column.minWidth ?? column.minSize ?? minimumColumnWidth,
     maxSize: column.maxWidth ?? column.maxSize ?? (scaleWidthMode === "Grow" ? 700 : Infinity),
     enableSorting: !column.disableSortBy && (column.sortable ?? column.enableSorting ?? sortable),
+    enableGrouping: !column.disableGroupBy && column.enableGrouping !== false,
     enableColumnFilter: !column.disableFilters && (column.filterable ?? column.enableColumnFilter ?? filterable),
     enableGlobalFilter: !column.disableGlobalFilter && column.enableGlobalFilter !== false,
     sortDescFirst: column.sortDescFirst ?? false,
     invertSorting: column.sortInverted ?? column.invertSorting,
   })) as ColumnDef<Features, T, any>[], [columns, scaleWidthMode, sortable, filterable])
   const engineFeatures = {
-    filteredRowModel: createAnalyticalFilterModel, sortedRowModel: createAnalyticalSortModel,
+    filteredRowModel: createAnalyticalFilterModel, groupedRowModel: createAnalyticalGroupModel,
+    sortedRowModel: createAnalyticalSortModel, expandedRowModel: createExpandedRowModel(),
     ...tableOptions?.features, ...tableOptions?._features, ...features,
   }
   const table = useTable<Features, T>({
@@ -435,12 +477,16 @@ export function AnalyticalTable<T extends RowData>({
     data,
     meta: { ...tableOptions?.meta, [analyticalModelOptions]: { locale, disableGlobalFilter } },
     state: { ...tableOptions?.state, columnSizing: { ...baseWidths, ...sizing }, columnOrder: order, columnVisibility: visibility, columnPinning: pinning,
+      grouping: groupState, expanded: expandedState,
       sorting: sortState, columnFilters: filterState, globalFilter: disableGlobalFilter ? "" : globalQuery },
     enableMultiSort, enableGlobalFilter: !disableGlobalFilter,
+    enableGrouping: groupable && !disableGroupBy && !renderRowSubComponent,
+    onGroupingChange: setGrouping, onExpandedChange: setExpanded,
     onColumnOrderChange: setOrder, onColumnVisibilityChange: setVisibility, onColumnPinningChange: setPinning,
     onColumnSizingChange: setSizing, onSortingChange: setSorting, onColumnFiltersChange: setFilters, onGlobalFilterChange: setGlobalFilter,
   })
   const rows = table.getRowModel().rows
+  const grouped = groupState.some(id => table.getColumn(id) !== undefined)
   const visible = table.getVisibleLeafColumns()
   const headersById = new Map(table.getHeaderGroups().at(-1)?.headers.map(header => [header.column.id, header]) ?? [])
   const pinned = visible.filter(column => pinning.start.includes(column.id))
@@ -472,13 +518,15 @@ export function AnalyticalTable<T extends RowData>({
     overscan: Math.floor(fitRows / 2), paddingStart: densityHeader, scrollPaddingStart: densityHeader,
     rangeExtractor: range => keepIndexes(defaultRangeExtractor(range), nav.active?.row ? [nav.active.row - 1] : []),
   })
+  const pendingHeaderFocus = React.useRef<string>(undefined)
   const colVirtual = useVirtualizer<HTMLDivElement, HTMLDivElement>({
     count: ordered.length, getScrollElement: () => grid.current, horizontal: true, isRtl: rtl,
     estimateSize: index => ordered[index]?.getSize() ?? minimumColumnWidth,
     getItemKey: index => ordered[index]?.id ?? index, overscan: 10,
     scrollPaddingStart: freezeActive ? frozenSize : 0,
     rangeExtractor: range => keepIndexes(defaultRangeExtractor(range),
-      [...Array.from({ length: pinnedCount }, (_, index) => index), ...(nav.active ? [nav.active.column] : [])]),
+      [...Array.from({ length: pinnedCount }, (_, index) => index), ...(nav.active ? [nav.active.column] : []),
+        ...ordered.flatMap((column, index) => column.id === pendingHeaderFocus.current ? [index] : [])]),
   })
   virtualRows.current = rowVirtual
   virtualColumns.current = colVirtual
@@ -501,6 +549,10 @@ export function AnalyticalTable<T extends RowData>({
   }))
 
   const [openColumn, setOpenColumn] = React.useState<string>()
+  const [announcement, setAnnouncement] = React.useState({ text: "", revision: 0 })
+  const [announcementActive, setAnnouncementActive] = React.useState(false)
+  const announcementTimer = React.useRef<ReturnType<typeof setTimeout>>(undefined)
+  React.useEffect(() => () => clearTimeout(announcementTimer.current), [])
   const [dropTarget, setDropTarget] = React.useState<string>()
   const [guide, setGuide] = React.useState<{ id: string; delta: number }>()
   const menuItems = new Map(ordered.map(column => [column.id, headerMenuItems?.(column, table) ?? []]))
@@ -520,6 +572,14 @@ export function AnalyticalTable<T extends RowData>({
   const headerId = (column: GridColumn<T>) => `${id}-head-${encodeURIComponent(column.id)}`
   const valueId = (cell: GridCell<T>) => `${id}-value-${encodeURIComponent(cell.id)}`
   const emptyId = `${id}-empty`
+  React.useLayoutEffect(() => {
+    const restore = pendingHeaderFocus.current
+    if (restore && !openColumn) {
+      pendingHeaderFocus.current = undefined
+      const column = columnIndexes.get(restore)
+      if (column !== undefined) nav.focusCell(0, column)
+    }
+  })
   const customColumns = new Map(columns.map(column => [columnId(column), column]))
   const isFrozen = (index: number) => index < pinnedCount
   const canFreeze = (column: GridColumn<T>) => frozenMenu && column.getCanPin()
@@ -589,7 +649,42 @@ export function AnalyticalTable<T extends RowData>({
     onColumnsReorder?.({ column: source, columnsNewOrder: next.map(key => table.getColumn(key)!) })
   }
 
-  function canSortOrFilter(column: GridColumn<T>) { return column.getCanSort() || column.getCanFilter() }
+  function toggleGroup(column: GridColumn<T>) {
+    const isGrouped = !column.getIsGrouped()
+    const groupedColumns = isGrouped ? [...groupState, column.id] : groupState.filter(id => id !== column.id)
+    setGrouping(groupedColumns)
+    onGroup?.({ column, groupedColumns, isGrouped })
+    pendingHeaderFocus.current = column.id
+    setOpenColumn(undefined)
+  }
+
+  function toggleGroupRow(row: GridRow<T>) {
+    const next = !row.getIsExpanded()
+    row.toggleExpanded(next)
+    onRowExpandChange?.({ row, column: row.groupingColumnId ? table.getColumn(row.groupingColumnId) : undefined })
+    // WCR useToggleRowExpand debounces the polite InvisibleMessage announcement.
+    const text = next ? texts.rowExpanded : texts.rowCollapsed
+    setAnnouncementActive(true)
+    clearTimeout(announcementTimer.current)
+    announcementTimer.current = setTimeout(() => {
+      setAnnouncement(current => ({ text, revision: current.revision + 1 }))
+      announcementTimer.current = setTimeout(() => setAnnouncement(current => ({ ...current, text: "" })), 3000)
+    }, 200)
+  }
+
+  function hasColumnActions(column: GridColumn<T>) { return column.getCanSort() || column.getCanFilter() || column.getCanGroup() }
+  function groupLabel(row: GridRow<T>) {
+    if (!row.groupingColumnId) return undefined
+    return texts.groupValue(print(row.getValue(row.groupingColumnId)), formatNumber(row.subRows.length, locale))
+  }
+  function printAggregate(value: unknown, aggregate: AnalyticalTableAggregate | undefined) {
+    const format = (item: unknown) => typeof item === "number" ? formatNumber(item, locale, { maxFractionDigits: 20 }) : String(item ?? "")
+    if (aggregate === "minMax" && typeof value === "string") {
+      const parts = value.split("..")
+      if (parts.length === 2) return parts.map(part => part && !Number.isNaN(Number(part)) ? format(Number(part)) : part).join("..")
+    }
+    return Array.isArray(value) ? value.map(format).join(",") : format(value)
+  }
   function sortDirection(column: GridColumn<T>) {
     const state = sortState.find(item => item.id === column.id)
     return state ? state.desc ? "desc" : "asc" : undefined
@@ -633,10 +728,11 @@ export function AnalyticalTable<T extends RowData>({
     const column = header.column
     const index = columnIndexes.get(column.id) ?? 0
     const def = definition(column)
-    const hasMenu = canSortOrFilter(column) || canFreeze(column) || Boolean(menuItems.get(column.id)?.length)
+    const hasMenu = hasColumnActions(column) || canFreeze(column) || Boolean(menuItems.get(column.id)?.length)
     const name = def.headerLabel ?? (typeof def.header === "string" ? def.header : undefined)
     const sorted = sortDirection(column)
     const filtered = isFiltered(column)
+    const grouped = column.getIsGrouped()
     const draggable = !def.disableDragAndDrop && !isFrozen(index) && !guide
     return mergeHost("header-cell", {
       ...part("header-cell", cn("fiori-at-header-cell", def.meta?.headerClassName)),
@@ -644,9 +740,9 @@ export function AnalyticalTable<T extends RowData>({
       // WCR useStickyColumns.getHeaderProps supplies FIXED_COLUMN as the frozen header name.
       // WCR useA11y.setHeaderProps exposes sorting via aria-sort and appends
       // FILTERED to the name. The naming channel supplies its sort/filter announcements.
-      "aria-label": isFrozen(index) ? texts.fixedColumn : (name ? `${name} ` : "") + (filtered ? texts.filtered : "") || undefined,
+      "aria-label": isFrozen(index) ? texts.fixedColumn : [name, filtered && texts.filtered, grouped && texts.grouped].filter(Boolean).join(" ") || undefined,
       "aria-sort": sorted === "asc" ? "ascending" : sorted === "desc" ? "descending" : undefined,
-      "data-sorted": sorted, "data-filtered": filtered || undefined,
+      "data-sorted": sorted, "data-filtered": filtered || undefined, "data-grouped": grouped || undefined,
       "aria-haspopup": hasMenu ? "menu" : undefined, "aria-expanded": hasMenu ? openColumn === column.id : undefined,
       "aria-controls": hasMenu ? `${headerId(column)}-menu` : undefined,
       tabIndex: !loading && nav.isActive(0, index) ? 0 : -1,
@@ -684,18 +780,23 @@ export function AnalyticalTable<T extends RowData>({
 
   function cellInfo(cell: GridCell<T>): AnalyticalTableCellInfo<T> {
     const value = cell.getValue()
-    return { ...info(print(value)), cell, value, row: cell.row, column: cell.column }
+    const defaultContent = cell.getIsGrouped() ? groupLabel(cell.row) :
+      cell.getIsPlaceholder() ? null : cell.row.getIsGrouped() ? printAggregate(value, definition(cell.column).aggregate) : print(value)
+    return { ...info(defaultContent), cell, value, row: cell.row, column: cell.column }
   }
   const context: AnalyticalTableContext<T> = {
     model: { rows, columns: ordered, locale },
     state: { visibleRows: requestedRows, columnSizing: sizing, columnOrder: order, columnVisibility: visibility, columnPinning: pinning,
-      sorting: sortState, columnFilters: filterState, globalFilter: globalQuery },
-    actions: { focusCell: nav.focusCell, scrollToRow, scrollToColumn, resetColumnSizing, toggleStickyColumn, setSorting, setColumnFilters: setFilters, setGlobalFilter },
+      sorting: sortState, columnFilters: filterState, globalFilter: globalQuery, groupBy: groupState, expanded: expandedState },
+    actions: { focusCell: nav.focusCell, scrollToRow, scrollToColumn, resetColumnSizing, toggleStickyColumn, setSorting, setColumnFilters: setFilters, setGlobalFilter, setGroupBy: setGrouping, setExpanded },
     getHeaderProps: ownedHeader,
     getRowProps: (row, extra) => {
       const index = rowIndexes.get(row.id) ?? 0
       return mergeHost("row", {
         ...part("row", "fiori-at-row"), role: "row", "aria-rowindex": index + 2, id: `${id}-row-${encodeURIComponent(row.id)}`,
+        "data-grouped": row.getIsGrouped() || undefined,
+        "aria-expanded": row.getIsGrouped() ? row.getIsExpanded() : undefined,
+        "aria-level": row.getIsGrouped() ? row.depth + 1 : undefined,
         "data-alternate": alternateRowColor && index % 2 === 0 || undefined,
         style: { top: (rowPositions.get(row.id)?.start ?? densityHeader) - densityHeader, height: densityRow },
       } as HostProps, getRowProps?.(row), extra)
@@ -706,14 +807,21 @@ export function AnalyticalTable<T extends RowData>({
       const def = definition(cell.column)
       const value = cell.getValue()
       const empty = announceEmptyCells && typeof value !== "number" && !value
+      const group = cell.row.getIsGrouped()
+      const expanded = group ? cell.row.getIsExpanded() : undefined
       // useA11y.setCellProps + useCanUseVoiceOver: value first, then the header on Apple platforms.
       const interactiveName = typeof def.interactiveElementName === "function" ? def.interactiveElementName(cell) : def.interactiveElementName
       const cellName = def.cellLabel?.(cellInfo(cell))
-      const name = interactiveName ? `${texts.includesContent(interactiveName)} ${cellName ?? print(value)}` : cellName
+      const defaultContent = interactiveName ? cellInfo(cell).defaultContent : undefined
+      const name = interactiveName ? `${texts.includesContent(interactiveName)} ${cellName ?? defaultContent ?? ""}` : cellName
       return mergeHost("cell", {
         ...part("cell", cn("fiori-at-cell", def.meta?.className)),
         role: "gridcell", id: `${valueId(cell)}-cell`, "aria-colindex": column + 1,
         "aria-label": name,
+        // WCR useA11y.setCellProps attaches the expansion hint to every cell
+        // of a group row since the keyboard cursor normally rests on a cell.
+        "aria-expanded": expanded,
+        "aria-describedby": group ? `${id}-hint-${expanded ? 5 : 4}` : undefined,
         "aria-labelledby": name === undefined ? [valueId(cell), voiceOver && headerId(cell.column), empty && emptyId].filter(Boolean).join(" ") : undefined,
         "data-grid-row": row, "data-grid-column": column, "data-column-id": cell.column.id,
         "data-frozen": isFrozen(column) || undefined,
@@ -721,7 +829,16 @@ export function AnalyticalTable<T extends RowData>({
         style: { ...cellStyle(column), justifyContent: def.hAlign?.toLowerCase(),
           alignItems: def.vAlign === "Top" ? "start" : def.vAlign === "Bottom" ? "end" : "center" },
         onFocus: event => nav.onHostFocus(event, row, column), onBlur: nav.onHostBlur,
-        onKeyDown: event => nav.onKeyDown(event, row, column),
+        onKeyDown: event => {
+          // useToggleRowExpand matches Enter, F4 and unshifted Space.
+          if (group && event.target === event.currentTarget &&
+            (event.key === "Enter" || event.code === "F4" || event.code === "Space" && !event.shiftKey)) {
+            event.preventDefault()
+            toggleGroupRow(cell.row)
+            return
+          }
+          nav.onKeyDown(event, row, column)
+        },
       } as HostProps, getCellProps?.(cell), extra)
     },
   }
@@ -745,12 +862,24 @@ export function AnalyticalTable<T extends RowData>({
         const cell = cells.get(ordered[col.index].id)
         if (!cell) return null
         const content = cellInfo(cell)
-        const custom = customColumns.get(cell.column.id)?.cell ?? tableOptions?.defaultColumn?.cell
+        const def = customColumns.get(cell.column.id)
+        const fallback = def?.cell ?? tableOptions?.defaultColumn?.cell
+        const group = cell.getIsGrouped()
+        const repeat = cell.getIsPlaceholder()
+        const custom = group ? def?.Grouped ?? fallback :
+          repeat ? def?.RepeatedValue : cell.row.getIsGrouped() ? def?.Aggregated ?? def?.aggregatedCell ?? fallback : fallback
+        const expand = cell.row.getIsExpanded()
+        const toggleLabel = expand ? texts.collapseNode : texts.expandNode
         return <AnalyticalTableCell key={cell.id} cell={cell}>
-          <span {...part("cell-content", custom ? undefined : "fiori-at-ellipsis")} id={valueId(cell)}
-            title={custom ? undefined : String(content.defaultContent)} aria-hidden={custom ? undefined : true}>
+          {group && <button {...part("group-toggle", "fiori-at-group-toggle")} type="button" title={toggleLabel}
+            aria-label={toggleLabel} tabIndex={-1} onMouseDown={event => event.preventDefault()} onClick={() => toggleGroupRow(cell.row)}>
+            <Icon icon={expand ? navigationDownArrow : navigationRightArrow} />
+          </button>}
+          {group && custom && <span {...part("hidden-text", "fiori-at-sr")} id={valueId(cell)} aria-hidden="true">{content.defaultContent}</span>}
+          {(!repeat || custom) && <span {...part("cell-content", custom ? undefined : "fiori-at-ellipsis")} id={group && custom ? undefined : valueId(cell)}
+            title={custom ? undefined : String(content.defaultContent ?? "")} aria-hidden={custom ? undefined : true}>
             {custom ? flexRender(custom, { ...cell.getContext(), ...content }) : content.defaultContent}
-          </span>
+          </span>}
         </AnalyticalTableCell>
       })}
       {renderRowSubComponent && <div {...part("sub-component")} role="gridcell">
@@ -761,9 +890,10 @@ export function AnalyticalTable<T extends RowData>({
   return <Context.Provider value={context}>
     <div {...rootProps} data-slot="analytical-table" dir={direction} className={cn("fiori-at", className)} style={{ "--at-grid-height": `${densityHeader + bodyHeight + (footer ? densityHeader : 0)}px`, ...rootProps.style } as React.CSSProperties}
       ref={node => { root.current = node; if (typeof ref === "function") return ref(node); if (ref) ref.current = node }}>
-      <div {...part("grid", "fiori-at-grid")} ref={grid} role="grid" aria-label={label} aria-labelledby={labelledBy}
+      <div {...part("grid", "fiori-at-grid")} ref={grid} role={grouped ? "treegrid" : "grid"} aria-label={label} aria-labelledby={labelledBy}
         aria-describedby={describedBy} aria-description={[description, columns.some(column => column.interactiveElementName) && texts.moveToContent].filter(Boolean).join(" ") || undefined} aria-details={details} aria-rowcount={rowCount}
         aria-colcount={ordered.length} aria-multiselectable={false} data-fills-width={totalWidth >= viewport.width || undefined}
+        data-grouped={grouped || undefined}
         tabIndex={!loading && !nav.active && rowCount ? 0 : -1} onFocus={nav.onGridFocus}
         style={{ height: densityHeader + bodyHeight + (footer ? densityHeader : 0),
           scrollPaddingInlineStart: freezeActive ? frozenSize : undefined,
@@ -784,7 +914,7 @@ export function AnalyticalTable<T extends RowData>({
             const filtered = isFiltered(column)
             const sortableHeader = column.getCanSort()
             const filterableHeader = column.getCanFilter()
-            const sortOrFilter = sortableHeader || filterableHeader
+            const hasActions = hasColumnActions(column)
             const open = openColumn === column.id
             const freeze = () => {
               toggleStickyColumn(column.id)
@@ -811,12 +941,14 @@ export function AnalyticalTable<T extends RowData>({
                   onMouseDown={event => event.preventDefault()}
                   onClick={() => { updateFilter(column, undefined); fieldRef.current?.focus() }}><Icon icon={decline} /></button></InputIcon> : undefined} />
             </div>
-            const sortPopup = sortOrFilter && open ? <AnalyticalHeaderMenu
+            const sortPopup = hasActions && open ? <AnalyticalHeaderMenu
               id={`${headerId(column)}-menu`} anchorId={headerId(column)} rtl={rtl} close={close}
               align={def.hAlign === "Center" ? "center" : def.hAlign === "End" || def.hAlign === (rtl ? "Left" : "Right") ? "end" : "start"}
               className={cn("fiori-at-sort-popup", classNames?.["header-menu"])} activeText={texts.menuItemActive}
               beforeFilter={sortItems.map(item => ({ ...item, run: () => { sortColumn(column, item.id); close() } }))}
               afterFilter={[
+                ...(column.getCanGroup() ? [{ id: "group", icon: group2,
+                  text: column.getIsGrouped() ? texts.ungroup : texts.group, run: () => toggleGroup(column) }] : []),
                 ...extra.map(item => ({ ...item, run: () => { item.onSelect(); close() } })),
                 ...(canFreeze(column) ? [{ id: "freeze", icon: configuredPin ? pushpinOff : pushpinOn,
                   text: configuredPin ? texts.unfreezeColumn : texts.freezeColumn, run: () => { freeze(); close() } }] : []),
@@ -841,13 +973,14 @@ export function AnalyticalTable<T extends RowData>({
                 <div className="fiori-at-header-icons">
                   {filtered && <Icon {...part("header-indicator")} icon={filterIcon} />}
                   {sorted && <Icon {...part("header-indicator")} icon={sorted === "asc" ? sortAscending : sortDescending} />}
+                  {column.getIsGrouped() && <Icon {...part("header-indicator")} icon={group2} />}
                 </div>
               </div>
               {sortPopup}
             </div>
             return <div className="fiori-at-header-position" key={column.id} style={cellStyle(item.index)}
               data-frozen={frozen || undefined} data-frozen-edge={frozen && item.index === pinnedCount - 1 || undefined}>
-              {!sortOrFilter && (canFreeze(column) || extra.length > 0) ? <Menu dir={rtl ? "rtl" : "ltr"} modal={false}
+              {!hasActions && (canFreeze(column) || extra.length > 0) ? <Menu dir={rtl ? "rtl" : "ltr"} modal={false}
                 open={openColumn === column.id} onOpenChange={open => setOpenColumn(open ? column.id : undefined)}>
                 {host}
                 <MenuTrigger aria-hidden="true" tabIndex={-1} className="fiori-at-menu-anchor" />
@@ -907,6 +1040,9 @@ export function AnalyticalTable<T extends RowData>({
           node.onpointercancel = node.onlostpointercapture = () => finish()
         }} />}
     </div>
+      {announcementActive && <span {...part("announcement", "fiori-at-sr")} role="alert" aria-live="polite" aria-atomic="true">
+        <span key={announcement.revision}>{announcement.text}</span>
+      </span>}
       {/* WCR index.js mounts the descriptions alongside the grid. Keep them available for name references. */}
       {[texts.selectRow, texts.unselectRow, texts.selectAll, texts.unselectAll, texts.expandRow, texts.collapseRow, texts.emptyCell].map((text, index) =>
         <span {...part("hidden-text", "fiori-at-sr")} key={index} id={index === 6 ? emptyId : `${id}-hint-${index}`}>{text}</span>)}

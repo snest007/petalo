@@ -6,7 +6,13 @@ export const inventory = [
   { product: "Summit Pack", category: "Packs", stock: "12" },
   { product: "Ridge Mat", category: "Sleeping", stock: "27" },
 ]
-export type Inventory = typeof inventory[number]
+export type Inventory = { product: string; category: string; stock: string | number; reserve?: number }
+export const groupInventory: Inventory[] = [
+  { product: "Alpine Tent", category: "Shelter", stock: 1299.5, reserve: 24.25 },
+  { product: "Ridge Mat", category: "Shelter", stock: 260.75, reserve: 19.25 },
+  { product: "Trail Stove", category: "Cooking", stock: 54.75, reserve: 30.5 },
+  { product: "Trail Kettle", category: "Cooking", stock: 13.25, reserve: 8 },
+]
 export const inventoryColumns = [
   { key: "product", label: "Product" },
   { key: "category", label: "Category" },
@@ -34,6 +40,10 @@ type Case = {
   sorting?: { id: string; desc: boolean }[]
   columnFilters?: { id: string; value: string }[]
   openHeaderMenu?: boolean
+  groupable?: boolean
+  groupBy?: string[]
+  expanded?: Record<string, boolean>
+  aggregates?: boolean
 }
 
 const cases: [string, Case][] = [
@@ -63,6 +73,13 @@ const cases: [string, Case][] = [
   ["sort-filter-rtl", { rtl: true, sortable: true, filterable: true, sorting: [{ id: "product", desc: true }],
     columnFilters: [{ id: "product", value: "a" }] }],
   ["sort-filter-open", { sortable: true, filterable: true, openHeaderMenu: true }],
+  ["group-collapsed", { groupable: true, groupBy: ["category"], data: groupInventory }],
+  ["group-expanded", { groupable: true, groupBy: ["category"], expanded: { "category:Shelter": true }, data: groupInventory }],
+  ["group-nested", { groupable: true, groupBy: ["category", "product"], expanded: { "category:Shelter": true, "category:Shelter>product:Tent": true },
+    // WCR's Grouped Cell reference uses a raw row ID as an IDREF.
+    data: groupInventory.map(row => ({ ...row, product: row.product.split(" ").at(-1)! })) }],
+  ["group-de-aggregates", { groupable: true, groupBy: ["category"], aggregates: true, german: true, data: groupInventory }],
+  ["group-menu-open", { groupable: true, openHeaderMenu: true }],
   ["empty-cell", { emptyCell: true, data: [{ ...inventory[0], category: "" }, ...inventory.slice(1)] }],
 ]
 export const fixtureInputs = {
@@ -70,6 +87,7 @@ export const fixtureInputs = {
   cases: cases.map(([name, props]) => ({ id: `analytical-table-${name}`, props })),
 }
 
-export const headersFor = (longHeader?: boolean) => inventoryColumns.map(({ key, label }, index) => ({
+export const headersFor = (longHeader?: boolean, aggregates?: boolean) =>
+  (aggregates ? [...inventoryColumns, { key: "reserve" as const, label: "Reserve" }] : inventoryColumns).map(({ key, label }, index) => ({
   key, label: index === 0 && longHeader ? "Product identification and description" : label,
 }))

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { build } from "vite"
 import { aliases } from "../vite.aliases"
+import { captureAX } from "./a11y-tree-normalize"
 
 const cell = (grid: Locator, row: number, column: number) => grid.locator(`[data-grid-row="${row}"][data-grid-column="${column}"]`)
 const resizer = (grid: Locator, id: string) => grid.locator(`[data-slot="analytical-table-resizer"][data-column="${id}"]`)
@@ -353,3 +354,126 @@ test("fixtures: built-in filters accept string cells from controlled state and c
   }
   expect(errors).toEqual([])
 })
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`group headers and rows retain focus, disclosure semantics and announcements in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-group-demo-${dir}`)
+    const grid = demo.locator('[data-slot="analytical-table-grid"]')
+    const header = grid.getByRole("columnheader", { name: "Category Grouped" })
+    await expect(header).toHaveAttribute("aria-colindex", "1")
+    await header.focus()
+    await header.press("Enter")
+    const ungroup = grid.getByRole("menuitem", { name: /^Ungroup/ })
+    await expect(ungroup).toBeFocused()
+    await ungroup.press("Enter")
+    const normal = grid.getByRole("columnheader", { name: "Category", exact: true })
+    await expect(normal).toBeFocused()
+    await expect(normal).toHaveAttribute("aria-colindex", "2")
+    await normal.press("Space")
+    const group = grid.getByRole("menuitem", { name: /^Group/ })
+    await expect(group).toBeFocused()
+    await group.press("Enter")
+    await expect(header).toBeFocused()
+    await expect(demo.getByRole("status", { name: "Grouped columns" })).toHaveText("category")
+    await expect(grid.getByRole("columnheader", { name: "Stock" })).not.toHaveAttribute("aria-haspopup")
+
+    const row = grid.getByRole("row", { name: /^Shelter \(2\)/ })
+    await expect(row).toHaveAttribute("aria-level", "1")
+    await expect(row).toHaveAttribute("aria-expanded", "false")
+    const cell = row.getByRole("gridcell", { name: /^Shelter \(2\)/ })
+    const expand = cell.getByRole("button", { name: "Expand Node" })
+    await expect(expand).toHaveAttribute("tabindex", "-1")
+    await expect(row).not.toHaveAttribute("id", "fake-group-row")
+    await expect(cell).not.toHaveAttribute("id", "fake-group-cell")
+    await header.press("ArrowDown")
+    await expect(cell).toBeFocused()
+    await cell.press("F4")
+    await expect(cell).toBeFocused()
+    await expect(row).toHaveAttribute("aria-expanded", "true")
+    await expect(cell).toHaveAttribute("aria-expanded", "true")
+    await expect(cell).toHaveAccessibleDescription("To collapse the row, press the spacebar.")
+    await expect(cell.getByRole("button", { name: "Collapse Node" })).toBeVisible()
+    await expect(demo.getByRole("alert")).toHaveText("Row expanded")
+    await expect(grid.locator("[data-repeated-category]").first()).toHaveText("Shelter")
+
+    await cell.press(dir === "rtl" ? "ArrowLeft" : "ArrowRight")
+    const adjacent = row.locator('[data-column-id="product"]')
+    await expect(adjacent).toBeFocused()
+    await adjacent.press("Shift+Space")
+    await expect(row).toHaveAttribute("aria-expanded", "true")
+    await adjacent.press("Space")
+    await expect(row).toHaveAttribute("aria-expanded", "false")
+    await expect(adjacent).toBeFocused()
+    await expect(demo.getByRole("alert")).toHaveText("Row collapsed")
+  })
+}
+
+test("groups recompute custom localized aggregates on filtering and data changes", async ({ page }) => {
+  const demo = page.locator("#analytical-table-group-demo-ltr")
+  const grid = demo.getByRole("treegrid")
+  const stock = grid.getByRole("row", { name: /^Shelter/ }).locator("[data-aggregate]")
+  await expect(stock).toHaveText("3.120,5")
+  await demo.getByRole("button", { name: "Receive ten items" }).click()
+  await expect(stock).toHaveText("3.140,5")
+  const search = demo.getByRole("textbox", { name: "Search grouped inventory" })
+  await search.fill("Ridge")
+  await expect(grid.getByRole("row", { name: /^Shelter \(1\)/ })).toBeVisible()
+  await expect(stock).toHaveText("521,5")
+  await expect(grid.getByRole("row", { name: /^Cooking/ })).toHaveCount(0)
+  await search.clear()
+  await expect(stock).toHaveText("3.140,5")
+})
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`paired group rows expose their hierarchy while preserving WCR cell states in ${dir}`, async ({ page, context }) => {
+    const reference = await context.newPage()
+    try {
+      const cases = {
+        "group-collapsed": [[1, false], [1, false]],
+        "group-expanded": [[1, true], null, null, [1, false]],
+        "group-nested": [[1, true], [2, true], null, [2, false], [1, false]],
+        "group-de-aggregates": [[1, false], [1, false]],
+      } as const
+      for (const [name, rows] of Object.entries(cases)) {
+        const id = `analytical-table-${name}`
+        const query = `theme=sap_horizon&dir=${dir}&only=${id}`
+        await Promise.all([page.goto(`/index.html?fixtures&ref=wcr&${query}`), reference.goto(`/wcr.html?${query}`)])
+        await Promise.all([page, reference].map(canvas => expect(canvas.locator("html")).toHaveAttribute("data-ready", "true")))
+        const fixture = `[data-fixture="${id}"]`
+        for (const [canvas, role, required] of [[page, "treegrid", false], [reference, "grid", undefined]] as const) {
+          const { ax } = await captureAX(canvas, fixture)
+          const [host] = ax as { children: { role: string; properties: { required?: boolean } }[] }[]
+          expect(host.children[0].role).toBe(role)
+          expect(host.children[0].properties.required).toBe(required)
+        }
+        const ours = page.locator(fixture).getByRole("treegrid").getByRole("row")
+        const wcr = reference.locator(fixture).getByRole("grid").getByRole("row")
+        await expect(ours).toHaveCount(rows.length + 1)
+        await expect(wcr).toHaveCount(rows.length + 1)
+        for (const [index, expected] of rows.entries()) {
+          const row = ours.nth(index + 1)
+          const nativeRow = wcr.nth(index + 1)
+          await expect(nativeRow).not.toHaveAttribute("aria-level")
+          await expect(nativeRow).not.toHaveAttribute("aria-expanded")
+          if (expected === null) {
+            await expect(row).not.toHaveAttribute("aria-level")
+            await expect(row).not.toHaveAttribute("aria-expanded")
+            continue
+          }
+          const [level, expanded] = expected
+          await expect(row).toHaveAttribute("aria-level", String(level))
+          await expect(row).toHaveAttribute("aria-expanded", String(expanded))
+          for (const [node, canvas] of [[row, page], [nativeRow, reference]] as const) {
+            const pivot = node.getByRole("gridcell").filter({ has: canvas.getByRole("button", {
+              name: expanded ? "Collapse Node" : "Expand Node",
+            }) })
+            await expect(pivot).toHaveAttribute("aria-expanded", String(expanded))
+            await expect(pivot).toHaveAccessibleName(/\(\d+\)/)
+          }
+        }
+      }
+    } finally {
+      await reference.close()
+    }
+  })
+}
