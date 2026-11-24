@@ -12,8 +12,8 @@ contract generalises H1's instance/state/content/props contract. Calendar eviden
    (section 4), in a story or spike, and its invariant tests. Candidate `components` keys that no example needs stay
    unbuilt; the card's final message lists them as "not needed yet". "Apply the inventory tiers" in a rollout card
    means exactly this.
-2. **Calendar first, without waiting for P2.** Calendar and the three date pickers move out of P2 into **P2a**.
-   P2a runs right after E4 and E5, then H6 → H6b → H6c. P2 keeps its other components.
+2. **Calendar ownership.** P2a owns Calendar and the three date pickers and must merge before H6.
+   See the [Backlog](plan/README.md) for current scheduling and the remaining dependencies.
 3. **"Release" for experimental status (section 3)** means one published registry version: a deploy of `public/r`
    (card E3's publishing pipeline) with a changelog entry naming the experimental surface. An extension point leaves
    experimental status at the earliest in the following release, by an explicit card, never by renaming (rule 7).
@@ -155,17 +155,8 @@ smoke alone validates new exports.
 
 ## 7. AGENTS.md rule 11 (activated 2026-11-17; the AGENTS.md text, which adds amendment 1, is authoritative)
 
-> **11. Extensibility is a library contract.** New and changed components implement their applicable tier and all
-> lower applicable capabilities from `docs/extension-contract.md`. Default UI5 pixels, accessibility tree and
-> interaction remain unchanged unless the owning card explicitly fixes parity. Customisation points use
-> component-owned semantic parts and protected getters; they cannot remove roles, ARIA states/relationships, focus
-> management, keyboard handling, announcements, overridable texts, locale or RTL behaviour. Public slot names,
-> `components` keys, context/actions/getters and detail types follow rule 7. Each extension ships a Customise section,
-> a story for its tier, neutral paired fixtures, adversarial ownership tests and a real installed-consumer example.
-> Add a point for a demonstrated reusable fork boundary, not a bespoke domain feature. Name shared packaging/schema/
-> test-helper edits in the task card and commit. T4 is deferred until an approved card implements it.
-
-The owner accepted X0 on 2026-11-17; rule 11 is now in AGENTS.md.
+[AGENTS.md rule 11](../AGENTS.md#hard-rules) defines the binding requirements for an extension card and its
+acceptance evidence. List any shared packaging, schema, or test-helper edits in the card and name them in the commit.
 
 ## Reference models read
 
