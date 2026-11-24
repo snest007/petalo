@@ -18,3 +18,18 @@ Restored SelectDialog from `966e1a4` on top of `5344ea0`. The implementation use
 
 - Generate, typecheck, registry build and the accessibility audit check passed. `pnpm test:changed` classified the shared fixture type and tree normalizer as requiring the full-suite fallback.
 - `20 passed, 0 failed, 0 flaky, 0 skipped (71.8s)` in `test-results/summary-2026-11-24T01-27-10-571Z-92904.log`. The run covers every WCR visual pass and both WCR trees, plus selection, focus return, translated UI strings, row ownership, count expiry and four themes' axe checks.
+- A fresh Vite app requested only `@petalo/select-dialog` from the local shadcn registry. Strict TypeScript and production build passed. The headless app verified the search styling slot, clear control and focus, rejected hostile row props, selected a row and restored opener focus. The final evidence is `.integration/H9c/consumer-final.log`.
+- The full main snapshot covered all six accessibility matrices again on the final source. The E11 recorder added zero further entries.
+
+## First full-suite fallback
+
+- Main ran once with three workers and retries off. `1911 passed, 1 failed, 0 flaky, 0 skipped (1725.1s)` in `test-results/summary-2026-11-24T01-29-43-059Z-94570.log`. The sole failure was `select: phone label names dialog and list separately and follows live label updates`. The native UI5 Select still exposed “Shipping country” after the test updated its label to “Billing country” at `tests/select.spec.ts:159`. H9c's exact isolated comparison passed 12/12, with retries off, in `test-results/summary-2026-11-24T02-43-05-437Z-57160.log`. The reviewer observed 16/16 passed on clean main. Select, the phone fixture and the owning assertion are identical in both revisions.
+- Storybook ran once with three workers and retries off. `4556 passed, 1 failed, 0 flaky, 0 skipped (2644.1s)` in `test-results/summary-2026-11-24T01-58-30-473Z-15534.log`. The sole failure was `S3 Playground-open marker binds its live primary docs canvas (sap_horizon)`, waiting for the open ViewSettingsDialog segmented-button mode control at `tests-storybook/known-issues.spec.ts:154`. The same H9c test failed once in 12 isolated runs with retries off in `test-results/summary-2026-11-24T02-43-05-436Z-57154.log`. P4 already tracks this same test family and control. The owning story, component, assertion and Storybook configuration are identical to clean main.
+
+## Full confirmation
+
+Both suites passed unchanged with seven workers, retries disabled and the same generated inputs.
+
+- Main. `1912 passed, 0 failed, 0 flaky, 0 skipped (754.3s) | Log: test-results/summary-2026-11-24T02-44-41-777Z-58019.log | PORT=4310 SAPUI5_PORT=4311`.
+- Storybook. `4557 passed, 0 failed, 0 flaky, 0 skipped (896.5s) | Log: test-results/summary-2026-11-24T02-57-16-830Z-64520.log | STORYBOOK_PORT=4320`.
+- Total full runs were two main and two Storybook. CI rounds were zero.

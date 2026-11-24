@@ -326,7 +326,7 @@ H6/H6b/H6c wait for P2a.
 - [x] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/done/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
 - [x] [H9 SplitterLayout and CalendarLegend check](tasks/done/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d
 - [x] [H9b Finish H9 parity](tasks/done/H9b-finish-h9-parity.md) — see the [H9 return](returns/done/H9.md) for the owner split
-- [ ] [H9c SelectDialog parity](tasks/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
+- [x] [H9c SelectDialog parity](tasks/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
 - [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
 - [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
 - [ ] [H10 NavigationMenu, AnalyticalCardHeader, ActionSheet, UserSettingsDialog, TableHeaderCellActionAI](tasks/H10-remaining-low-priority.md) — L (after H0; may split)
