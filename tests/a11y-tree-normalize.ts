@@ -295,7 +295,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** The H8 fixture composes the existing desktop Menu in place. The UI5
  * ResponsivePopover advertises aria-modal and exposes focus guards even though
  * the fixture paints a closed surface. Pin both surfaces exactly, then compare
@@ -393,6 +393,26 @@ function removeEmptyInputPhoneAlerts(ui5: any) {
   }
   ax.children.splice(-2)
   snapshot.children.splice(-2)
+}
+
+/** PopoverTemplate.js exposes a banner inside the desktop suggestion dialog.
+ * Compare the exact header as the React group while retaining its text, all
+ * descendants and the field's separately compared description relationship. */
+function reconcileInputSuggestionBanner(ours: any, ui5: any, paths: NonNullable<Allowed["inputSuggestionBanner"]>) {
+  for (const channel of ["ax", "snapshot"] as const) {
+    const path = paths[channel]
+    if (!new RegExp(`^/${channel}/\\d+/children/0$`).test(path)) {
+      throw new Error(`Input validation header requires an exact first-child path: ${path}`)
+    }
+    const [, , index] = path.split("/")
+    const actualDialog = ours[channel][Number(index)]
+    const nativeDialog = ui5[channel][Number(index)]
+    const actual = actualDialog?.children[0], native = nativeDialog?.children[0]
+    if (actualDialog?.role !== "dialog" || nativeDialog?.role !== "dialog" || actual?.role !== "group" || native?.role !== "banner") {
+      throw new Error(`Input validation header must be the native dialog banner and its React group: ${path}`)
+    }
+    native.role = "group"
+  }
 }
 
 /** Read only the literal a11yDiff object, without running fixture React modules or broadening main.tsx ownership. */
@@ -520,6 +540,10 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.messageBoxNameRef) {
       if (id !== "message-box-confirm") throw new Error("Name reference allowance is specific to message-box-confirm")
       reconcileMessageBoxNameRef(adjusted.ours, native)
+    }
+    if (allowed?.inputSuggestionBanner) {
+      if (id !== "input-suggestions-state") throw new Error("Validation header allowance is specific to input-suggestions-state")
+      reconcileInputSuggestionBanner(adjusted.ours, native, allowed.inputSuggestionBanner)
     }
     const [engine, direction, ...casePath] = key.split("/")
     const legacy = existsSync("tests/a11y-tree-baseline.json") && readTreeBaseline().entries.some((entry) =>

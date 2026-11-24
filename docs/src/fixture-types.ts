@@ -43,6 +43,8 @@ type FixtureA11yDiff = {
   messageBoxNameRef?: true
   /** InputSuggestionsTemplate's phone Dialog allocates empty Popup announcement outlets. */
   inputPhoneAlerts?: true
+  /** PopoverTemplate's nested banner appears as a group in the desktop Input. */
+  inputSuggestionBanner?: { ax: string; snapshot: string }
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */

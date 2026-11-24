@@ -106,6 +106,8 @@ for (const dir of ["ltr", "rtl"] as const) {
     await expect.poll(() => input.evaluate((input: HTMLInputElement) => [input.selectionStart, input.selectionEnd])).toEqual([2, 6])
     const popup = demo.getByRole("dialog", { name: "Available Values" })
     const listbox = popup.getByRole("listbox", { name: "Contains Selectable Items" })
+    const groupHeader = listbox.getByRole("group", { name: "Europe", exact: true })
+    await expect(groupHeader).toHaveAttribute("aria-roledescription", "Group Header")
     await expect(listbox.getByRole("option")).toHaveCount(2)
     await expect(listbox.locator("b")).toHaveText(["Be", "Be"])
     await input.press("ArrowUp")

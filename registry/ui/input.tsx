@@ -614,17 +614,23 @@ function SuggestingInput({
       aria-description={groupCount ? texts.groups(groupCount) : undefined} data-slot="input-suggestion-list" className={cn("fiori-input-suggestion-list", classNames?.list)}>
     {visible.map((entry) => "item" in entry ? renderOption(entry) : <li key={entry.id} role="none">
       <ul role="group" data-slot="input-suggestion-group" className={cn("fiori-input-suggestion-list", classNames?.group, entry.group.className)}>
-        <li id={entry.id} role="group" aria-roledescription={texts.groupDescription}
-          aria-label={entry.group.headerText} data-active={active === entry.id || undefined}
-          data-slot="input-suggestion-group-header" className={cn("fiori-input-suggestion-group-header", classNames?.groupHeader)}
-          onMouseDown={(event) => event.preventDefault()}>
-          {entry.group.headerText}
+        {/* ListItemGroupHeaderTemplate.js exposes the named Group on a div. */}
+        <li role="none">
+          <div id={entry.id} role="group" aria-roledescription={texts.groupDescription}
+            aria-label={entry.group.headerText} data-active={active === entry.id || undefined}
+            data-slot="input-suggestion-group-header" className={cn("fiori-input-suggestion-group-header", classNames?.groupHeader)}
+            onMouseDown={(event) => event.preventDefault()}>
+            {entry.group.headerText}
+          </div>
         </li>
         {entry.options.map(renderOption)}
       </ul>
     </li>)}
   </ul></>
-  const messageHeader = popupMessage != null && <div role={phone ? undefined : "banner"} className="fiori-value-state-message" data-slot="input-suggestion-message" data-value-state={valueState} onKeyDown={handleMessageKey}>
+  // PopoverTemplate.js renders a header that exposes a nested banner in Chromium.
+  // Group the message inside the dialog; Input.ariaValueStateHiddenText still
+  // supplies the field description and the keyboard links stay on this host.
+  const messageHeader = popupMessage != null && <div role={phone ? undefined : "group"} className="fiori-value-state-message" data-slot="input-suggestion-message" data-value-state={valueState} onKeyDown={handleMessageKey}>
     {valueState !== "none" && <Icon icon={valueStateIcons[valueState]} />}{popupMessage}
   </div>
 

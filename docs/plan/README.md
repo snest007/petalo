@@ -320,8 +320,8 @@ H6/H6b/H6c wait for P2a.
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [ ] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
-- [ ] [H7b Input suggestions full-grid acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (same branch as H7)
+- [x] [H7 Input suggestions + MessageBox](tasks/H7-input-suggestions-messagebox.md) — L (after H0)
+- [x] [H7b Input suggestions full-grid acceptance](tasks/H7b-input-suggestions-full-grid.md) — S (same branch as H7)
 - [x] [H8 SplitButton, ButtonBadge, NumericInput](tasks/done/H8-split-button-badge-numeric.md) — M (any time; doesn't need H0)
 - [x] [H8b Finish H8: register the new components, SplitButton HC menu, re-verify Button](tasks/done/H8b-finish-h8-parity.md) — S (owner's decision 2026-11-20; continues on `codex/H8`; ticks H8 and H8b)
 - [x] [H9 SplitterLayout and CalendarLegend check](tasks/done/H9-select-dialog-splitter-dynamic-date-range.md) — with H9b and H9d

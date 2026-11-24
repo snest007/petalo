@@ -4,6 +4,7 @@ import { renderFinished } from "@ui5/webcomponents-base/dist/Render.js"
 import type Input from "@ui5/webcomponents/dist/Input.js"
 
 import { defineUi5, FIELD_WIDTH, h, type Ui5FixtureElement } from "../fixture-types"
+import { placeInPlace } from "./ui5-popup-in-place"
 import { ui5State } from "./ui5-helpers"
 import set, { suggestionData } from "./input"
 
@@ -24,22 +25,27 @@ export default defineUi5(set, ({ value, placeholder, valueState, disabled, readO
       await el.definePromise
       await renderFinished()
       const popup = el.shadowRoot!.querySelector<HTMLElement & { openPopup: () => Promise<void>; definePromise: Promise<void> }>("ui5-responsive-popover")!
-      // Keep native Popup rendering and open-state announcements without top-layer
-      // paint or autofocus across the shared fixture page.
-      popup.openPopup = async () => {}
       await popup.definePromise
-      const styles = new CSSStyleSheet()
-      styles.replaceSync(`
-        ui5-responsive-popover.ui5-suggestions-popover { display:flex !important; position:absolute !important;
-          inset-block:100% auto !important; inset-inline:0 auto !important; transform:none !important;
-          max-width:none !important; max-height:none !important; width:${FIELD_WIDTH}; }
-      `)
-      const root = el.shadowRoot!
-      root.adoptedStyleSheets = [...root.adoptedStyleSheets, styles]
-      if (suggestions === "filtered") (el as Input & { typedInValue: string }).typedInValue = "Be"
+      // Popup.js and ResponsivePopover.handleOpenOnEnterDOM can call showPopover
+      // independently of openPopup. Keep the native open state and paint in the cell.
+      popup.showPopover = () => {}
+      popup.openPopup = async () => {}
+      const pin = () => {
+        if (popup.matches(":popover-open")) popup.hidePopover()
+        placeInPlace(popup)
+        popup.style.setProperty("position", "absolute", "important")
+        // Popover.js anchors to the opener's border box. Absolute positioning
+        // starts at its padding box, so account for the native Horizon HC border.
+        const { borderBlockEndWidth, borderInlineStartWidth } = getComputedStyle(el)
+        popup.style.setProperty("inset-block-start", `calc(100% + ${borderBlockEndWidth})`, "important")
+        popup.style.setProperty("inset-inline-start", `calc(-1 * ${borderInlineStartWidth})`, "important")
+        popup.style.width = FIELD_WIDTH
+      }
+      pin()
+      if (suggestions === "filtered") el.typedInValue = "Be"
       el.open = true
       await renderFinished()
-      if (!root.adoptedStyleSheets.includes(styles)) root.adoptedStyleSheets = [...root.adoptedStyleSheets, styles]
+      pin()
       const reserve = () => frame.style.setProperty("padding-bottom", `calc(.75rem + ${popup.offsetHeight}px)`)
       const observer = new ResizeObserver(reserve)
       observer.observe(popup)

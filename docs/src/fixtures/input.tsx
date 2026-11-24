@@ -126,7 +126,11 @@ export default defineFixtures<Props>({
           "/ui5/ax/0/children/0/children/1/children/0/children/2/children/0/children/0/children/0/children/0/children/3",
           "/ui5/ax/0/children/0/children/1/children/0/children/3"
         ],
-        "reason": "InputTemplate and PopupTemplate use generic shadow hosts, duplicate form validity on the outer custom element and add empty List/Popup focus sentinels. Compare the native textbox, live text, popup and each option after unwrapping those exact nodes."
+        "inputSuggestionBanner": {
+          "ax": "/ax/5/children/0",
+          "snapshot": "/snapshot/4/children/0"
+        },
+        "reason": "InputTemplate and PopupTemplate use generic shadow hosts, duplicate form validity on the outer custom element and add empty List/Popup focus sentinels. Compare the native textbox, live text, popup and each option after unwrapping those exact nodes. PopoverTemplate.js uses a nested banner inside the dialog for the validation header. Input exposes the header as a group and preserves the description and all message text."
       }
     }
   ],
