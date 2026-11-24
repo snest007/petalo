@@ -235,15 +235,13 @@ export function AnalyticalTableRowFeaturesDemo({ dir, hostile = false }: Pick<An
 }
 
 const pagedInventory = 15
-const editableColumns: AnalyticalTableColumnDef<Inventory>[] = [
-  { ...columns[0], interactiveElementName: "Input and button",
-    cell: ({ row }) => <div className="flex items-center gap-2">
-      <input aria-label="Product name" defaultValue={row.original.product} className="min-w-0" />
-      <button type="button" aria-label="Confirm product name">OK</button>
-    </div>,
-  },
-  ...columns.slice(1),
-]
+function ProductNameEditor({ product, onApply }: { product: string; onApply: (next: string) => void }) {
+  const [value, setValue] = React.useState(product)
+  return <div className="flex items-center gap-2">
+    <input aria-label="Product name" value={value} onChange={event => setValue(event.target.value)} className="min-w-0" />
+    <button type="button" aria-label="Apply product name" onClick={() => onApply(value)}>Apply</button>
+  </div>
+}
 
 export function AnalyticalTableVirtualDemo({ dir }: Pick<AnalyticalTableProps<Inventory>, "dir">) {
   const tableRef = React.useRef<AnalyticalTableInstance<Inventory>>(null)
@@ -253,7 +251,17 @@ export function AnalyticalTableVirtualDemo({ dir }: Pick<AnalyticalTableProps<In
   const [grouped, setGrouped] = React.useState(false)
   const [event, setEvent] = React.useState("")
   const [requests, setRequests] = React.useState(0)
-  const loadedRows = React.useMemo(() => inventory.slice(0, count), [count])
+  const [names, setNames] = React.useState<Record<number, string>>({})
+  const loadedRows = React.useMemo(() => inventory.slice(0, count).map((row, index) =>
+    names[index] === undefined ? row : { ...row, product: names[index] }), [count, names])
+  const editableColumns = React.useMemo<AnalyticalTableColumnDef<Inventory>[]>(() => [
+    { ...columns[0], interactiveElementName: "Input and button",
+      cellLabel: ({ row }) => `${row.original.product} Apply`,
+      cell: ({ row }) => <ProductNameEditor product={row.original.product}
+        onApply={product => setNames(previous => ({ ...previous, [row.index]: product }))} />,
+    },
+    ...columns.slice(1),
+  ], [])
   const append = () => { setCount(previous => previous + pagedInventory); setLoading(false) }
   return <div className="grid w-full max-w-xl gap-2" id={`analytical-table-virtual-${dir ?? "ltr"}`}>
     <div className="flex flex-wrap gap-3">

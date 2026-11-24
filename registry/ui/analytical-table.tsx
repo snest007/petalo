@@ -1359,6 +1359,12 @@ export function AnalyticalTable<T extends RowData>({
       {legacyDetail && detail}
     </AnalyticalTableRow>
   })
+  // WCR's AnalyticalTable/index.js paints an overlay across the loaded grid.
+  // The outer layer catches pointers while the busy row owns announcements.
+  const infiniteBusy = infiniteScroll && loading && rowCount > 0
+  const overlayClass = cn("fiori-at-busy", classNames?.loading)
+  const busyIndicator = <BusyIndicator active delay={loadingDelay} inert={infiniteBusy || undefined}
+    className={infiniteBusy ? undefined : overlayClass} aria-label={texts.busy} />
   return <Context.Provider value={context}>
     <div {...rootProps} data-slot="analytical-table" dir={direction} className={cn("fiori-at", className)} style={{ "--at-grid-height": `${densityHeader + bodyHeight + (footer ? densityHeader : 0)}px`, ...rootProps.style } as React.CSSProperties}
       ref={node => { root.current = node; if (typeof ref === "function") return ref(node); if (ref) ref.current = node }}>
@@ -1513,8 +1519,8 @@ export function AnalyticalTable<T extends RowData>({
           })}
         </div>}
       </div>
-      {loading && (rowCount > 0 || alwaysShowBusyIndicator) &&
-        <BusyIndicator active delay={loadingDelay} className={cn("fiori-at-busy", classNames?.loading)} aria-label={texts.busy} aria-hidden={infiniteScroll && rowCount > 0 || undefined} />}
+      {infiniteBusy ? <div className={overlayClass} aria-hidden="true">{busyIndicator}</div> :
+        loading && (rowCount > 0 || alwaysShowBusyIndicator) && busyIndicator}
       {visibleRowCountMode === "Interactive" && <div {...part("vertical-resizer", "fiori-at-vertical-resizer")}
         role="separator" aria-hidden="true" title={texts.dragToResize} onPointerDown={event => {
           if (!event.isPrimary || event.button !== 0) return
