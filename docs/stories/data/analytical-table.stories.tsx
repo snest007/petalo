@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AnalyticalTable } from "@/components/ui/analytical-table"
-import { AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
+import { AnalyticalTableGroupingDemo, AnalyticalTableSortFilterDemo, columns, CustomAnalyticalTable, inventory } from "../../src/demos/analytical-table"
 import { fioriMeta } from "../_lib/meta"
 
 const base = fioriMeta({ name: "analytical-table", component: AnalyticalTable<(typeof inventory)[number]> })
@@ -50,3 +50,7 @@ export const ColumnFilter: Story = { args: { filterable: true, defaultColumnFilt
 export const ColumnFilterEmpty: Story = { args: { filterable: true, defaultColumnFilters: [{ id: "product", value: "missing" }] } }
 export const SortFilterMenu: Story = { render: () => <AnalyticalTableSortFilterDemo /> }
 export const SortFilterRTL: Story = { render: () => <AnalyticalTableSortFilterDemo dir="rtl" /> }
+
+export const Grouped: Story = { render: () => <AnalyticalTableGroupingDemo /> }
+export const GroupedRTL: Story = { render: () => <AnalyticalTableGroupingDemo dir="rtl" /> }
+export const ExpandedGroups: Story = { args: { groupable: true, defaultGroupBy: ["category"], defaultExpanded: true } }

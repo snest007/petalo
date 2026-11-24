@@ -2,7 +2,7 @@
 // plugin-hooks/useSortBy, useFilters and useGlobalFilter. SPDX-License-Identifier: Apache-2.0.
 import { collatorIncludes } from "@/lib/fiori-locale"
 import { parseNumber } from "@/lib/fiori-numbers"
-import type { RowData } from "@tanstack/react-table"
+import { copyInstancePropertiesWithoutMemos, type RowData } from "@tanstack/react-table"
 import type { AnalyticalTableColumnDef, AnalyticalTableEngine, AnalyticalTableRowModel } from "@/components/ui/analytical-table"
 
 export type AnalyticalTableSortType<T extends RowData> =
@@ -150,14 +150,28 @@ export function createAnalyticalSortModel<T extends RowData>(table: AnalyticalTa
     if (!rules.length) return result = source
     // WCR useSortBy.defaultOrderByFn uses the original indices as the final
     // tie-breaker, in the effective direction of the primary comparator.
-    const rows = [...source.rows].sort((a, b) => {
+    const compareRows = (a: AnalyticalTableRowModel<T>, b: AnalyticalTableRowModel<T>) => {
       for (const { compare, direction } of rules) {
         const difference = compare(a, b)
         if (difference) return difference * direction
       }
       return (a.index - b.index) * rules[0].direction
-    })
-    result = { ...source, rows, flatRows: rows }
+    }
+    const flatRows: AnalyticalTableRowModel<T>[] = []
+    function sortRows(rows: AnalyticalTableRowModel<T>[]): AnalyticalTableRowModel<T>[] {
+      return [...rows].sort(compareRows).map(row => {
+        const index = flatRows.push(row) - 1
+        if (!row.subRows.length) return row
+        // WCR useSortBy also sorts descendants. Clone the row before replacing
+        // its children so clearing the sort recovers the original group order.
+        const sorted = copyInstancePropertiesWithoutMemos(Object.create(Object.getPrototypeOf(row)), row) as typeof row
+        sorted.subRows = sortRows(row.subRows)
+        flatRows[index] = sorted
+        return sorted
+      })
+    }
+    const rows = sortRows(source.rows)
+    result = { ...source, rows, flatRows }
     return result
   }
 }

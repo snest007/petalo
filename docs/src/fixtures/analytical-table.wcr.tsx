@@ -1,6 +1,7 @@
 import * as React from "react"
 import { AnalyticalTable } from "@ui5/webcomponents-react/AnalyticalTable"
 import { useAnnounceEmptyCells, useStickyColumns } from "@ui5/webcomponents-react/AnalyticalTableHooks"
+import { Cell } from "@ui5/webcomponents-react/dist/components/AnalyticalTable/defaults/Column/Cell.js"
 import { ColumnHeaderModal } from "@ui5/webcomponents-react/dist/components/AnalyticalTable/defaults/Column/ColumnHeaderModal.js"
 import { defineFixtures } from "../fixture-types"
 import { fixtureInputs, headersFor, inventory } from "./analytical-table.cases"
@@ -63,22 +64,31 @@ export default defineFixtures({
   ...fixtureInputs,
   react: (props) => {
     const table = <AnalyticalTable accessibleName="Inventory" data={props.filtered ? [] : props.data ?? inventory}
-        columns={headersFor(props.longHeader).map(({ key, label }, index) => ({
+        columns={headersFor(props.longHeader, props.aggregates).map(({ key, label }, index) => ({
           accessor: key, Header: label,
           ...(props.widths?.[index] === undefined ? {} : { width: props.widths[index] }),
+          ...(props.aggregates ? {
+            aggregate: key === "stock" ? "sum" : key === "reserve" ? "average" : undefined,
+            Aggregated: (instance: Parameters<typeof Cell>[0]) => <Cell {...instance} cell={{ ...instance.cell,
+              value: typeof instance.cell.value === "number" ?
+                new Intl.NumberFormat("de-DE", { maximumFractionDigits: 20 }).format(instance.cell.value) : instance.cell.value,
+            }} />,
+          } : {}),
           sticky: props.frozen && index === 0 ? "start" : undefined,
           ...(props.openHeaderMenu ? { Popover: (instance: Parameters<typeof ColumnHeaderModal>[0]) => (
             <ColumnHeaderModal {...instance} popoverProps={{ ...instance.popoverProps, openerRef: { current: null! }, openerId: "" }} />
           ) } : {}),
-          ...(props.sortable || props.filterable ? { headerLabel: label } : {}),
+          ...(props.sortable || props.filterable || props.groupable ? { headerLabel: label } : {}),
         }))}
         reactTableOptions={{ manualGlobalFilter: props.filtered, useControlledState: props.filtered ? (state: Record<string, unknown>) => ({ ...state, globalFilter: "unmatched product" }) : undefined, initialState: { hiddenColumns: props.hidden ?? [],
           globalFilter: props.filtered ? "unmatched product" : undefined,
+          ...(props.groupBy ? { groupBy: props.groupBy } : {}),
+          ...(props.expanded ? { expanded: Object.fromEntries(Object.entries(props.expanded).map(([id, value]) => [decodeURIComponent(id), value])) } : {}),
           ...(props.sorting ? { sortBy: props.sorting } : {}),
           ...(props.columnFilters ? { filters: props.columnFilters } : {}),
         } }}
         tableHooks={props.frozen ? sticky : props.emptyCell ? announceEmpty : undefined}
-        sortable={props.sortable} filterable={props.filterable} alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
+        groupable={props.groupable} sortable={props.sortable} filterable={props.filterable} alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
         visibleRows={5} minRows={3} onLoadMore={() => {}} visibleRowCountMode={props.countMode} loading={props.loading}
         noDataText={props.german ? "Keine Daten" : undefined} />
     return <div dir={props.rtl ? "rtl" : undefined} style={{ width: 480, height: props.height }}>
