@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator } from "@playwright/test"
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { build } from "vite"
 import { aliases } from "../vite.aliases"
@@ -123,6 +123,155 @@ test("controlled widths, order, visibility and pins in the Custom example", asyn
   await expect(grid.getByRole("gridcell")).toHaveText("Inventory is empty")
 })
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`virtual inventory uses absolute row indices and keeps keyboard editing in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-virtual-${dir}`)
+    const grid = demo.getByRole("grid")
+    const heading = cell(grid, 0, 0)
+    await heading.focus()
+    await expect(grid).toHaveAccessibleDescription(/F2/)
+    await heading.press("Tab")
+    const first = cell(grid, 1, 0)
+    await expect(first).toBeFocused()
+    await expect(first).toHaveAccessibleName(/includes input and button/i)
+    const input = first.getByRole("textbox", { name: "Product name" })
+    await expect(input).toHaveAttribute("tabindex", "-1")
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.press("Tab")
+    const confirm = first.getByRole("button", { name: "Confirm product name" })
+    await expect(confirm).toBeFocused()
+    await confirm.press("Escape")
+    await expect(first).toBeFocused()
+    await expect(input).toHaveAttribute("tabindex", "-1")
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.press("F2")
+    await expect(first).toBeFocused()
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.press("Tab")
+    await expect(confirm).toBeFocused()
+    await confirm.press("Tab")
+    const next = cell(grid, 2, 0)
+    const nextInput = next.getByRole("textbox", { name: "Product name" })
+    await expect(nextInput).toBeFocused()
+    await nextInput.press("Escape")
+    await expect(next).toBeFocused()
+    await next.press("ArrowUp")
+    await expect(first).toBeFocused()
+    const forward = dir === "ltr" ? "ArrowRight" : "ArrowLeft"
+    await first.press(forward)
+    await expect(cell(grid, 1, 1)).toBeFocused()
+    await cell(grid, 1, 1).press("Shift+Tab")
+    await expect(cell(grid, 0, 1)).toBeFocused()
+    await cell(grid, 0, 1).press("Tab")
+    await expect(cell(grid, 1, 1)).toBeFocused()
+
+    await expect(cell(grid, 10, 1)).toHaveCount(0)
+    for (let row = 2; row <= 10; row++) {
+      await page.keyboard.press("ArrowDown")
+      await expect(cell(grid, row, 1)).toBeFocused()
+      await expect(cell(grid, row, 1).locator("..")).toHaveAttribute("aria-rowindex", String(row + 1))
+    }
+    await expect(cell(grid, 1, 1)).toHaveCount(0)
+    for (let row = 9; row >= 1; row--) {
+      await page.keyboard.press("ArrowUp")
+      await expect(cell(grid, row, 1)).toBeFocused()
+    }
+  })
+}
+
+test("infinite scrolling requests one page per count and announces loading", async ({ page }) => {
+  const demo = page.locator("#analytical-table-virtual-ltr")
+  const grid = demo.getByRole("grid")
+  const top = demo.getByRole("button", { name: "Scroll to first product" })
+  const end = demo.getByRole("button", { name: "Scroll to last loaded product" })
+  const requests = demo.getByRole("status", { name: "Page requests" })
+  const loading = demo.getByRole("button", { name: "Finish loading products" })
+  await expect(grid).toHaveAttribute("aria-rowcount", "-1")
+  await demo.getByRole("checkbox", { name: "Show total products" }).check()
+  await expect(grid).toHaveAttribute("aria-rowcount", "75")
+  await end.click()
+  await expect(requests).toHaveText("1")
+  await expect(demo.getByRole("status", { name: "Scroll event" })).toHaveText("Scrolled 15 loaded products")
+  await expect(grid).toHaveAttribute("aria-busy", "true")
+  await expect(grid.getByRole("row", { name: /please wait/i })).toHaveCount(1)
+  await expect(loading).toBeEnabled()
+  await top.click()
+  await expect.poll(() => grid.evaluate(node => node.scrollTop)).toBe(0)
+  await end.click()
+  await expect(grid.locator('[role="row"][aria-rowindex="16"]').getByRole("textbox", { name: "Product name" })).toHaveValue("Camp Lantern 15")
+  await expect(requests).toHaveText("1")
+  await loading.click()
+  await expect(grid).not.toHaveAttribute("aria-busy", "true")
+  await expect(grid.getByRole("row", { name: /please wait/i })).toHaveCount(0)
+  await end.click()
+  await expect(requests).toHaveText("2")
+  await expect(demo.getByRole("status", { name: "Scroll event" })).toHaveText("Scrolled 30 loaded products")
+})
+
+test("infinite scrolling rearms when a page joins the same collapsed groups", async ({ page }) => {
+  const demo = page.locator("#analytical-table-virtual-ltr")
+  await demo.getByRole("checkbox", { name: "Group loaded products" }).check()
+  const grid = demo.getByRole("treegrid")
+  const group = grid.getByRole("row", { name: /^Shelter \(/ })
+  const top = demo.getByRole("button", { name: "Scroll to first product" })
+  const bottom = demo.getByRole("button", { name: "Scroll to last loaded product" })
+  const complete = demo.getByRole("button", { name: "Finish loading products" })
+  const requests = demo.getByRole("status", { name: "Page requests" })
+  await expect(group).toHaveAccessibleName(/^Shelter \(4\)/)
+  await expect(group).toHaveAttribute("aria-expanded", "false")
+  await bottom.click()
+  await expect(requests).toHaveText("1")
+  await complete.click()
+  await top.click()
+  await expect(group).toHaveAccessibleName(/^Shelter \(8\)/)
+  await expect(group).toHaveAttribute("aria-expanded", "false")
+  await expect.poll(() => grid.evaluate(node => node.scrollTop)).toBe(0)
+  await bottom.click()
+  await expect(requests).toHaveText("2")
+})
+
+test("responsive pop-in retains the custom label and hides a secondary column", async ({ page }) => {
+  const demo = page.locator("#analytical-table-custom")
+  const grid = demo.getByRole("grid")
+  const toggle = demo.getByRole("button", { name: "Narrow table" })
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product", "Category", "Stock"])
+  await toggle.click()
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product"])
+  const first = cell(grid, 1, 0)
+  const header = first.locator('[data-slot="analytical-table-pop-in-header"]')
+  const value = first.locator('[data-slot="analytical-table-pop-in-value"]')
+  await expect(header).toHaveText("Inventory category:")
+  await expect(value).toHaveText("Shelter")
+  await expect(first).toHaveAccessibleName("Product Alpine Tent Inventory category: Shelter")
+  const refs = (await first.getAttribute("aria-labelledby"))?.split(" ")
+  expect(refs).toContain(await header.getAttribute("id"))
+  expect(refs).toContain(await value.getAttribute("id"))
+  await expect(first).toHaveRole("gridcell")
+  await first.focus()
+  await first.press("ArrowDown")
+  await expect(cell(grid, 2, 0)).toBeFocused()
+  await toggle.click()
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product", "Category", "Stock"])
+  await expect(header).toHaveCount(0)
+})
+
+test("fixtures keep the frozen column and align the scrolled header and body", async ({ page }) => {
+  await page.goto("/index.html?fixtures&ref=wcr")
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
+  const fixture = page.locator('[data-fixture="analytical-table-virtual-frozen-horizontal"]')
+  const grid = fixture.getByRole("grid")
+  await expect.poll(() => grid.evaluate(node => node.scrollLeft)).toBeGreaterThan(0)
+  const column = grid.locator('[role="columnheader"][data-frozen="true"]')
+  const product = grid.locator('[role="gridcell"][data-frozen="true"]').first()
+  const stock = grid.locator('[role="columnheader"][data-column-id="stock"]')
+  const stockCell = grid.locator('[role="gridcell"][data-column-id="stock"]').first()
+  await expect.poll(async () => (await column.boundingBox())?.x).toBe((await product.boundingBox())?.x)
+  await expect.poll(async () => (await stock.boundingBox())?.x).toBe((await stockCell.boundingBox())?.x)
+})
+
 test("fixtures keep absolute indices, empty announcements and localized text", async ({ page }) => {
   await page.goto("/index.html?fixtures&ref=wcr")
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
@@ -160,11 +309,14 @@ for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_
         }
         // WCR RowSubComponent.js has a focusable div as a direct row child,
         // useRowDisableSelection exposes an unnamed checkbox, and Expandable.js
-        // names the Horizon buttons only after focus. Keep those failures visible
-        // by checking the raw rule IDs, counts and offending markup.
+        // names the Horizon buttons only after focus. PopIn.js leaves DOM text
+        // from its three fragments adjacent ("Alpine TentType:Shelter"), while
+        // useA11y constructs a spaced accessible name. Assert the raw WCR
+        // rules and exact offending cells. Petalo must still be axe clean.
         const regularHorizon = theme === "sap_horizon" || theme === "sap_horizon_dark"
         expect(result.violations.map(({ id, nodes }) => [id, nodes.length]), path).toEqual([
           ["aria-required-children", 10], ["aria-toggle-field-name", 1], ...(regularHorizon ? [["button-name", 15]] : []),
+          ["label-content-name-mismatch", 15],
         ])
         for (const { id, nodes } of result.violations) {
           for (const node of nodes) {
@@ -176,9 +328,27 @@ for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_
             } else if (id === "aria-toggle-field-name") {
               expect(node.html).toMatch(/^<div class="ui5-checkbox-root" role="checkbox" part="root" aria-checked="false" aria-disabled="true"/)
               expect(node.target.flat().join(" ")).toContain('[data-name="internal_selection_column"]')
+            } else if (id === "label-content-name-mismatch") {
+              expect(node.html).toMatch(/^<div role="gridcell" data-column-id-cell="product" .*aria-labelledby=.*data-is-first-column="true"/)
             } else {
               expect(node.html).toMatch(/^<button [^>]*class="ui5-button-root" [^>]*aria-label=""/)
               expect(JSON.stringify(node.target)).toMatch(/navigation-(?:right|down)-arrow/)
+            }
+          }
+          if (id === "label-content-name-mismatch") {
+            const cells = await Promise.all(nodes.map(node => {
+              const [selector] = node.target
+              expect(node.target).toHaveLength(1)
+              if (typeof selector !== "string") throw new Error("Expected a light DOM pop-in cell")
+              return page.locator(selector).evaluate(cell => ({
+                fixture: cell.closest("[data-fixture]")?.getAttribute("data-fixture"),
+                row: Number(cell.getAttribute("data-row-index")),
+              }))
+            }))
+            expect(cells).toHaveLength(15)
+            for (const mode of ["block", "inline", "without-header"]) {
+              const rows = cells.filter(cell => cell.fixture === `analytical-table-pop-in-${mode}`).map(cell => cell.row)
+              expect(rows.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5])
             }
           }
         }
@@ -298,6 +468,78 @@ test("controlled sorting and the custom Filter renderer keep the owned menu and 
   const values = await grid.locator('[role="gridcell"][data-column-id="stock"]').allTextContents()
   const digits = values.map(value => Number(value) % 10)
   expect(digits).toEqual([...digits].sort((a, b) => a - b))
+})
+
+test("fixtures: scroll 100,000 rows and 50 columns within a bounded frame sequence", async ({ page }, info) => {
+  test.setTimeout(60_000)
+  const entry = resolve("analytical-table-performance-test.js")
+  const virtual = "\0analytical-table-performance-test"
+  const source = `
+    import { createElement as h } from "react";
+    import { createRoot } from "react-dom/client";
+    import { AnalyticalTable } from "@/components/ui/analytical-table";
+
+    const data = Array.from({ length: 100_000 }, (_, id) => ({ id }));
+    const columns = Array.from({ length: 50 }, (_, col) => ({
+      id: String(col), header: "Measure " + col, width: 116,
+      accessorFn: row => row.id * 50 + col,
+    }));
+    createRoot(document.getElementById("performance-example")).render(h(AnalyticalTable, {
+      columns, data, visibleRows: 8, overscanCount: 2, overscanCountHorizontal: 2,
+      "aria-label": "Wide inventory", defaultColumnPinning: { start: ["0"], end: [] },
+    }));
+  `
+  const bundle = await build({
+    configFile: false, publicDir: false, logLevel: "silent", resolve: { alias: aliases },
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    plugins: [{ name: "analytical-table-performance-test", resolveId: id => id === entry ? virtual : undefined,
+      load: id => id === virtual ? source : undefined }],
+    build: { write: false, lib: { entry, formats: ["iife"], name: "AnalyticalTablePerformanceTest" } },
+  })
+  const output = Array.isArray(bundle) ? bundle[0] : bundle
+  const script = "output" in output && output.output.find(file => file.type === "chunk")?.code
+  const css = readFileSync("dist/index.html", "utf8").match(/href="([^"]+\.css)"/)?.[1]
+  if (!script || !css) throw new Error("Missing AnalyticalTable performance fixture assets")
+  const path = "/analytical-table-performance-test.html"
+  await page.route("**" + path, route => route.fulfill({
+    contentType: "text/html; charset=utf-8",
+    body: `<!doctype html><html lang="en" data-theme="sap_horizon">
+      <head><link rel="stylesheet" href="${css}"></head><body>
+        <main id="performance-example" style="width: 840px"></main>
+        <script>${script.replaceAll("</script", "<\/script")}</script>
+      </body></html>`,
+  }))
+  await page.goto(path)
+  const grid = page.getByRole("grid", { name: "Wide inventory" })
+  await expect(grid).toHaveAttribute("aria-rowcount", "100000")
+  await expect(grid).toHaveAttribute("aria-colcount", "50")
+  await expect(cell(grid, 1, 0)).toHaveText("0", { timeout: 25_000 })
+
+  const result = await grid.evaluate(async viewport => {
+    const vertical = viewport.scrollHeight - viewport.clientHeight
+    const horizontal = viewport.scrollWidth - viewport.clientWidth
+    const frames = 32
+    const frame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
+    const start = await frame()
+    let maxRows = 0
+    let maxColumns = 0
+    for (let step = 1; step <= frames; step++) {
+      viewport.scrollTo(horizontal * step / frames, vertical * step / frames)
+      await frame()
+      maxRows = Math.max(maxRows, viewport.querySelectorAll('[role="row"][aria-rowindex]').length)
+      maxColumns = Math.max(maxColumns, viewport.querySelectorAll('[role="columnheader"]').length)
+    }
+    return { ms: await frame() - start, maxRows, maxColumns }
+  })
+  await expect(grid.locator('[aria-rowindex="100001"]')).toBeAttached()
+  await expect(grid.locator('[role="columnheader"][aria-colindex="50"]')).toBeAttached()
+  await expect(grid.locator('[role="columnheader"][aria-colindex="1"]')).toHaveAttribute("data-frozen", "true")
+  const measurements = info.outputPath("virtual-scroll-measurements.json")
+  writeFileSync(measurements, JSON.stringify(result))
+  await info.attach("virtual-scroll-measurements", { contentType: "application/json", path: measurements })
+  expect(result.maxRows).toBeLessThanOrEqual(16)
+  expect(result.maxColumns).toBeLessThanOrEqual(16)
+  expect(result.ms).toBeLessThan(4_000)
 })
 
 test("fixtures: built-in filters accept string cells from controlled state and custom editors", async ({ page }) => {

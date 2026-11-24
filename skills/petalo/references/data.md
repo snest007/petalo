@@ -21,6 +21,7 @@ Compare wide or large datasets in a virtualized Fiori grid with configurable col
 
 - Keep identifying columns visible while users scroll horizontally through measures.
 - Let users resize, reorder and hide columns with controlled layout state.
+- Load additional rows on scroll and move secondary columns into the row at narrower widths.
 - Use the experimental Customise API for protected cell content, header menu actions and layout replacements.
 
 ### Don't use when

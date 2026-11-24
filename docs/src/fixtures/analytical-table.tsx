@@ -1,9 +1,9 @@
 import * as React from "react"
-import { AnalyticalTable, type AnalyticalTableColumnDef } from "@/components/ui/analytical-table"
+import { AnalyticalTable, type AnalyticalTableColumnDef, type AnalyticalTableInstance } from "@/components/ui/analytical-table"
 import { FioriLocaleProvider } from "@/lib/fiori-locale"
 import de from "../../../registry/i18n/de"
 import { defineFixtures } from "../fixture-types"
-import { fixtureInputs, headersFor, inventory, inventoryDetail, type Inventory } from "./analytical-table.cases"
+import { fixtureInputs, headersFor, inventory, inventoryDetail, InventoryFixtureViewport, inventoryEditor, type Inventory } from "./analytical-table.cases"
 
 function OpenColumnMenu({ children }: { children: React.ReactNode }) {
   const frame = React.useRef<HTMLDivElement>(null)
@@ -117,6 +117,11 @@ export default defineFixtures({
     }
   ],
   a11yDiff: {
+    "analytical-table-infinite-busy": {
+      "ignore": [],
+      "analyticalTableBusyRow": true,
+      "reason": "WCR AnalyticalTable/index.js renders a focusable BusyIndicator before the already-loaded grid. H5 requires a busy row inside it. Guard the rendered progress name, busy grid and dedicated status row, and compare all data rows."
+    },
       "analytical-table-row-navigation": {
       "ignore": [
         "/ui5/ax/0/children/0/children/0/children/3/children/0/children/0",
@@ -296,11 +301,23 @@ export default defineFixtures({
       "reason": "WCR uses grid and omits group hierarchy in useStyling.getRowProps. H3 uses treegrid because aria-expanded and aria-level require it on rows. Chromium adds a required=false default for treegrid. The paired group-row spec checks the exact roles, implicit required state and row states while preserving WCR cell states and names."
     }
   },
-  react: (props) => {
+  react: props => <InventoryTable {...props} />,
+})
+
+function InventoryTable(props: (typeof fixtureInputs.cases)[number]["props"]) {
+    const instance = React.useRef<AnalyticalTableInstance<Inventory>>(null)
     const columns: AnalyticalTableColumnDef<Inventory>[] = headersFor(props.longHeader, props.aggregates).map(({ key, label }, index) => ({
       accessorKey: key, header: label, width: props.widths?.[index],
       aggregate: props.aggregates ? key === "stock" ? "sum" : key === "reserve" ? "average" : undefined : undefined,
       sticky: props.frozen && index === 0 ? "start" : undefined,
+      ...(props.popIn && key === "category" ? {
+        responsiveMinWidth: 500, responsivePopIn: true, popinDisplay: props.popIn,
+        PopInHeader: <strong>Type</strong>,
+      } : {}),
+      ...(props.edit && key === "product" ? {
+        interactiveElementName: "Input",
+        cell: ({ row }) => inventoryEditor(row.original.product),
+      } : {}),
     }))
     const grid = <AnalyticalTable<Inventory> aria-label="Inventory" data={props.filtered ? [] : props.data ?? inventory} columns={columns}
       dir={props.rtl || props.aggregates && document.documentElement.dir === "rtl" ? "rtl" : undefined} initialState={{ hiddenColumns: props.hidden }}
@@ -315,11 +332,13 @@ export default defineFixtures({
       sortable={props.sortable} filterable={props.filterable} defaultSorting={props.sorting} defaultColumnFilters={props.columnFilters}
       alternateRowColor={props.alternate} scaleWidthMode={props.scaleWidthMode}
       defaultVisibleRows={5} minRows={3} visibleRowCountMode={props.countMode} loading={props.loading}
+      tableRef={instance} infiniteScroll={props.infinite} loadingDelay={props.infinite ? 0 : undefined}
+      adjustTableHeightOnPopIn={!!props.popIn} f2CellEdit={props.edit}
       noDataReason={props.filtered ? "Filtered" : undefined} announceEmptyCells={props.emptyCell}
       classNames={props.neutral ? { row: "inventory-row", cell: "inventory-cell" } : undefined}
       components={props.neutral ? { Body: ({ children }) => children } : undefined} />
+    if (props.scroll || props.edit) return <InventoryFixtureViewport instance={instance} scroll={props.scroll} edit={props.edit}>{grid}</InventoryFixtureViewport>
     return <div style={{ width: 480, height: props.height }}>
       {props.german ? <FioriLocaleProvider locale="de-DE" texts={{ "wcr:LIST_NO_DATA": de["wcr:LIST_NO_DATA"] }}>{grid}</FioriLocaleProvider> : props.openHeaderMenu ? <OpenColumnMenu>{grid}</OpenColumnMenu> : grid}
     </div>
-  },
-})
+}

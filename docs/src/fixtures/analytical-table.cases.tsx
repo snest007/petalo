@@ -1,3 +1,5 @@
+import * as React from "react"
+
 // Neutral inputs shared by petalo and WCR. The oracle imports no registry implementation.
 export const inventory = [
   { product: "Alpine Tent", category: "Shelter", stock: "24" },
@@ -41,6 +43,63 @@ export const inventoryColumns = [
   { key: "stock", label: "Stock" },
 ] as const
 
+export const virtualInventory: Inventory[] = Array.from({ length: 10_000 }, (_, index) => ({
+  product: `Product ${index + 1}`, category: inventory[index % inventory.length].category, stock: String(index + 1),
+}))
+
+export function inventoryEditor(product: string, ref?: React.Ref<HTMLInputElement>) {
+  return <input ref={ref} aria-label="Product name" defaultValue={product}
+    style={{ font: "inherit", minWidth: 0, width: "8rem", padding: ".125rem .25rem", color: "var(--sapField_TextColor)",
+      background: "var(--sapField_Background)", border: "1px solid var(--sapField_BorderColor)" }} />
+}
+
+type FixtureScroll = {
+  scrollToItem(index: number, align: "start"): void
+  horizontalScrollTo(offset: number, align: "start"): void
+}
+export function InventoryFixtureViewport({ instance, scroll, edit, children }: {
+  instance: React.RefObject<FixtureScroll | null>
+  scroll?: "vertical" | "horizontal"
+  edit?: boolean
+  children: React.ReactNode
+}) {
+  const frame = React.useRef<HTMLDivElement>(null)
+  React.useLayoutEffect(() => {
+    if (!scroll && !edit) return
+    const node = frame.current
+    if (!node) return
+    let frameId: number
+    let finished = false
+    const ready = () => {
+      if (finished) return true
+      if (scroll === "vertical" && instance.current && node.querySelector('[aria-rowindex="2"]')) {
+        finished = true
+        instance.current.scrollToItem(5_000, "start")
+      } else if (scroll === "horizontal" && instance.current && node.querySelector('[aria-rowindex="2"]')) {
+        finished = true
+        instance.current.horizontalScrollTo(60, "start")
+      } else if (edit) {
+        const target = node.querySelector<HTMLElement>('[role="gridcell"]:has(input)')
+        if (target) {
+          finished = true
+          target.focus({ preventScroll: true })
+          target.dispatchEvent(new KeyboardEvent("keydown", { key: "F2", code: "F2", bubbles: true, cancelable: true }))
+        }
+      }
+      return finished
+    }
+    // A forwarded WCR ref can exist before its lazy body has mounted. Wait
+    // for the first rendered row, then use the component's actual controller.
+    const observer = new MutationObserver(() => {
+      cancelAnimationFrame(frameId)
+      frameId = requestAnimationFrame(() => { if (ready()) observer.disconnect() })
+    })
+    if (!ready()) observer.observe(node, { childList: true, subtree: true })
+    return () => { observer.disconnect(); cancelAnimationFrame(frameId) }
+  }, [instance, scroll, edit])
+  return <div ref={frame} style={{ width: 480 }}>{children}</div>
+}
+
 type Case = {
   data?: Inventory[]
   scaleWidthMode?: "Default" | "Smart" | "Grow"
@@ -75,6 +134,10 @@ type Case = {
   detail?: "Expandable" | "Visible" | "IncludeHeight" | "IncludeHeightExpandable"
   highlight?: boolean
   navigation?: boolean
+  scroll?: "vertical" | "horizontal"
+  popIn?: "Block" | "Inline" | "WithoutHeader"
+  edit?: boolean
+  infinite?: boolean
 }
 
 const cases: [string, Case][] = [
@@ -128,6 +191,13 @@ const cases: [string, Case][] = [
   ["details-included-expandable", { detail: "IncludeHeightExpandable", expanded: { "0": true } }],
   ["row-highlight", { highlight: true, data: highlightedInventory }],
   ["row-navigation", { navigation: true }],
+  ["virtual-middle", { scroll: "vertical", data: virtualInventory, widths: [160, 160, 160] }],
+  ["virtual-frozen-horizontal", { scroll: "horizontal", frozen: true, widths: [140, 180, 220] }],
+  ["pop-in-block", { popIn: "Block", widths: [310, 150, 170] }],
+  ["pop-in-inline", { popIn: "Inline", widths: [310, 150, 170] }],
+  ["pop-in-without-header", { popIn: "WithoutHeader", widths: [310, 150, 170] }],
+  ["edit", { edit: true }],
+  ["infinite-busy", { infinite: true, loading: true, data: virtualInventory.slice(0, 15), widths: [160, 160, 160] }],
   ["empty-cell", { emptyCell: true, data: [{ ...inventory[0], category: "" }, ...inventory.slice(1)] }],
 ]
 export const fixtureInputs = {

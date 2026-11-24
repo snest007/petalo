@@ -296,7 +296,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; analyticalTableBusyRow?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** As with the in-place SplitButton/Menu fixture, the closed reference is
  * painted inside its cell without opening a modal surface. Verify PopupTemplate's
  * owning host, closed block layer and both exact focus guards, then compare all
@@ -447,6 +447,47 @@ function reconcileInputSuggestionBanner(ours: any, ui5: any, paths: NonNullable<
     }
     native.role = "group"
   }
+}
+
+/** AnalyticalTable/index.js renders the independent BusyIndicator before the grid.
+ * H5 puts the loading text in a grid row and marks the grid busy while preserving
+ * the overlay paint. Validate both exact shapes and compare the loaded rows.
+ */
+function reconcileAnalyticalTableBusyRow(ours: any, ui5: any) {
+  const actual = ours.ax[0].children[0]
+  const native = ui5.ax[0].children[1]
+  const text = "Please wait"
+  expect(actual.role).toBe("grid")
+  expect(native.role).toBe("grid")
+  expect(actual.properties.busy).toBe(1)
+  expect(native.properties.busy).toBeUndefined()
+  const node = (role: string, name: string, properties = {}, children: unknown[] = []) => ({ role, name, properties, children })
+  const generic = (...children: unknown[]) => node("generic", "", {}, children)
+  expect(ui5.ax[0].children[0]).toEqual(generic(generic(
+    node("progressbar", text, { focusable: true, valuemax: 100, valuemin: 0, valuetext: "" },
+      [generic(generic(), generic(), generic())]),
+    node("generic", "", { focusable: true }),
+  )))
+  const actualSnapshot = ours.snapshot[0]
+  const nativeSnapshot = ui5.snapshot[1]
+  expect(actualSnapshot.role).toBe("grid")
+  expect(nativeSnapshot.role).toBe("grid")
+  expect(ui5.snapshot[0]).toEqual({ role: "progressbar", name: text, states: [], children: [] })
+  const body = actual.children[1].children[0]
+  const snapshotBody = actualSnapshot.children[1]
+  expect(actual.children[1].role).toBe("rowgroup")
+  expect(snapshotBody.role).toBe("rowgroup")
+  expect(body.children.at(-1)).toEqual(node("row", text, {}, [
+    node("gridcell", text, { readonly: false, required: false }, [node("StaticText", text)]),
+  ]))
+  expect(snapshotBody.children.at(-1)).toEqual({ role: "row", name: text, states: [], children: [
+    { role: "gridcell", name: text, states: [], children: [] },
+  ] })
+  delete actual.properties.busy
+  body.children.pop()
+  snapshotBody.children.pop()
+  ui5.ax[0].children.shift()
+  ui5.snapshot.shift()
 }
 
 /** WCR RowSubComponent.js places a focusable div directly under the row.
@@ -643,6 +684,10 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.analyticalTableDisabledSelection) {
       if (id !== "analytical-table-select-disabled") throw new Error("Disabled selection allowance is specific to analytical-table-select-disabled")
       reconcileAnalyticalTableDisabledHeader(adjusted.ours, native)
+    }
+    if (allowed?.analyticalTableBusyRow) {
+      if (id !== "analytical-table-infinite-busy") throw new Error("Busy-row allowance applies only to the loaded AnalyticalTable")
+      reconcileAnalyticalTableBusyRow(adjusted.ours, native)
     }
     if (allowed?.analyticalTableDetailRows) {
       if (!/^analytical-table-details-(?:expanded|visible|included-height|included-expandable)$/.test(id)) {

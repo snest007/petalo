@@ -44,6 +44,15 @@ const customColumns: AnalyticalTableColumnDef<Inventory>[] = [
     </span>,
   },
 ]
+const narrowCustomColumns: AnalyticalTableColumnDef<Inventory>[] = customColumns.map(column => {
+  if ("accessorKey" in column && column.accessorKey === "category") return {
+    ...column, responsiveMinWidth: 400, responsivePopIn: true, popinDisplay: "Inline",
+    PopInHeader: () => <strong>Inventory category</strong>,
+  }
+  if ("accessorKey" in column && column.accessorKey === "stock") return { ...column, responsiveMinWidth: 400 }
+  return column
+})
+
 function InventoryBody({ children }: AnalyticalTableBodyProps) {
   const { model } = useAnalyticalTable<Inventory>()
   // Attach inventory analytics metadata to the virtual rows without inserting
@@ -62,6 +71,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
   const [pinning, setPinning] = React.useState({ start: [] as string[], end: [] as string[] })
   const [empty, setEmpty] = React.useState(false)
   const [showDetails, setShowDetails] = React.useState(false)
+  const [narrow, setNarrow] = React.useState(false)
   const [feedback, setFeedback] = React.useState("")
   const tools = { onColumnResize: ({ columnWidth }: { columnWidth: number }) => setFeedback(String(columnWidth)),
     onAutoResize: ({ width }: { width: number }) => setFeedback(String(width)),
@@ -73,11 +83,14 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
       <button type="button" onClick={() => setVisibility(current => ({ category: current.category === false }))}>Toggle category</button>
       <button type="button" onClick={() => setEmpty(previous => !previous)}>Toggle products</button>
       <button type="button" onClick={() => setShowDetails(previous => !previous)} aria-pressed={showDetails}>Toggle details</button>
+      <button type="button" onClick={() => setNarrow(previous => !previous)} aria-pressed={narrow}>Narrow table</button>
       <button type="button" onClick={() => setGroupBy(previous => previous.length ? [] : ["category"])}
         aria-pressed={groupBy.length > 0}>Group categories</button>
     </div>
+    <div className={narrow ? "w-72 max-w-full" : "min-w-0"}>
     <FioriLocaleProvider locale="en-US" texts={{ "wcr:LIST_NO_DATA": "Inventory is empty" }}>
-      <AnalyticalTable data={empty ? [] : inventory} columns={customColumns} aria-label="Custom inventory"
+      <AnalyticalTable data={empty ? [] : inventory} columns={narrow ? narrowCustomColumns : customColumns} aria-label="Custom inventory"
+        adjustTableHeightOnPopIn={narrow}
         tableRef={tableRef} tableOptions={{ getRowId: (_, index) => `product-${index}`, meta: { source: "inventory" } }}
         sorting={sorting} onSortingChange={setSorting} columnFilters={filters} onColumnFiltersChange={setFilters}
         groupBy={groupBy} onGroupByChange={setGroupBy}
@@ -101,6 +114,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
         } : { className: "analytical-table-merged-cell" }}
         NoDataComponent={({ defaultContent }) => <strong>{defaultContent}</strong>} />
     </FioriLocaleProvider>
+    </div>
     <output aria-label="Last column action">{feedback}</output>
   </div>
 }
@@ -220,6 +234,47 @@ export function AnalyticalTableRowFeaturesDemo({ dir, hostile = false }: Pick<An
   </div>
 }
 
+const pagedInventory = 15
+const editableColumns: AnalyticalTableColumnDef<Inventory>[] = [
+  { ...columns[0], interactiveElementName: "Input and button",
+    cell: ({ row }) => <div className="flex items-center gap-2">
+      <input aria-label="Product name" defaultValue={row.original.product} className="min-w-0" />
+      <button type="button" aria-label="Confirm product name">OK</button>
+    </div>,
+  },
+  ...columns.slice(1),
+]
+
+export function AnalyticalTableVirtualDemo({ dir }: Pick<AnalyticalTableProps<Inventory>, "dir">) {
+  const tableRef = React.useRef<AnalyticalTableInstance<Inventory>>(null)
+  const [count, setCount] = React.useState(pagedInventory)
+  const [loading, setLoading] = React.useState(false)
+  const [known, setKnown] = React.useState(false)
+  const [grouped, setGrouped] = React.useState(false)
+  const [event, setEvent] = React.useState("")
+  const [requests, setRequests] = React.useState(0)
+  const loadedRows = React.useMemo(() => inventory.slice(0, count), [count])
+  const append = () => { setCount(previous => previous + pagedInventory); setLoading(false) }
+  return <div className="grid w-full max-w-xl gap-2" id={`analytical-table-virtual-${dir ?? "ltr"}`}>
+    <div className="flex flex-wrap gap-3">
+      <button type="button" onClick={() => tableRef.current?.scrollToItem(0, "start")}>Scroll to first product</button>
+      <button type="button" onClick={() => tableRef.current?.scrollToItem(count - 1, "end")}>Scroll to last loaded product</button>
+      <button type="button" onClick={append} disabled={!loading}>Finish loading products</button>
+      <label><input type="checkbox" checked={known} onChange={event => setKnown(event.target.checked)} /> Show total products</label>
+      <label><input type="checkbox" checked={grouped} onChange={event => setGrouped(event.target.checked)} /> Group loaded products</label>
+    </div>
+    <AnalyticalTable data={loadedRows} columns={editableColumns} aria-label="Editable inventory"
+      tableRef={tableRef} dir={dir} visibleRows={grouped ? 2 : 4} minRows={grouped ? 2 : 3} overscanCount={1} overscanCountHorizontal={1} nativeScrollbar
+      groupable={grouped} groupBy={grouped ? ["category"] : []}
+      infiniteScroll infiniteScrollThreshold={grouped ? 1 : 2} totalRowCount={known ? inventory.length : undefined}
+      loading={loading} loadingDelay={0} f2CellEdit
+      onTableScroll={({ detail }) => setEvent(`Scrolled ${detail.rows.length} loaded products`)}
+      onLoadMore={() => { setRequests(previous => previous + 1); setLoading(true) }} />
+    <output aria-label="Scroll event">{event}</output>
+    <output aria-label="Page requests">{requests}</output>
+  </div>
+}
+
 export default defineDemo({
   category: "Data", title: "AnalyticalTable", order: 55,
   docs: [{
@@ -234,6 +289,9 @@ export default defineDemo({
       { name: "scaleWidthMode", type: "Default | Smart | Grow", description: "Allocate widths evenly, prioritize typical content, or fit the longest sampled values." },
       { name: "visibleRowCountMode", type: "Fixed | Auto | AutoWithEmptyRows | Interactive", description: "Set viewport height from rows, available space, or the pointer resizer." },
       { name: "tableOptions / tableRef", type: "Partial<TableOptions> / Ref<AnalyticalTableInstance>", description: "Add engine options, scroll to a row or column, focus a cell, or reset sizing." },
+      { name: "overscanCount / overscanCountHorizontal", type: "number", description: "Mount extra rows and columns around the viewport to smooth scrolling." },
+      { name: "infiniteScroll / totalRowCount / onLoadMore", type: "boolean / number / scroll event", description: "Request the next page near the end of the loaded rows. Set the server total when it is known." },
+      { name: "nativeScrollbar / f2CellEdit", type: "boolean", description: "Use browser scrollbars and enable Tab through editors and between a header and its body column." },
       { name: "classNames / components / texts / locale", type: "Experimental extension API", description: "Style owned parts, arrange the virtual body and localize grid text." },
     ],
   }],
@@ -246,6 +304,8 @@ export default defineDemo({
     <AnalyticalTableGroupingDemo dir="rtl" hostile />
     <AnalyticalTableRowFeaturesDemo />
     <AnalyticalTableRowFeaturesDemo dir="rtl" hostile />
+    <AnalyticalTableVirtualDemo />
+    <AnalyticalTableVirtualDemo dir="rtl" />
     <section className="grid gap-2">
       <h3>Customise</h3>
       <p>Use <code>classNames</code> with the typed slot names or the <code>analytical-table-*</code> data attributes. Pinned and dragged columns expose <code>data-frozen</code> and <code>data-dragging</code>. ARIA names and descriptions target the inner grid.</p>
@@ -254,6 +314,7 @@ export default defineDemo({
       <p>The experimental column <code>Filter</code> slot receives the current value, a setter, the default editor and the label reference. The Custom example supplies a category selector and sorts stock by its final digit.</p>
       <p>Use the experimental column <code>Grouped</code>, <code>RepeatedValue</code> and <code>Aggregated</code> renderers to customize content inside the grid cells. The table owns the group disclosure, expanded states, level, names and keyboard handling. Add a built-in <code>aggregate</code> or a function. <code>aggregateValue</code> can transform leaf values before the outermost aggregate. The group example computes localized stock totals.</p>
       <p>The experimental <code>renderRowSubComponent</code> slot receives the owning row and table context. Its host handles measured height. The Custom example activates it with Toggle details. Select rows with controlled <code>selectedRowIds</code>, or supply <code>defaultSelectedRowIds</code>. Use <code>isRowSelectable</code> to protect ineligible rows and <code>shouldIgnoreRowClick</code> to reserve activation for embedded actions.</p>
+      <p>Choose Narrow table to move Category into the product cell with the experimental <code>PopInHeader</code> content slot. The grid owns the label and value IDs and keeps the resulting accessible name on the product cell.</p>
       <h4>Custom</h4>
       <CustomAnalyticalTable />
     </section>
