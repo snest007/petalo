@@ -186,16 +186,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for component ownership and reference fi
 
 ## Not done yet
 
-The backlog with task cards is in [docs/plan](docs/plan/README.md) (open cards in `docs/plan/tasks/`, finished ones in
-`docs/plan/tasks/done/`). Calendars are Gregorian only, by design. None of the following blocks using the library.
-
-- **Accessibility and localization parity with UI5, library-wide:** the comparison and ratchet infrastructure (cards
-  E4, E5) and the per-group fixes (wave P) are in progress.
-- **Extension points** for every component (wave X, after its P card), following [the extension contract](docs/extension-contract.md).
-- **From [issue #1](https://github.com/snest007/petalo/issues/1)** (wave H): AnalyticalTable, Calendar extension
-  points, Input suggestions + MessageBox, SplitButton, ButtonBadge, NumericInput,
-  DynamicDateRange and the remaining lower-priority components.
-- **Storybook coverage gate** (card S5).
+Upcoming work includes closer accessibility and localization parity with UI5, more component extension points,
+and gaps in component and Storybook coverage. The [backlog](docs/plan/README.md) tracks current priorities and
+individual cards.
 
 ## License
 

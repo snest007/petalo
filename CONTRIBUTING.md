@@ -1,6 +1,7 @@
 # Adding a component
 
-Every component owns its own files. Nothing shared needs editing, so components can be built in parallel.
+Each component owns the files below. Scope shared edits using [AGENTS.md](AGENTS.md#hard-rules) rule 3.
+See [card scheduling](docs/plan/RUN.md#picking-cards) for parallel work.
 
 | File | Purpose |
 |---|---|
@@ -40,10 +41,8 @@ Quick lookup: `grep -- '--fiori-checkbox' registry/styles/fiori.css | sort -u`
 
 ## Done means
 
-```bash
-pnpm generate && pnpm typecheck && pnpm registry:build
-PORT=<your port> pnpm exec playwright test   # all green, including your fixtures in 4 themes × 2 densities
-```
+Follow the card's acceptance checks and the [definition of done](AGENTS.md#definition-of-done-every-card).
+The [verification budget](AGENTS.md#verification-budget) defines when to run scoped or full suites.
 
 The visual test fails a cell if more than 2% of its pixels differ, or if its size differs at all. Failing cells
 are written to `test-results/visual/<theme>-<density>/` as `<id>-ours.png`, `-ui5.png` and `-diff.png`. Open them with the Read tool.
@@ -56,6 +55,29 @@ or the dark/HC themes fall back to Morning Horizon parameters on the UI5 side.
 Generated files (`registry.json`, `registry/styles/fiori-components.css`, `public/r/`) are git-ignored; scripts rebuild them.
 Commit only your component's own files. If you truly must change a shared file (`fiori-types`, `input.tsx`, a script),
 keep the change minimal and say so in your commit message.
+
+## Verification and preview recipes
+
+The verification scripts choose free ports. For direct Playwright commands, set a free `PORT` other than
+4173 or 5173 so Playwright builds and serves its own copy. Use a free port in place of the examples below.
+
+```bash
+PORT=4310 pnpm exec playwright test                      # full main suite, or append tests/<name>.spec.ts
+PORT=4310 pnpm exec playwright test tests/visual.spec.ts  # UI5 pixels across 4 themes × 2 densities
+VISUAL_ONLY=button,toggle-button pnpm test:summary tests/visual.spec.ts  # comma-separated fixture prefixes
+scripts/ci-local.sh tests/toolbar.spec.ts                 # reproduce Linux CI in Docker
+pnpm check                                               # full repository checks in order
+pnpm storybook                                           # preview at http://localhost:6006
+pnpm storybook:build                                     # build storybook-static/
+PORT=4320 pnpm test:storybook                            # render, globals, Controls and axe
+STORYBOOK_ONLY=toolbar pnpm test:summary -c playwright.storybook.config.ts tests-storybook/storybook.spec.ts
+pnpm dev                                                 # preview docs at http://localhost:5173
+pnpm build                                               # build docs into dist/
+node scripts/smoke-install.mjs                           # install every block in a fresh shadcn app, build and render
+```
+
+The docs preview exposes `/?fixtures`, `/ui5.html`, `/wcr.html`, and `/block.html?name=<block>`.
+Use `node scripts/a11y-baseline.mjs --list P<n>` to inspect entries and `--prune P<n>` after a complete capture.
 
 ## Components from SAPUI5
 
