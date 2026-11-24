@@ -13,7 +13,7 @@ Read [`/AGENTS.md`](../../AGENTS.md) first.
 | S (Storybook) | S0–S4, S4b, SX | S5 | later (polish) |
 | P (a11y/l10n parity) | — | P1–P6, P2a | later (polish); **P2a only before H6** |
 | X (extension rollout) | X0 (design) | X1–X40 (cards written per group) | later (polish), after each group's P card |
-| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H8 (+H8b), H9 (+H9b, H9d) | H3–H7, H9c, H9e, H10 and follow-ups | **H3, H9c and H9e are eligible.** H7b continues on H7. |
+| H (issue #1: new components) | H0, H1 (+H1b), H2 (+H2b–H2d), H8 (+H8b), H9 (+H9b, H9d) | H3–H7, H9c, H9e, H10 and follow-ups | **H3 and H9c are eligible.** H9e returned for open-editor accessibility review. H7b continues on H7. |
 
 **Phase (owner's decision, 2026-11-20): build out components first.** The library isn't mature yet, so new
 components (wave H) come before polish (waves P, X, S5). Order: **H0** → **H7, H8, H9** in parallel and **H1–H5** in
