@@ -26,7 +26,51 @@ async function bounds(locator: Locator) {
   return box!
 }
 
+async function labelInset(page: Page, name: string, native: boolean) {
+  const label = native
+    ? page.locator(`ui5-navigation-menu-item[text="${name}"] li [part="content"]`).first()
+    : page.locator(slot("text")).filter({ hasText: new RegExp(`^${name}$`) })
+  await expect(label).toBeVisible()
+  return label.evaluate((el, { name, native }) => {
+    const row = el.closest(native ? "li" : '[data-slot="navigation-menu-item"]')!
+    const textNodes = document.createTreeWalker(el, NodeFilter.SHOW_TEXT)
+    let text = textNodes.nextNode()
+    while (text && text.textContent?.trim() !== name) text = textNodes.nextNode()
+    if (!text) throw new Error(`No rendered label text: ${name}`)
+    // The UI5 content box includes the icon; measure the actual text on both sides.
+    const range = document.createRange()
+    range.selectNodeContents(text)
+    const glyphs = range.getBoundingClientRect()
+    const bounds = row.getBoundingClientRect()
+    const style = getComputedStyle(row)
+    const inset = style.direction === "rtl" ? bounds.right - glyphs.right : glyphs.left - bounds.left
+    return inset - parseFloat(style.paddingInlineStart)
+  }, { name, native })
+}
+
 for (const dir of ["ltr", "rtl"] as const) {
+  test(`built ${dir} composed icon rows match UI5 at their own menu level`, async ({ browser }) => {
+    const [reference, actual] = await Promise.all([browser.newPage(), browser.newPage()])
+    try {
+      for (const [fixture, rows] of [
+        ["navigation-menu-customise", ["Home", "Workspace"]],
+        ["navigation-menu-expanded", ["Home", "Workspace", "Settings", "More"]],
+      ] as const) {
+        const query = `dir=${dir}&only=${fixture}`
+        await Promise.all([reference.goto(`/ui5.html?${query}`), actual.goto(`/?fixtures&${query}`)])
+        await Promise.all([reference.waitForSelector("html[data-ready=true]"), actual.waitForSelector("html[data-ready=true]")])
+        for (const name of rows) {
+          const [ui5, react] = await Promise.all([labelInset(reference, name, true), labelInset(actual, name, false)])
+          expect(Math.abs(react - ui5), `${fixture} ${name}: React ${react}px, UI5 ${ui5}px`).toBeLessThanOrEqual(1)
+          if (fixture === "navigation-menu-expanded") {
+            if (name === "Home" || name === "Workspace") expect(Math.abs(react)).toBeLessThanOrEqual(1)
+            else expect(react, "The submenu reserves space for its own icons").toBeGreaterThan(0)
+          }
+        }
+      }
+    } finally { await Promise.all([reference.close(), actual.close()]) }
+  })
+
   test(`live desktop ${dir} opens at inline end and aligns the nested surface`, async ({ browser }) => {
     const measures = []
     for (const native of [true, false]) {

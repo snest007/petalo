@@ -7,9 +7,13 @@ import zh from "../../../registry/i18n/zh-CN.json"
 import ar from "../../../registry/i18n/ar.json"
 import { defineFixtures, readPageOptions } from "../fixture-types"
 import { inPlace } from "./popover"
+import type { ReactNode } from "react"
 
 type Props = { rtl?: boolean; interaction?: boolean; styled?: boolean; expanded?: boolean }
 const locales = { "de-DE": de, "zh-CN": zh, "ar-EG": ar }
+function ComposedItems({ children }: { children: ReactNode }) {
+  return <>{children}</>
+}
 const openInPlace = `${inPlace} w-80 [&_[data-slot=navigation-menu]]:w-max
   [&_.fiori-navigation-menu-list]:relative [&_.fiori-navigation-menu-list]:overflow-visible
   [&_.fiori-popup__root]:overflow-visible
@@ -57,20 +61,23 @@ export default defineFixtures<Props>({
   react: ({ rtl, interaction, styled, expanded }) => {
     const { locale, dir } = readPageOptions()
     const localized = interaction && locale && Object.hasOwn(locales, locale) ? locale as keyof typeof locales : undefined
+    const items = [
+      <NavigationMenuItem key="home" text="Home" icon={expanded ? undefined : home} href="#navigation-menu-home" tag={<Tag>New</Tag>} />,
+      <NavigationMenuItem key="workspace" text="Workspace" defaultOpen={expanded}>
+        <NavigationMenuItem text="Settings" icon={expanded ? home : undefined} href="#navigation-menu-settings" />
+        <NavigationMenuItem text="More">
+          <NavigationMenuItem text="Reporting" href="#navigation-menu-reporting" />
+        </NavigationMenuItem>
+      </NavigationMenuItem>,
+      <NavigationMenuItem key="help" text="Help" href="about:blank" target="_blank" design="action" />,
+      <NavigationMenuItem key="archive" text="Archive" href="#navigation-menu-archive" disabled />,
+    ]
     const menu = <div dir={rtl ? "rtl" : undefined} className={interaction ? "inline-flex" : expanded ? openInPlace : inPlace}>
       <NavigationMenu trigger="Navigate" defaultOpen={!interaction} portal={!!interaction}
         preventInitialFocus={!interaction}
         triggerProps={interaction ? undefined : { className: "hidden" }}
         classNames={styled ? { item: "navigation-menu-custom-item" } : undefined}>
-        <NavigationMenuItem text="Home" icon={home} href="#navigation-menu-home" tag={<Tag>New</Tag>} />
-        <NavigationMenuItem text="Workspace" defaultOpen={expanded}>
-          <NavigationMenuItem text="Settings" href="#navigation-menu-settings" />
-          <NavigationMenuItem text="More">
-            <NavigationMenuItem text="Reporting" href="#navigation-menu-reporting" />
-          </NavigationMenuItem>
-        </NavigationMenuItem>
-        <NavigationMenuItem text="Help" href="about:blank" target="_blank" design="action" />
-        <NavigationMenuItem text="Archive" href="#navigation-menu-archive" disabled />
+        {styled ? <ComposedItems>{items}</ComposedItems> : items}
       </NavigationMenu>
     </div>
     return localized ? <FioriLocaleProvider locale={localized} dir={dir} texts={locales[localized]}>{menu}</FioriLocaleProvider> : menu

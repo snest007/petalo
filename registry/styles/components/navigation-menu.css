@@ -86,11 +86,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.fiori-navigation-menu-icon,
-.fiori-navigation-menu-icon-placeholder {
+.fiori-navigation-menu-icon {
   flex-shrink: 0;
   width: var(--fiori-list-item-icon-size);
   height: var(--fiori-list-item-icon-size);
+  margin-inline-end: var(--fiori-list-item-icon-padding-inline-end);
+}
+/* Menu.js and MenuItem.js/onBeforeRendering set _siblingsWithIcon for each level.
+   Use rendered siblings so a React component or fragment can supply the rows. */
+.fiori-navigation-menu-list:has(> .fiori-navigation-menu-item > [data-slot="navigation-menu-icon"])
+  > .fiori-navigation-menu-item:not(:has(> [data-slot="navigation-menu-icon"]))::before {
+  content: "";
+  flex: none;
+  inline-size: var(--fiori-list-item-icon-size);
   margin-inline-end: var(--fiori-list-item-icon-padding-inline-end);
 }
 .fiori-navigation-menu-item .fiori-navigation-menu-indicator {

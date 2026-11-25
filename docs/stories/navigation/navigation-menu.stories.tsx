@@ -30,7 +30,15 @@ export const Playground: Story = {}
 export const Open: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole("button", { name: "Navigate" }))
-    await expect(within(canvasElement.ownerDocument.body).getByRole("dialog", { name: "Additional Navigation Items" })).toBeVisible()
+    const dialog = within(canvasElement.ownerDocument.body).getByRole("dialog", { name: "Additional Navigation Items" })
+    await expect(dialog).toBeVisible()
+    const labels = within(dialog)
+    const home = labels.getByText("Home", { exact: true }).getBoundingClientRect()
+    const workspace = labels.getByText("Workspace", { exact: true }).getBoundingClientRect()
+    const rtl = getComputedStyle(dialog).direction === "rtl"
+    // Native MenuItem.css uses the list icon token for the dummy and NavigationMenuItem.css
+    // sets the real icon to 16 px. Cozy keeps the resulting 2 px difference.
+    await expect(Math.abs(rtl ? home.right - workspace.right : home.left - workspace.left)).toBeLessThanOrEqual(2)
   },
 }
 export const Expanded: Story = {

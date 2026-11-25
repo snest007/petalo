@@ -17,9 +17,9 @@ type NativeMenu = HTMLElement & { opener: HTMLElement; open: boolean; _openItemS
 
 export default defineUi5(set, ({ rtl, interaction, expanded }) => {
   const menu = h("ui5-navigation-menu", {},
-    h("ui5-navigation-menu-item", { text: "Home", icon: "home", href: "#navigation-menu-home" }, h("ui5-tag", { slot: "tag" }, "New")),
+    h("ui5-navigation-menu-item", { text: "Home", icon: expanded ? undefined : "home", href: "#navigation-menu-home" }, h("ui5-tag", { slot: "tag" }, "New")),
     h("ui5-navigation-menu-item", { text: "Workspace" },
-      h("ui5-navigation-menu-item", { text: "Settings", href: "#navigation-menu-settings" }),
+      h("ui5-navigation-menu-item", { text: "Settings", icon: expanded ? "home" : undefined, href: "#navigation-menu-settings" }),
       h("ui5-navigation-menu-item", { text: "More" }, h("ui5-navigation-menu-item", { text: "Reporting", href: "#navigation-menu-reporting" }))),
     h("ui5-navigation-menu-item", { text: "Help", href: "about:blank", target: "_blank", design: "Action" }),
     h("ui5-navigation-menu-item", { text: "Archive", href: "#navigation-menu-archive", disabled: true })) as NativeMenu

@@ -90,7 +90,6 @@ const MenuContext = React.createContext<MenuState | null>(null)
 type MenuLevel = {
   depth: number
   submenu: boolean
-  hasIcons: boolean
   close: () => void
   submenus: Map<string, () => void>
 }
@@ -220,7 +219,6 @@ function NavigationMenuSurface({ id, title, owner, close, submenu = false, preve
     else root.dismissals.delete(id)
   }, [root.dismissals, id, depth, close])
   const submenus = React.useRef(new Map<string, () => void>()).current
-  const hasIcons = React.Children.toArray(children).some((child) => React.isValidElement<NavigationMenuItemProps>(child) && !!child.props.icon)
   const closeOnDismiss = React.useRef(true)
   const titleId = `${id}-label`
   const focusRow = () => list.current && rows(list.current)[0]?.focus({ preventScroll: true })
@@ -270,7 +268,7 @@ function NavigationMenuSurface({ id, title, owner, close, submenu = false, preve
   const desktopSubmenu = submenu && !phone
   const content = <>
     {!submenu && <span id={titleId} className="fiori-navigation-menu-hidden">{title}</span>}
-    <LevelContext.Provider value={{ depth, hasIcons, submenu, close, submenus }}>
+    <LevelContext.Provider value={{ depth, submenu, close, submenus }}>
       <div id={id} ref={list} data-slot="navigation-menu-menu" className={cn("fiori-navigation-menu-list", root.classes?.menu)}
         role="menu" onKeyDown={onKeyDown} onFocus={(event) => {
           const items = rows(event.currentTarget)
@@ -428,8 +426,7 @@ function NavigationMenuItem({
     },
   } satisfies React.HTMLAttributes<HTMLElement> & Record<string, unknown>
   const body = <>
-    {icon ? <Icon icon={icon} data-slot="navigation-menu-icon" className={cn("fiori-navigation-menu-icon", menu.classes?.icon)} />
-      : level.hasIcons && <span aria-hidden="true" className="fiori-navigation-menu-icon-placeholder" />}
+    {icon && <Icon icon={icon} data-slot="navigation-menu-icon" className={cn("fiori-navigation-menu-icon", menu.classes?.icon)} />}
     <span id={labelId} data-slot="navigation-menu-text" className={cn("fiori-navigation-menu-text", menu.classes?.text)}>{text}</span>
     {tag != null && <span id={tagId} aria-hidden="true" data-slot="navigation-menu-tag" className={cn("fiori-navigation-menu-tag", menu.classes?.tag)}>{tag}</span>}
     {hasSubmenu || external ? <Icon icon={hasSubmenu ? slimArrowRight : arrowRight} data-slot="navigation-menu-indicator"
