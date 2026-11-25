@@ -13,7 +13,7 @@ const yesterdayAndToday: DynamicDateRangeOption = {
 
 function Demo() {
   const [value, setValue] = React.useState<DynamicDateRangeValue | null>({ operator: "TODAY" })
-  return <div className="grid gap-4">
+  return <div id="dynamic-date-range-demo" className="grid gap-4">
     <div>
       <Label id="dynamic-date-range-label" htmlFor="dynamic-date-range-period">Period</Label>
       <div><DynamicDateRange id="dynamic-date-range-period" aria-labelledby="dynamic-date-range-label" value={value} onValueChange={setValue} /></div>

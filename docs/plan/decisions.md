@@ -3,6 +3,15 @@
 Owner decisions that change a rule or how cards run. [AGENTS.md](../../AGENTS.md) holds the core rules and this file
 records their rationale and dates, newest first. Record findings for individual cards in their Review findings sections.
 
+## 2026-11-25 — Preserve accessible controls in DynamicDateRange editors
+
+The owner approved keeping the amount spinbutton, named step buttons, visible-label associations for
+amount, unit and From/To, and the Date/Time switch name. The pinned UI5 editors expose an unnamed
+amount textbox, icon hosts and unassociated labels. Apply rule 9 exact, source-backed comparisons
+only in the matching [H9e](tasks/H9e-dynamic-date-range-parity.md) fixtures. Compare values, states,
+text and unaffected nodes, and verify keyboard, focus and announcements in the open editors. Shared
+picker production changes need separate review. The full Tier 2 gate still applies.
+
 ## 2026-11-23 — New-component cards may record structural accessibility-tree differences
 
 See rule 9 and New-component accessibility acceptance in [AGENTS.md](../../AGENTS.md#definition-of-done-every-card).

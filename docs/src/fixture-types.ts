@@ -57,6 +57,8 @@ type FixtureA11yDiff = {
   pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }
   /** Fixed SelectDialog capture topology, after verifying the pinned Dialog shell. */
   selectDialogShape?: "single" | "multiple" | "selected" | "empty"
+  /** Source-pinned DynamicDateRange editor tree for an exact open fixture. */
+  dynamicDateRangeEditor?: true
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */

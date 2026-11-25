@@ -1,4 +1,5 @@
 import { reconcileSelectDialogFixture, type SelectDialogFixtureShape } from "./select-dialog-a11y"
+import { reconcileDynamicDateRangeEditor } from "./dynamic-date-range-a11y"
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { expect, type Page } from "@playwright/test"
 import ts from "typescript"
@@ -296,7 +297,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; analyticalTableBusyRow?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { dynamicDateRangeEditor?: true; analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; analyticalTableBusyRow?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** As with the in-place SplitButton/Menu fixture, the closed reference is
  * painted inside its cell without opening a modal surface. Verify PopupTemplate's
  * owning host, closed block layer and both exact focus guards, then compare all
@@ -670,6 +671,10 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     if (allowed?.selectDialogShape) {
       if (!allowed.pinnedPopupShell || !id.startsWith("select-dialog-")) throw new Error("SelectDialog fixture shape requires its pinned Dialog shell")
       reconcileSelectDialogFixture(adjusted.ours, native, allowed.selectDialogShape)
+    }
+    if (allowed?.dynamicDateRangeEditor) {
+      if (allowed.pinnedPopupShell?.kind !== "popover") throw new Error("DynamicDateRange needs its verified pinned popover shell")
+      reconcileDynamicDateRangeEditor(adjusted.ours, native, id)
     }
     if (allowed?.splitButtonMenu) {
       if (id !== "split-button-menu-open") throw new Error("Menu composition allowance is specific to split-button-menu-open")

@@ -60,7 +60,8 @@ export default defineFixtures<RangeCase>({
       "diff": {
         "ignore": [],
         "pinnedPopupShell": {"kind": "popover", "name": "Dynamic Date Range"},
-        "reason": "As in the SplitButton menu fixture, verify PopupTemplate's exact closed host and focus sentinels and compare the named dialog."
+        "dynamicDateRangeEditor": true,
+        "reason": "ListTemplate projects preset text before the named entries. Verify the duplicate text, sentinels, state-free wrappers and empty local selection outlet while comparing every list item."
       }
     },
     {
@@ -74,7 +75,8 @@ export default defineFixtures<RangeCase>({
         ],
         "ui5FormHosts": ["/ui5/ax/0/children/0/children/1/children/0", "/ui5/ax/0/children/0/children/7/children/0/children/0", "/ui5/ax/0/children/0/children/7/children/0/children/1"],
         "pinnedPopupShell": {"kind": "popover", "name": "Dynamic Date Range"},
-        "reason": "As in the SplitButton menu fixture, verify PopupTemplate's exact closed host and focus sentinels and compare the named dialog. Title and footer text use unnamed presentation wrappers. The button form hosts have only implicit invalid=false; the inner buttons, names, description, and heading level stay compared."
+        "dynamicDateRangeEditor": true,
+        "reason": "LastNextTemplate and DateTimeRangeTemplate leave visible labels unassociated. Check the exact native StepInput and DateTimePicker icon hosts and React controls, names and relations before aligning their shapes. Header and footer remain compared."
       }
     },
     {
@@ -88,7 +90,8 @@ export default defineFixtures<RangeCase>({
         ],
         "ui5FormHosts": ["/ui5/ax/0/children/0/children/1/children/0", "/ui5/ax/0/children/0/children/4/children/0/children/0", "/ui5/ax/0/children/0/children/4/children/0/children/1"],
         "pinnedPopupShell": {"kind": "popover", "name": "Dynamic Date Range"},
-        "reason": "As in the SplitButton menu fixture, verify PopupTemplate's exact closed host and focus sentinels and compare the named dialog. Title and footer text use unnamed presentation wrappers. The button form hosts have only implicit invalid=false; the inner buttons, names, description, and heading level stay compared."
+        "dynamicDateRangeEditor": true,
+        "reason": "CalendarHeaderTemplate uses the spaced shortcut and Popup.js allocates announcements only on actual open. Compare the exact shortcut and the empty local Calendar alert. Header and footer remain compared."
       }
     },
     {
@@ -105,7 +108,8 @@ export default defineFixtures<RangeCase>({
         ],
         "ui5FormHosts": ["/ui5/ax/0/children/0/children/1/children/0", "/ui5/ax/0/children/0/children/5/children/0/children/0", "/ui5/ax/0/children/0/children/5/children/0/children/1"],
         "pinnedPopupShell": {"kind": "popover", "name": "Dynamic Date Range"},
-        "reason": "As in the SplitButton menu fixture, verify PopupTemplate's exact closed host and focus sentinels and compare the named dialog. Title and footer text use unnamed presentation wrappers. The button form hosts have only implicit invalid=false; the inner buttons, names, description, and heading level stay compared. Strip only the unnamed Calendar and Date/Time option wrappers; the roles and text remain compared."
+        "dynamicDateRangeEditor": true,
+        "reason": "FromDateTimeTemplate leaves SegmentedButton unnamed. Keep option semantics and compare the exact added group name, the Calendar shortcut and empty announcement outlets. Header and footer remain compared."
       }
     }
   ],

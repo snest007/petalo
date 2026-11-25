@@ -83,3 +83,69 @@ test("DynamicDateRange date-time editor switches to the Time view after picking 
   await expect(dialog.getByRole("spinbutton", { name: "Hours" })).toBeVisible()
   await expect(dialog.locator('[data-slot="dynamic-date-range-preview"]')).toContainText("Selected: From")
 })
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`DynamicDateRange ${dir} keeps named amount, unit and range controls interactive`, async ({ page }) => {
+    await page.goto(`/?dir=${dir}#/dynamic-date-range`)
+    const demo = page.locator("#dynamic-date-range-demo")
+    const field = demo.getByRole("textbox", { name: "Period", exact: true })
+    const dialog = page.getByRole("dialog", { name })
+    await field.press("F4")
+    await dialog.getByRole("listitem", { name: /Last X Days/ }).click()
+    const amount = dialog.getByRole("spinbutton", { name: "Value for X" })
+    await expect(amount).toHaveAttribute("aria-valuemin", "1")
+    await expect(amount).toHaveAttribute("aria-valuemax", "9999")
+    await amount.press("ArrowUp")
+    await expect(amount).toHaveValue("2")
+    await dialog.getByRole("button", { name: "Increase", exact: true }).click()
+    await expect(amount).toHaveValue("3")
+    const unit = dialog.getByRole("combobox", { name: "Unit of Time" })
+    await unit.press("Enter")
+    await page.getByRole("option", { name: "Weeks", exact: true }).click()
+    await expect(unit).toHaveText("Weeks")
+    await dialog.getByRole("button", { name: "Submit" }).click()
+    await expect(field).toHaveValue("Last 3 Weeks")
+    await expect(field).toBeFocused()
+
+    await field.press("F4")
+    await dialog.getByRole("listitem", { name: /From \/ To \(Date and Time\)/ }).click()
+    for (const label of ["From", "To"]) {
+      const endpoint = dialog.getByRole("textbox", { name: label, exact: true })
+      await endpoint.focus()
+      await expect(endpoint).toBeFocused()
+      await expect(endpoint).toHaveAttribute("aria-haspopup", "grid")
+    }
+    await expect(dialog.getByRole("button", { name: "Open Picker", exact: true })).toHaveCount(2)
+    expect((await new AxeBuilder({ page }).include('[aria-label="Dynamic Date Range"]').analyze()).violations).toEqual([])
+    await page.keyboard.press("Escape")
+    await expect(field).toBeFocused()
+  })
+
+  for (const native of [true, false]) {
+    test(`DynamicDateRange ${native ? "UI5" : "React"} ${dir} announces a picked day in the open editor`, async ({ page }) => {
+      await page.clock.setFixedTime(new Date(2026, 10, 18, 12))
+      await page.goto(native ? `/ui5.html?only=dynamic-date-range-date&dir=${dir}` : `/?dir=${dir}#/dynamic-date-range`)
+      await page.waitForSelector("html[data-ready=true]")
+      const owner = page.locator(native ? '[data-fixture="dynamic-date-range-date"]' : "#dynamic-date-range-demo")
+      const field = owner.getByRole("textbox", { name: "Period", exact: true })
+      await field.press("F4")
+      const dialog = page.getByRole("dialog", { name })
+      const popup = native ? owner.locator("ui5-responsive-popover[open]") : dialog
+      await expect(dialog).toBeVisible()
+      await popup.getByRole("listitem", { name: /^Date Navigation/ }).click()
+      const grid = popup.getByRole("grid")
+      const target = grid.getByRole("gridcell", { name: /November 20, 2026/ })
+      await target.press("Enter")
+      await expect(target).toHaveAttribute("aria-selected", "true")
+      const announcement = native
+        ? page.locator(".ui5-invisiblemessage-assertive").filter({ hasText: /^Selected$/ })
+        : dialog.locator('[data-slot="calendar-announcement"]')
+      await expect(announcement).toHaveAttribute("aria-live", "assertive")
+      await expect(announcement).toHaveText("Selected")
+      await target.press("Shift+F4")
+      await expect(popup.getByRole("gridcell", { name: "2027", exact: true })).toBeVisible()
+      await popup.getByRole("button", { name: "Submit", exact: true }).click()
+      await expect(field).toBeFocused()
+    })
+  }
+}

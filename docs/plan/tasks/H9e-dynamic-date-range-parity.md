@@ -31,6 +31,20 @@ case counts and the pinned template evidence.
 
 Start the next focused comparison with the date-only Calendar shortcut and announcement lifecycle,
 then the native List's preset text and sentinels. The name and role differences in the amount and
-date-time editors repeat the H9b issue. The review needs an owner decision about using exact,
-source-backed native deviations for these named controls and whether any shared picker work belongs
-in scope. Preserve the current interactive semantics. All prior acceptance checks still apply.
+date-time editors repeat the H9b issue. The [owner decision](../decisions.md#2026-11-25--preserve-accessible-controls-in-dynamicdaterange-editors)
+permits exact, source-backed tree comparisons for those cases. Preserve interactive semantics and
+leave shared picker production changes for separate review. All prior acceptance checks still apply.
+
+## Shared integration files
+
+- `README.md`, `docs/plan/README.md`, `docs/plan/decisions.md`, `docs/plan/returns/H9e.md`, and
+  `docs/plan/tasks/P2-parity-value-pickers.md` record the shipped item, scoped owner decision and P2 ownership.
+- `registry/items/date-picker.json` and `registry/items/date-range-picker.json` contain usage routing to
+  `dynamic-date-range`. The item adds its own `docs/stories/dates/dynamic-date-range.stories.tsx`.
+- `docs/src/fixture-types.ts`, `tests/a11y-tree-normalize.ts` and `tests/dynamic-date-range-a11y.ts`
+  register the reference-tree comparison. `tests/a11y-tree-baseline.ts`, `tests/a11y-tree.spec.ts`,
+  `tests/a11y-tree-customizations.spec.ts`, `tests/i18n.spec.ts` and `tests/i18n-audit-baseline.json`
+  register the owner, RTL and locale coverage, and public customization proof.
+- `scripts/a11y-audit.mjs` and `scripts/i18n-audit.mjs` register verified UI5 channels. The generated
+  `docs/plan/a11y-audit.md`, `docs/plan/i18n-audit.md`, locale packs under `registry/i18n/` and
+  `skills/petalo/references/dates.md` incorporate the item.
