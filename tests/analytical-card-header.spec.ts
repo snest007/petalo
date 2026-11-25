@@ -1,5 +1,9 @@
 import { AxeBuilder } from "@axe-core/playwright"
-import { expect, test } from "@playwright/test"
+import { expect, test, type Page } from "@playwright/test"
+import { readFileSync } from "node:fs"
+import { resolve } from "node:path"
+import { build } from "vite"
+import { aliases } from "../vite.aliases"
 
 const headerSlot = '[data-slot="analytical-card-header"]'
 const fixture = '[data-fixture="analytical-card-header-positive"]'
@@ -36,6 +40,8 @@ for (const dir of ["ltr", "rtl"]) {
     await details.click()
     await expect(detailActions).toHaveText("3")
     await expect(headerActions).toHaveText("2")
+    await header.getByRole("heading", { name: "Net revenue", level: 2 }).click()
+    await expect(headerActions).toHaveText("3")
   })
 }
 
@@ -74,3 +80,69 @@ for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_
     expect(violations).toEqual([])
   })
 }
+
+test.describe("AnalyticalCardHeader embedded action ownership", () => {
+  let code: string
+  let stylesheet: string
+
+  test.beforeAll(async () => {
+    const result = await build({
+      configFile: false, publicDir: false, logLevel: "silent", resolve: { alias: aliases },
+      define: { "process.env.NODE_ENV": JSON.stringify("production") },
+      build: { write: false, lib: {
+        entry: resolve("tests/analytical-card-header-ownership.tsx"), formats: ["iife"], name: "AnalyticalCardHeaderOwnership",
+      } },
+    })
+    const buildOutput = Array.isArray(result) ? result[0] : result
+    if (!("output" in buildOutput)) throw new Error("Expected the embedded actions fixture bundle")
+    const chunk = buildOutput.output.find(file => file.type === "chunk")
+    if (!chunk || chunk.type !== "chunk") throw new Error("Missing the embedded actions fixture bundle")
+    code = chunk.code
+    stylesheet = readFileSync("dist/index.html", "utf8").match(/href="([^"]+\.css)"/)![1]
+  })
+
+  async function openFixture(page: Page, dir: "ltr" | "rtl") {
+    const path = "/analytical-card-header-ownership.html"
+    await page.route("**" + path, route => route.fulfill({
+      contentType: "text/html; charset=utf-8",
+      body: `<!doctype html><html lang="en" dir="${dir}" data-theme="sap_horizon"><head><link rel="stylesheet" href="${stylesheet}"></head>
+        <body><div id="root"></div><script>${code.replaceAll("</script", "<\\/script")}</script></body></html>`,
+    }))
+    await page.goto(path)
+    const fixture = page.locator("#analytical-card-header-ownership")
+    await expect(fixture.getByLabel("Header activations")).toHaveText("0")
+    return fixture
+  }
+
+  for (const dir of ["ltr", "rtl"] as const) {
+    test(`native disclosure toggles by mouse and keyboard in ${dir}`, async ({ page }) => {
+      const fixture = await openFixture(page, dir)
+      const disclosure = fixture.locator("details")
+      const summary = disclosure.locator("summary")
+      const headerActions = fixture.getByLabel("Header activations")
+      await disclosure.getByText("Breakdown", { exact: true }).click()
+      await expect(disclosure).toHaveAttribute("open", "")
+      await expect(headerActions).toHaveText("0")
+      await summary.focus()
+      await expect(summary).toBeFocused()
+      await page.keyboard.press("Enter")
+      await expect(disclosure).not.toHaveAttribute("open")
+      await expect(headerActions).toHaveText("0")
+    })
+
+    test(`a portaled menu item keeps its selection in ${dir}`, async ({ page }) => {
+      const fixture = await openFixture(page, dir)
+      const header = fixture.locator(headerSlot)
+      const headerActions = fixture.getByLabel("Header activations")
+      await header.getByRole("button", { name: "Actions", exact: true }).click()
+      const item = page.getByRole("menuitem", { name: "Export", exact: true })
+      await expect(item).toBeVisible()
+      await expect(header.getByRole("menuitem")).toHaveCount(0)
+      await expect(headerActions).toHaveText("0")
+      await item.click()
+      await expect(fixture.getByLabel("Menu selections")).toHaveText("1")
+      await expect(item).toBeHidden()
+      await expect(headerActions).toHaveText("0")
+    })
+  }
+})

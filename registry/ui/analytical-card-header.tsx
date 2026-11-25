@@ -92,6 +92,9 @@ function sideItems(children: React.ReactNode): React.ReactNode[] {
   )
 }
 
+const embeddedControl = "a[href], area[href], button, input, label, select, textarea, summary, audio[controls], video[controls], " +
+  "[tabindex], [role~=button], [role~=link], [contenteditable]:not([contenteditable=false])"
+
 /** @accessibility The named group includes the title, subtitle, measurement, KPI, side indicators and description in reading order. */
 function AnalyticalCardHeader({
   titleText, titleTextLevel = 3, subtitleText, value, scale, unitOfMeasurement, status, description,
@@ -138,8 +141,15 @@ function AnalyticalCardHeader({
     data-sap-ui-fastnavgroup="true" role="group" tabIndex={0} aria-roledescription={texts.header} aria-labelledby={labelledBy || undefined}
     className={cn("fiori-analytical-card-header", classNames?.root, className)}
     onClick={(event) => {
-      const childControl = (event.target as Element).closest("a[href], button, input, select, textarea, [role=button], [role=link], [contenteditable=true]")
-      if (!childControl || !event.currentTarget.contains(childControl)) onClick?.(event)
+      // React bubbles portal events through its component tree. The native
+      // path must reach this header without crossing an embedded control.
+      for (const target of event.nativeEvent.composedPath()) {
+        if (target === event.currentTarget) {
+          onClick?.(event)
+          return
+        }
+        if (target instanceof Element && target.matches(embeddedControl)) return
+      }
     }}
     onKeyDown={(event) => {
       if (keyActivation(event)) {
