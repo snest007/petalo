@@ -95,7 +95,7 @@ Maintain the row format below for the [localization audit](../../scripts/i18n-au
 | P2a | calendar, date-picker, date-range-picker, date-time-picker (split from P2 on 2026-11-17 so the Calendar pilot runs first) |
 | P3 | table, data-table, list, tree, timeline, upload-collection, object-status, object-number, object-identifier |
 | P4 | dialog, message-box, popover, responsive-popover, menu, navigation-menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
-| P5 | avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
+| P5 | analytical-card-header, avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
 | P6 | bar, breadcrumbs, filter-bar, notification-list, product-switch, search, shell-bar, side-navigation, tabs, toolbar, variant-management, wizard, dynamic-page, dynamic-side-content, flexible-column-layout, navigation-layout, object-page, page, f6-navigation, variants |
 
 Register Wave H components under the P group for their demo category. Apply

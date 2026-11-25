@@ -10,6 +10,10 @@
     ],
     "avoidWhen": [
       {
+        "when": "Lead a chart card with a primary KPI, trend and supporting indicators.",
+        "use": ["analytical-card-header"]
+      },
+      {
         "when": "Group information inside a page and let users collapse it rather than preview an independent destination.",
         "use": [
           "panel"

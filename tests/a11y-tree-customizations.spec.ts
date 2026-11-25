@@ -8,6 +8,9 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "AnalyticalCardHeader.className": "analytical-card-header",
+  "AnalyticalCardHeader.children": "analytical-card-header",
+  "NumericSideIndicator.className": "analytical-card-header",
   "AnalyticalTable.className": "analytical-table-custom",
   "AnalyticalTable.NoDataComponent": "analytical-table-custom",
   "AnalyticalTable.LoadingComponent": "analytical-table-custom",
@@ -631,6 +634,22 @@ test.beforeAll(async () => {
     }));
     function C(name,props,...children){const module=modules.find(m=>m[name]);if(!module)throw Error('Missing public component '+name);return h(module[name],props,...children)}
     const fixtures={${names.map((name, i) => `${JSON.stringify(name)}:F${i}`).join(",")}};
+    fixtures['analytical-card-header-hostile'] = {
+      cases: [{ id: 'analytical-card-header-hostile', props: {} }],
+      react: () => C('AnalyticalCardHeader', {
+        id:'owned-kpi', titleText:'Revenue', value:40, scale:'K', state:'positive', trend:'up',
+        role:'presentation', tabIndex:17, 'aria-labelledby':'foreign-label', 'aria-hidden':true,
+        'aria-label':'Foreign name', 'aria-roledescription':'Foreign role', 'data-slot':'foreign-slot',
+        'data-state':'negative', 'data-trend':'down', asChild:true,
+        classNames:{root:'custom-kpi', value:'font-bold'},
+        texts:{header:'Revenue summary', up:'Growth', positive:'Healthy'},
+      }, C('NumericSideIndicator', {
+        id:'owned-target', titleText:'Target', number:42, unit:'K',
+        role:'presentation', tabIndex:18, 'aria-hidden':true, 'aria-label':'Foreign target',
+        'data-slot':'foreign-target', classNames:{title:'italic'},
+      }), C('AnalyticalCardHeader', {titleText:'Title only'})),
+    };
+
     const seen=new Set(); const wrappers=new Map(); const h=React.createElement; let root; let sequence=0;
     const button=text=>C('Button',{},text), text=value=>h('span',{},value);
     const optional={
@@ -1071,4 +1090,37 @@ test("NavigationMenu protects disclosure roles, name references, descriptions an
   for (const prop of ["role", "id", "tabIndex", "aria-expanded", "aria-haspopup", "aria-controls", "aria-disabled", "aria-label", "aria-labelledby"]) {
     expect(warnings.some((warning) => warning.includes("NavigationMenu.Item: ignored ownership prop " + prop))).toBe(true)
   }
+})
+
+
+test("AnalyticalCardHeader and NumericSideIndicator protect custom roles, names, states and tab stops", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", message => { if (message.type() === "warning") warnings.push(message.text()) })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("analytical-card-header-hostile", "analytical-card-header-hostile", false))
+  const header = page.locator("#owned-kpi")
+  const target = page.locator("#owned-target")
+  await expect(header).toHaveRole("group")
+  await expect(header).toHaveAttribute("tabindex", "0")
+  await expect(header).toHaveAttribute("data-slot", "analytical-card-header")
+  await expect(header).toHaveAttribute("data-state", "positive")
+  await expect(header).toHaveAttribute("data-trend", "up")
+  await expect(header).toHaveClass(/custom-kpi/)
+  await expect(header).toHaveAttribute("aria-roledescription", "Revenue summary")
+  await expect(header).toHaveAccessibleName("Revenue 40K Growth Healthy Target 42K Title only")
+  await expect(header.getByRole("img", { name: "40K Growth Healthy" })).toBeVisible()
+  await expect(header.locator('[data-slot="analytical-card-header-value"]').first()).toHaveClass(/font-bold/)
+  await expect(target).toHaveAttribute("data-slot", "numeric-side-indicator")
+  await expect(target).not.toHaveAttribute("tabindex", /.+/)
+  await expect(target.getByText("Target", { exact: true })).toHaveClass(/italic/)
+  const titleOnly = header.getByRole("group", { name: "Title only" })
+  await expect(titleOnly.getByRole("img")).toHaveCount(0)
+  expect(warnings).toEqual(expect.arrayContaining([
+    'AnalyticalCardHeader: ignored owned prop "role".',
+    'AnalyticalCardHeader: ignored owned prop "aria-labelledby".',
+    'AnalyticalCardHeader: ignored owned prop "tabIndex".',
+    'AnalyticalCardHeader: ignored owned prop "data-slot".',
+    'NumericSideIndicator: ignored owned prop "aria-hidden".',
+    'NumericSideIndicator: ignored owned prop "tabIndex".',
+  ]))
 })

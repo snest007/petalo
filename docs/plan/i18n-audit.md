@@ -203,17 +203,17 @@ Owner: P4
 
 ## analytical-card-header
 
-Owner: H10
+Owner: H11
 
 | SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| wcr:ARIA_DESC_CARD_HEADER | Card Header | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:NUMERICCONTENT_DEVIATION_DOWN | Descending | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:NUMERICCONTENT_DEVIATION_UP | Ascending | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:SEMANTIC_COLOR_CRITICAL | Warning | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:SEMANTIC_COLOR_ERROR | Critical | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:SEMANTIC_COLOR_GOOD | Good | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
-| wcr:SEMANTIC_COLOR_NEUTRAL | Neutral | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:ARIA_DESC_CARD_HEADER | Card Header | analytical-card-header: texts/labels.header | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:NUMERICCONTENT_DEVIATION_DOWN | Descending | analytical-card-header: texts/labels.down | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:NUMERICCONTENT_DEVIATION_UP | Ascending | analytical-card-header: texts/labels.up | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:SEMANTIC_COLOR_CRITICAL | Warning | analytical-card-header: texts/labels.critical | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:SEMANTIC_COLOR_ERROR | Critical | analytical-card-header: texts/labels.negative | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:SEMANTIC_COLOR_GOOD | Good | analytical-card-header: texts/labels.positive | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
+| wcr:SEMANTIC_COLOR_NEUTRAL | Neutral | analytical-card-header: texts/labels.neutral | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js:10 (WCR key import) | wcr |
 
 ## analytical-table
 

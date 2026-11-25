@@ -197,6 +197,13 @@ verifiedTexts["navigation-menu.NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT"] = {
   proof: "NavigationMenuItem.js _accInfo requires associatedItem.isSelectable, only set by SideNavigationPopoverTemplate.js.",
 }
 
+const h11Proof = "tests/analytical-card-header.spec.ts: localizes KPI values and preserves overridable SAP phrases"
+for (const [key, equivalent] of [
+  ["ARIA_DESC_CARD_HEADER", "header"], ["NUMERICCONTENT_DEVIATION_UP", "up"], ["NUMERICCONTENT_DEVIATION_DOWN", "down"],
+  ["SEMANTIC_COLOR_NEUTRAL", "neutral"], ["SEMANTIC_COLOR_GOOD", "positive"],
+  ["SEMANTIC_COLOR_CRITICAL", "critical"], ["SEMANTIC_COLOR_ERROR", "negative"],
+]) verifiedTexts[`analytical-card-header.${key}`] = { equivalent: `AnalyticalCardHeader.texts.${equivalent}`, status: "ok", proof: h11Proof }
+
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {
   const manifestPath = `node_modules/${pkg}/dist/custom-elements.json`
@@ -226,6 +233,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
   ["node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js", "select-dialog"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js", "analytical-card-header"],
   ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
   ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)
@@ -233,8 +241,16 @@ const textRows = [], announcements = []
 for (const [file, owner] of sourceFiles) {
   const source = read(file), lines = source.split("\n")
   const keys = new Set([...source.matchAll(/getText\(\s*([A-Z][A-Z\d_]+)/g)].map((match) => match[1]))
+  if (owner === "analytical-card-header") {
+    // The renderer passes two state-map lookups to getText. Audit every key
+    // from those maps in addition to the directly referenced role description.
+    for (const key of Object.keys(verifiedTexts).filter(key => key.startsWith(`${owner}.`))) keys.add(key.split(".")[1])
+  }
   for (const key of keys) {
-    const line = lines.findIndex((value) => value.includes(`getText(${key}`)) + 1
+    const directLine = lines.findIndex((value) => value.includes(`getText(${key}`))
+    const line = (directLine < 0 && owner === "analytical-card-header"
+      ? lines.findIndex(value => value.startsWith("const ") && value.includes(key))
+      : directLine) + 1
     textRows.push({ owner, key, source: `${file}:${line}`, status: "gap", equivalent: "Exact overridable text and behavior assertion require verification", ...verifiedTexts[`${owner}.${key}`] })
   }
   for (let index = 0; index < lines.length; index++) if (/\bannounce\(|\bapplyCustomAnnouncement\(|\bgetCustomAnnouncement\(/.test(lines[index])) {

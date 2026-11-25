@@ -54,6 +54,19 @@
       "p13nDialog.RESET"
     ]
   },
+  "analytical-card-header": {
+    "owner": "H11",
+    "gapCount": 0,
+    "okKeys": [
+      "wcr:ARIA_DESC_CARD_HEADER",
+      "wcr:NUMERICCONTENT_DEVIATION_DOWN",
+      "wcr:NUMERICCONTENT_DEVIATION_UP",
+      "wcr:SEMANTIC_COLOR_CRITICAL",
+      "wcr:SEMANTIC_COLOR_ERROR",
+      "wcr:SEMANTIC_COLOR_GOOD",
+      "wcr:SEMANTIC_COLOR_NEUTRAL"
+    ]
+  },
   "analytical-table": {
     "owner": "H1",
     "gapCount": 0,

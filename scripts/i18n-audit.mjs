@@ -273,7 +273,7 @@ ownerByComponent.icon = 'P5'
 // hooks/renderers. Shared Web Component keys continue to use their own domain.
 const wcrComponents = {
   'action-sheet': ['ActionSheet', 'H10'],
-  'analytical-card-header': ['AnalyticalCardHeader', 'H10'],
+  'analytical-card-header': ['AnalyticalCardHeader', 'H11'],
   'analytical-table': ['AnalyticalTable', 'H1'],
   'message-box': ['MessageBox', 'H7'],
   'message-view': ['MessageView', 'H0'],
