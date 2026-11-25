@@ -6,6 +6,7 @@
 | [breadcrumbs](#breadcrumbs) | Show the current location and let users return to ancestors in the navigation path. |
 | [f6-navigation](#f6-navigation) | Opt-in UI5 fast navigation between page groups, with scoped roots, Popup containers, shadows and slots. |
 | [filter-bar](#filter-bar) | Let users limit a result collection by several criteria in the page header. |
+| [navigation-menu](#navigation-menu) | Offer related navigation destinations from a single opener. |
 | [notification-list](#notification-list) | Collect business-event updates that users may read, act on or dismiss without interrupting their task. |
 | [product-switch](#product-switch) | Let users choose another product from a grid of labeled product entries. |
 | [search](#search) | Find content by submitting a query, optionally with scopes and suggestions. |
@@ -92,6 +93,26 @@ Main exports: `FilterBar`, `FilterBarItem`, `FilterBarToggle`, `filterExpandedSu
 
 ```bash
 npx shadcn add @petalo/filter-bar
+```
+
+## navigation-menu
+
+Offer related navigation destinations from a single opener.
+
+### Use when
+
+- Group destinations into nested submenus.
+- Show native links, including destinations that open in a new tab.
+
+### Don't use when
+
+- Show action commands or checkable options. → [menu](overlays.md#menu)
+- Keep the application's destinations visible beside the page. → [side-navigation](navigation.md#side-navigation)
+
+Main exports: `NavigationMenu`, `NavigationMenuItem`.
+
+```bash
+npx shadcn add @petalo/navigation-menu
 ```
 
 ## notification-list
@@ -189,11 +210,11 @@ Provide the main navigation between modules or destinations within a product.
 
 ### Don't use when
 
+- Offer related destinations from a single opener without a persistent sidebar. → [navigation-menu](navigation.md#navigation-menu)
 - Switch facets of content within one page rather than application destinations. → [tabs](navigation.md#tabs)
 - Switch to a different product rather than navigate within the current one. → [product-switch](navigation.md#product-switch)
 - Show the current location and return to ancestors in its navigation path. → [breadcrumbs](navigation.md#breadcrumbs)
 - Arrange the shell, navigation and content regions rather than provide navigation items. → [navigation-layout](layout.md#navigation-layout)
-- Offer only a single navigation target.
 
 Main exports: `SideNavigation`, `SideNavigationGroup`, `SideNavigationItem`, `SideNavigationSubItem`.
 

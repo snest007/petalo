@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Tilgjengelige verdier",
   "FORM_TEXTFIELD_REQUIRED": "Fyll ut dette feltet.",
   "GROUP_HEADER_TEXT": "Gruppetopp",
+  "ICON_NAV_BACK": "Naviger tilbake",
   "IM_SUBTITLE_ACHIEVEMENT": "Gratulerer med fremragende resultat og innsats!",
   "IM_SUBTITLE_ADDCOLUMN": "Du kan legge til flere kolonner i tabellinnstillingene.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Legg til flere dimensjoner for å fullføre diagrammet.",

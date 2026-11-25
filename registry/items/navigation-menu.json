@@ -1,0 +1,14 @@
+{
+  "title": "NavigationMenu",
+  "description": "Opener-anchored hierarchy of navigation destinations with native links, icons, tags and directional keyboard navigation (ui5-navigation-menu).",
+  "registryDependencies": ["@petalo/responsive-popover", "@petalo/button", "@petalo/icons", "@petalo/f6-navigation", "@petalo/use-is-phone", "@petalo/locale"],
+  "usage": {
+    "summary": "Offer related navigation destinations from a single opener.",
+    "useWhen": ["Group destinations into nested submenus.", "Show native links, including destinations that open in a new tab."],
+    "avoidWhen": [
+      { "when": "Show action commands or checkable options.", "use": ["menu"] },
+      { "when": "Keep the application's destinations visible beside the page.", "use": ["side-navigation"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

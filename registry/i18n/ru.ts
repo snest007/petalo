@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Доступные значения",
   "FORM_TEXTFIELD_REQUIRED": "Заполните это поле.",
   "GROUP_HEADER_TEXT": "Заголовок группы",
+  "ICON_NAV_BACK": "Вернуться",
   "IM_SUBTITLE_ACHIEVEMENT": "Поздравляем!",
   "IM_SUBTITLE_ADDCOLUMN": "Можно добавить больше столбцов в настройках таблицы.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Добавьте измерения, чтобы сформировать диаграмму.",

@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Saadaolevad väärtused",
   "FORM_TEXTFIELD_REQUIRED": "Täitke see väli.",
   "GROUP_HEADER_TEXT": "Grupipäis",
+  "ICON_NAV_BACK": "Navigeeri tagasi",
   "IM_SUBTITLE_ACHIEVEMENT": "Õnnitlused teie silmapaistva tulemuslikkuse ja pühendumise eest!",
   "IM_SUBTITLE_ADDCOLUMN": "Tabelisätetes saate lisada veel veerge.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Lisage diagrammi lõpule viimiseks rohkem dimensioone.",

@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Valores disponíveis",
   "FORM_TEXTFIELD_REQUIRED": "Preencha este campo.",
   "GROUP_HEADER_TEXT": "Cabeçalho do grupo",
+  "ICON_NAV_BACK": "Navegar para trás",
   "IM_SUBTITLE_ACHIEVEMENT": "Parabéns pelo seu desempenho e dedicação incríveis!",
   "IM_SUBTITLE_ADDCOLUMN": "Pode adicionar mais colunas nas definições da tabela.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Adicione mais dimensões para concluir o seu gráfico.",

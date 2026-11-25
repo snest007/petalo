@@ -2029,6 +2029,31 @@ Owner: P6
 | SIDE_NAVIGATION_SEARCH_MATCH_COUNT_PLURAL | {0} matches found | No implemented provider/override text owner | gap | owner-review | Retained native/imported/helper or OpenUI5-family key without translated owner. Native references below identify the expression/definition; audit status alone does not establish a rendered feature blocker. | node_modules/@ui5/webcomponents-fiori/dist/SideNavigation.js:283 (noMatchText); node_modules/@ui5/webcomponents-fiori/dist/SideNavigation.js:650 (announceSearchMatchCount) | ui5-fiori |
 | SIDE_NAVIGATION_SEARCH_MATCH_COUNT_SINGULAR | {0} match found | No implemented provider/override text owner | gap | owner-review | Retained native/imported/helper or OpenUI5-family key without translated owner. Native references below identify the expression/definition; audit status alone does not establish a rendered feature blocker. | node_modules/@ui5/webcomponents-fiori/dist/SideNavigation.js:649 (announceSearchMatchCount) | ui5-fiori |
 
+## navigation-menu
+
+Owner: P4
+
+| SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| ARIA_LABEL_LIST_ITEM_CHECKBOX | Multiple Selection Mode | NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:332 (_accInfo) | ui5 |
+| ARIA_LABEL_LIST_ITEM_RADIO_BUTTON | Item Selection. | NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:333 (_accInfo) | ui5 |
+| DELETE | Delete | NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:303 (deleteText) | ui5 |
+| DIALOG_CONTENT_ARIA_LABEL | Content | navigation-menu: texts/labels.content | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:335 (_contentAriaLabel) | ui5 |
+| DIALOG_FOOTER_ARIA_LABEL | Footer | navigation-menu: texts/labels.footer | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:338 (_footerAriaLabel) | ui5 |
+| DIALOG_HEADER_ARIA_LABEL | Header | navigation-menu: texts/labels.header | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:332 (_headerAriaLabel) | ui5 |
+| ICON_NAV_BACK | Navigate Back | navigation-menu: owning t() text expression | fixed in E5 |  |  | node_modules/@ui5/webcomponents-icons/dist/v4/nav-back.js:7 (native key expression) | ui5 |
+| LIST_ITEM_ACTIVE | Is Active | navigation-menu: texts/labels.active | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:320 (ariaLabelledByText) | ui5 |
+| LIST_ITEM_NOT_SELECTED | Not Selected | NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:298 (ariaSelectedText) | ui5 |
+| LIST_ITEM_SELECTED | Selected | NavigationMenuTemplate.js and MenuItemTemplate.js use List selectionMode=None. Standalone destination rows do not render List selection controls or descriptions. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ListItem.js:298 (ariaSelectedText) | ui5 |
+| MENU_BACK_BUTTON_ARIA_LABEL | Back | navigation-menu: owning t() text expression | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/MenuItem.js:157 (labelBack) | ui5 |
+| MENU_CANCEL_BUTTON_TEXT | Cancel | navigation-menu: texts/labels.cancel | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/Menu.js:121 (labelCancel); node_modules/@ui5/webcomponents/dist/MenuItem.js:160 (labelCancel) | ui5 |
+| MENU_ITEM_END_CONTENT_ACCESSIBLE_NAME | Additional Actions | NavigationMenuTemplate.js uses the Fiori dialog name and NavigationMenuItemTemplate.js replaces the inherited end-content slot with a tag and indicator. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/MenuItem.js:166 (endContentAccessibleName) | ui5 |
+| MENU_ITEM_LOADING | Loading | The standalone destination item has no loading prop or asynchronously loaded submenu in the H10 card. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/Menu.js:323 (_afterPopoverOpen); node_modules/@ui5/webcomponents/dist/MenuItem.js:169 (loadingText); node_modules/@ui5/webcomponents/dist/MenuItem.js:376 (_afterPopoverOpen) | ui5 |
+| MENU_POPOVER_ACCESSIBLE_NAME | Select an option from the menu | NavigationMenuTemplate.js uses the Fiori dialog name and NavigationMenuItemTemplate.js replaces the inherited end-content slot with a tag and indicator. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/Menu.js:173 (accessibleNameText); node_modules/@ui5/webcomponents/dist/MenuItem.js:163 (accessibleNameText) | ui5 |
+| NAVIGATION_MENU_POPOVER_HIDDEN_TEXT | Additional Navigation Items | navigation-menu: texts/labels.menuLabel | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/NavigationMenu.js:49 (accSideNavigationPopoverHiddenText) | ui5-fiori |
+| NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT | This menu item opens a submenu and also links to a page. To go to the page, press Enter or the right arrow key to open the submenu, then select the first item in the submenu. | NavigationMenuItem.js only assigns this text when an associated SideNavigation item is selectable. The standalone menu has no associated item or duplicated selectable parent. | not rendered |  |  | node_modules/@ui5/webcomponents-fiori/dist/NavigationMenuItem.js:72 (_accInfo) | ui5-fiori |
+| RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON | Decline | navigation-menu: texts/labels.close | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/ResponsivePopover.js:127 (_closeDialogAriaLabel) | ui5 |
+
 ## notification-list
 
 Owner: P6

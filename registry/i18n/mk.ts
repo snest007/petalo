@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Достапни вредности",
   "FORM_TEXTFIELD_REQUIRED": "Пополнете го полево.",
   "GROUP_HEADER_TEXT": "Заглавие на групата",
+  "ICON_NAV_BACK": "Врати се назад",
   "IM_SUBTITLE_ACHIEVEMENT": "Честитки на неверојатниот учинок и посветеноста!",
   "IM_SUBTITLE_ADDCOLUMN": "Може да додадете повеќе колони во поставките на табелата.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Додајте повеќе димензии за да го пополните дијаграмот.",

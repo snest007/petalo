@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "ערכים זמינים",
   "FORM_TEXTFIELD_REQUIRED": "מלא שדה זה.",
   "GROUP_HEADER_TEXT": "כותרת קבוצה",
+  "ICON_NAV_BACK": "נווט חזרה",
   "IM_SUBTITLE_ACHIEVEMENT": "ברכות על המסירות והביצועים יוצאי הדופן שלך!",
   "IM_SUBTITLE_ADDCOLUMN": "באפשרותך להוסיף עוד עמודות בהגדרות הטבלה.",
   "IM_SUBTITLE_ADDDIMENSIONS": "הוסף ממדים נוספים כדי להשלים את התרשים שלך.",

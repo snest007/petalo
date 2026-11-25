@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Valori disponibile",
   "FORM_TEXTFIELD_REQUIRED": "Completați acest câmp.",
   "GROUP_HEADER_TEXT": "Antet de grup",
+  "ICON_NAV_BACK": "Navigare înapoi",
   "IM_SUBTITLE_ACHIEVEMENT": "Felicitări pentru performanța și dedicația dvs. deosebite!",
   "IM_SUBTITLE_ADDCOLUMN": "Acum puteți adăuga mai multe coloane în setările de tabel.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Adăugați mai multe dimensiuni pentru a completa diagrama dvs.",

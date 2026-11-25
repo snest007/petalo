@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Pieejamās vērtības",
   "FORM_TEXTFIELD_REQUIRED": "Lūdzu, aizpildiet šo lauku.",
   "GROUP_HEADER_TEXT": "Grupas galvene",
+  "ICON_NAV_BACK": "Naviģēt atpakaļ",
   "IM_SUBTITLE_ACHIEVEMENT": "Apsveicam ar izcilo sniegumu un centību!",
   "IM_SUBTITLE_ADDCOLUMN": "Tabulas iestatījumos varat pievienot vairāk kolonnu.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Lai pabeigtu diagrammu, pievienojiet vairāk dimensiju.",

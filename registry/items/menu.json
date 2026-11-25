@@ -20,6 +20,7 @@
       "Use MenuGroup checkMode=\"single\" or \"multiple\" when menu commands represent checked choices."
     ],
     "avoidWhen": [
+      { "when": "Offer destination links from one opener.", "use": ["navigation-menu"] },
       {
         "when": "Make the common command available immediately beside the menu arrow.",
         "use": [
@@ -27,14 +28,9 @@
         ]
       },
       {
-        "when": "Show mixed contextual information or editable content beside an opener on every device.",
+        "when": "Show mixed contextual information beside an opener or in a phone dialog.",
         "use": [
-          "popover"
-        ]
-      },
-      {
-        "when": "Show mixed contextual content anchored on desktop and in a full-screen phone dialog.",
-        "use": [
+          "popover",
           "responsive-popover"
         ]
       },

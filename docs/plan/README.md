@@ -7,7 +7,7 @@ Read [AGENTS.md](../../AGENTS.md) before starting a card.
 
 | Wave | Open or planned | Scheduling |
 |---|---|---|
-| H (new components) | H6, H6b, H6c, H9e, H10–H14, H10b, H10c | **Next: [H10c NavigationMenu](tasks/H10c-navigation-menu-composed-icons.md)** continues in the H10 worktree. [H9e DynamicDateRange](tasks/H9e-dynamic-date-range-parity.md) is ready for review. H11–H14 meet their listed card dependencies and await scheduling. |
+| H (new components) | H6, H6b, H6c, H9e, H11–H14 | **Next: [H9e DynamicDateRange](tasks/H9e-dynamic-date-range-parity.md)** is ready for review. H11–H14 meet their listed card dependencies and await scheduling. |
 | P (accessibility and localization parity) | P1–P6, P2a | [P2a](tasks/P2a-parity-calendar-date-pickers.md) runs just before H6 → H6b → H6c. The other P cards follow new component work. |
 | X (extension rollout) | X1–X40 candidates | Plan each group after its P card. |
 | S (Storybook) | S5 | Schedule after new component work. |
@@ -41,9 +41,6 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
 - [ ] [H9e DynamicDateRange parity](tasks/H9e-dynamic-date-range-parity.md) — M (after H9/H9b/H9d merge)
-- [ ] [H10 NavigationMenu](tasks/H10-navigation-menu.md) — M (after H0, E4, E5)
-- [ ] [H10b NavigationMenu built parity and open-state acceptance](tasks/H10b-navigation-menu-built-parity.md) — S (continue the [H10 return](returns/H10.md))
-- [ ] [H10c NavigationMenu composed icon alignment](tasks/H10c-navigation-menu-composed-icons.md) — S (continue the [H10b return](returns/H10b.md))
 - [ ] [H11 AnalyticalCardHeader and NumericSideIndicator](tasks/H11-analytical-card-header.md) — M (after H0, E4, E5)
 - [ ] [H12 ActionSheet](tasks/H12-action-sheet.md) — M (after H0, E4, E5)
 - [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
@@ -70,6 +67,9 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [x] [H9b Finish H9 parity](tasks/done/H9b-finish-h9-parity.md) — see the [H9 return](returns/done/H9.md) for the owner split
 - [x] [H9c SelectDialog parity](tasks/done/H9c-select-dialog-dynamic-date-range.md) — M (after H9/H9b/H9d merge)
 - [x] [H9d SplitterLayout: automatic pane sizing](tasks/done/H9d-splitter-layout-auto-sizing.md) — S (same branch as H9; after E11)
+- [x] [H10 NavigationMenu](tasks/done/H10-navigation-menu.md) — M (after H0, E4, E5)
+- [x] [H10b NavigationMenu built parity and open-state acceptance](tasks/done/H10b-navigation-menu-built-parity.md) — S (continue the [H10 return](returns/done/H10.md))
+- [x] [H10c NavigationMenu composed icon alignment](tasks/done/H10c-navigation-menu-composed-icons.md) — S (continue the [H10b return](returns/done/H10b.md))
 
 </details>
 
@@ -94,7 +94,7 @@ Maintain the row format below for the [localization audit](../../scripts/i18n-au
 | P2 | combobox, multi-combobox, multi-input, token, tokenizer, file-uploader, color-palette, color-palette-popover, color-picker, time-picker, picker-field |
 | P2a | calendar, date-picker, date-range-picker, date-time-picker (split from P2 on 2026-11-17 so the Calendar pilot runs first) |
 | P3 | table, data-table, list, tree, timeline, upload-collection, object-status, object-number, object-identifier |
-| P4 | dialog, message-box, popover, responsive-popover, menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
+| P4 | dialog, message-box, popover, responsive-popover, menu, navigation-menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
 | P5 | avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
 | P6 | bar, breadcrumbs, filter-bar, notification-list, product-switch, search, shell-bar, side-navigation, tabs, toolbar, variant-management, wizard, dynamic-page, dynamic-side-content, flexible-column-layout, navigation-layout, object-page, page, f6-navigation, variants |
 

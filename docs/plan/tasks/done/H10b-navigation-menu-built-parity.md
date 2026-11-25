@@ -1,7 +1,7 @@
 # H10b — Close NavigationMenu built parity and open-state acceptance
 
 Continue on `codex/H10` in `.worktrees/H10`. Merge local main first and keep the reviewed
-[H10 return](../returns/H10.md) if the return note is added on both sides. Budget: two hypotheses per
+[H10 return](../../returns/done/H10.md) if the return note is added on both sides. Budget: two hypotheses per
 failing check, about two hours and zero pushes.
 
 ## Review findings

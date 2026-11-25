@@ -1,7 +1,7 @@
 # H10c — Keep NavigationMenu icon alignment with composed items
 
 Continue on `codex/H10` in `.worktrees/H10` after merging local main. H10 and H10b remain open on main
-pending this follow-up. Keep the [review return](../returns/H10b.md) and the earlier H10 acceptance evidence.
+pending this follow-up. Keep the [review return](../../returns/done/H10b.md) and the earlier H10 acceptance evidence.
 
 ## Review findings
 

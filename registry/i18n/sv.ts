@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Tillgängliga värden",
   "FORM_TEXTFIELD_REQUIRED": "Fyll i det här fältet.",
   "GROUP_HEADER_TEXT": "Grupphuvud",
+  "ICON_NAV_BACK": "Gå tillbaka",
   "IM_SUBTITLE_ACHIEVEMENT": "Grattis till din enastående prestation och ditt engagemang!",
   "IM_SUBTITLE_ADDCOLUMN": "Du kan lägga till fler kolumner i tabellinställningarna.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Lägg till fler dimensioner för att slutföra ditt diagram.",

@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "ค่าที่มีอยู่",
   "FORM_TEXTFIELD_REQUIRED": "กรุณาเติมข้อมูลในฟิลด์นี้",
   "GROUP_HEADER_TEXT": "ส่วนหัวของกลุ่ม",
+  "ICON_NAV_BACK": "เนวิเกตย้อนกลับ",
   "IM_SUBTITLE_ACHIEVEMENT": "ขอแสดงความยินดีกับประสิทธิภาพการทำงานที่โดดเด่นและความทุ่มเทของคุณ!",
   "IM_SUBTITLE_ADDCOLUMN": "คุณสามารถเพิ่มคอลัมน์เพิ่มเติมในการกำหนดค่าตารางได้",
   "IM_SUBTITLE_ADDDIMENSIONS": "เพิ่มไดเมนชันอื่นๆ เพื่อให้แผนภูมิของคุณสมบูรณ์",

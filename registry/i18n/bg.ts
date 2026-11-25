@@ -166,6 +166,7 @@ const texts = {
   "FORM_SELECTABLE_AVALIABLE_VALUES": "Налични стойности",
   "FORM_TEXTFIELD_REQUIRED": "Моля, попълнете това поле.",
   "GROUP_HEADER_TEXT": "Заглавна част на група",
+  "ICON_NAV_BACK": "Навигиране назад",
   "IM_SUBTITLE_ACHIEVEMENT": "Поздравления за отличното представяне и отдаденост!",
   "IM_SUBTITLE_ADDCOLUMN": "Можете да добавите още колони от настройките на таблицата.",
   "IM_SUBTITLE_ADDDIMENSIONS": "Добавете още измерения, за да завършите диаграмата.",
