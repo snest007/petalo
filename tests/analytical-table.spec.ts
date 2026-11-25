@@ -1,9 +1,10 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Locator } from "@playwright/test"
-import { readFileSync } from "node:fs"
+import { readFileSync, writeFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { build } from "vite"
 import { aliases } from "../vite.aliases"
+import { captureAX } from "./a11y-tree-normalize"
 
 const cell = (grid: Locator, row: number, column: number) => grid.locator(`[data-grid-row="${row}"][data-grid-column="${column}"]`)
 const resizer = (grid: Locator, id: string) => grid.locator(`[data-slot="analytical-table-resizer"][data-column="${id}"]`)
@@ -122,6 +123,161 @@ test("controlled widths, order, visibility and pins in the Custom example", asyn
   await expect(grid.getByRole("gridcell")).toHaveText("Inventory is empty")
 })
 
+for (const dir of ["ltr", "rtl"]) {
+  test(`virtual inventory uses absolute row indices and keeps keyboard editing in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-virtual-${dir}`)
+    const grid = demo.getByRole("grid")
+    const heading = cell(grid, 0, 0)
+    await heading.focus()
+    await expect(grid).toHaveAccessibleDescription(/F2/)
+    await heading.press("Tab")
+    const first = cell(grid, 1, 0)
+    await expect(first).toBeFocused()
+    await expect(first).toHaveAccessibleName(/includes input and button/i)
+    const input = first.getByRole("textbox", { name: "Product name" })
+    await expect(input).toHaveAttribute("tabindex", "-1")
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.press("Tab")
+    const confirm = first.getByRole("button", { name: "Apply product name" })
+    await expect(confirm).toBeFocused()
+    await confirm.press("Escape")
+    await expect(first).toBeFocused()
+    await expect(input).toHaveAttribute("tabindex", "-1")
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.press("F2")
+    await expect(first).toBeFocused()
+    await first.press("F2")
+    await expect(input).toBeFocused()
+    await input.fill("Travel Tent")
+    await input.press("Tab")
+    await expect(confirm).toBeFocused()
+    await confirm.press("Enter")
+    await expect(first).toHaveAccessibleName("Includes Input and button Travel Tent Apply")
+    await expect(confirm).toBeFocused()
+    await confirm.press("Tab")
+    const next = cell(grid, 2, 0)
+    const nextInput = next.getByRole("textbox", { name: "Product name" })
+    await expect(nextInput).toBeFocused()
+    await nextInput.press("Escape")
+    await expect(next).toBeFocused()
+    await next.press("ArrowUp")
+    await expect(first).toBeFocused()
+    const forward = dir === "ltr" ? "ArrowRight" : "ArrowLeft"
+    await first.press(forward)
+    await expect(cell(grid, 1, 1)).toBeFocused()
+    await cell(grid, 1, 1).press("Shift+Tab")
+    await expect(cell(grid, 0, 1)).toBeFocused()
+    await cell(grid, 0, 1).press("Tab")
+    await expect(cell(grid, 1, 1)).toBeFocused()
+
+    await expect(cell(grid, 10, 1)).toHaveCount(0)
+    for (let row = 2; row <= 10; row++) {
+      await page.keyboard.press("ArrowDown")
+      await expect(cell(grid, row, 1)).toBeFocused()
+      await expect(cell(grid, row, 1).locator("..")).toHaveAttribute("aria-rowindex", String(row + 1))
+    }
+    await expect(cell(grid, 1, 1)).toHaveCount(0)
+    for (let row = 9; row >= 1; row--) {
+      await page.keyboard.press("ArrowUp")
+      await expect(cell(grid, row, 1)).toBeFocused()
+    }
+  })
+}
+
+test("infinite scrolling requests one page per count and announces loading", async ({ page }) => {
+  const demo = page.locator("#analytical-table-virtual-ltr")
+  const grid = demo.getByRole("grid")
+  const top = demo.getByRole("button", { name: "Scroll to first product" })
+  const end = demo.getByRole("button", { name: "Scroll to last loaded product" })
+  const requests = demo.getByRole("status", { name: "Page requests" })
+  const loading = demo.getByRole("button", { name: "Finish loading products" })
+  await expect(grid).toHaveAttribute("aria-rowcount", "-1")
+  await demo.getByRole("checkbox", { name: "Show total products" }).check()
+  await expect(grid).toHaveAttribute("aria-rowcount", "75")
+  await end.click()
+  await expect(requests).toHaveText("1")
+  await expect(demo.getByRole("status", { name: "Scroll event" })).toHaveText("Scrolled 15 loaded products")
+  await expect(grid).toHaveAttribute("aria-busy", "true")
+  await expect(grid.getByRole("row", { name: /please wait/i })).toHaveCount(1)
+  await expect(demo.locator('[data-slot="busy-indicator"]')).toHaveAttribute("inert", "")
+  await expect(demo.getByRole("progressbar")).toHaveCount(0)
+  await expect(loading).toBeEnabled()
+  await top.click()
+  await expect.poll(() => grid.evaluate(node => node.scrollTop)).toBe(0)
+  await end.click()
+  await expect(grid.locator('[role="row"][aria-rowindex="16"]').getByRole("textbox", { name: "Product name" })).toHaveValue("Camp Lantern 15")
+  await expect(requests).toHaveText("1")
+  await loading.click()
+  await expect(grid).not.toHaveAttribute("aria-busy", "true")
+  await expect(grid.getByRole("row", { name: /please wait/i })).toHaveCount(0)
+  await end.click()
+  await expect(requests).toHaveText("2")
+  await expect(demo.getByRole("status", { name: "Scroll event" })).toHaveText("Scrolled 30 loaded products")
+})
+
+test("infinite scrolling rearms when a page joins the same collapsed groups", async ({ page }) => {
+  const demo = page.locator("#analytical-table-virtual-ltr")
+  await demo.getByRole("checkbox", { name: "Group loaded products" }).check()
+  const grid = demo.getByRole("treegrid")
+  const group = grid.getByRole("row", { name: /^Shelter \(/ })
+  const top = demo.getByRole("button", { name: "Scroll to first product" })
+  const bottom = demo.getByRole("button", { name: "Scroll to last loaded product" })
+  const complete = demo.getByRole("button", { name: "Finish loading products" })
+  const requests = demo.getByRole("status", { name: "Page requests" })
+  await expect(group).toHaveAccessibleName(/^Shelter \(4\)/)
+  await expect(group).toHaveAttribute("aria-expanded", "false")
+  await bottom.click()
+  await expect(requests).toHaveText("1")
+  await complete.click()
+  await top.click()
+  await expect(group).toHaveAccessibleName(/^Shelter \(8\)/)
+  await expect(group).toHaveAttribute("aria-expanded", "false")
+  await expect.poll(() => grid.evaluate(node => node.scrollTop)).toBe(0)
+  await bottom.click()
+  await expect(requests).toHaveText("2")
+})
+
+test("responsive pop-in retains the custom label and hides a secondary column", async ({ page }) => {
+  const demo = page.locator("#analytical-table-custom")
+  const grid = demo.getByRole("grid")
+  const toggle = demo.getByRole("button", { name: "Narrow table" })
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product", "Category", "Stock"])
+  await toggle.click()
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product"])
+  const first = cell(grid, 1, 0)
+  const header = first.locator('[data-slot="analytical-table-pop-in-header"]')
+  const value = first.locator('[data-slot="analytical-table-pop-in-value"]')
+  await expect(header).toHaveText("Inventory category:")
+  await expect(value).toHaveText("Shelter")
+  await expect(first).toHaveAccessibleName("Product Alpine Tent Inventory category: Shelter")
+  const refs = (await first.getAttribute("aria-labelledby"))?.split(" ")
+  expect(refs).toContain(await header.getAttribute("id"))
+  expect(refs).toContain(await value.getAttribute("id"))
+  await expect(first).toHaveRole("gridcell")
+  await first.focus()
+  await first.press("ArrowDown")
+  await expect(cell(grid, 2, 0)).toBeFocused()
+  await toggle.click()
+  await expect(grid.getByRole("columnheader")).toHaveText(["Product", "Category", "Stock"])
+  await expect(header).toHaveCount(0)
+})
+
+test("fixtures keep the frozen column and align the scrolled header and body", async ({ page }) => {
+  await page.goto("/index.html?fixtures&ref=wcr")
+  await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
+  const fixture = page.locator('[data-fixture="analytical-table-virtual-frozen-horizontal"]')
+  const grid = fixture.getByRole("grid")
+  await expect.poll(() => grid.evaluate(node => node.scrollLeft)).toBeGreaterThan(0)
+  const column = grid.locator('[role="columnheader"][data-frozen="true"]')
+  const product = grid.locator('[role="gridcell"][data-frozen="true"]').first()
+  const stock = grid.locator('[role="columnheader"][data-column-id="stock"]')
+  const stockCell = grid.locator('[role="gridcell"][data-column-id="stock"]').first()
+  await expect.poll(async () => (await column.boundingBox())?.x).toBe((await product.boundingBox())?.x)
+  await expect.poll(async () => (await stock.boundingBox())?.x).toBe((await stockCell.boundingBox())?.x)
+})
+
 test("fixtures keep absolute indices, empty announcements and localized text", async ({ page }) => {
   await page.goto("/index.html?fixtures&ref=wcr")
   await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
@@ -153,7 +309,55 @@ for (const theme of ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_
         await expect(page.locator("html")).toHaveAttribute("data-ready", "true")
         const result = await new AxeBuilder({ page }).include('[data-fixture^="analytical-table-"]')
           .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze()
-        expect(result.violations, path).toEqual([])
+        if (!path.startsWith("/wcr.html")) {
+          expect(result.violations, path).toEqual([])
+          continue
+        }
+        // WCR RowSubComponent.js has a focusable div as a direct row child,
+        // useRowDisableSelection exposes an unnamed checkbox, and Expandable.js
+        // names the Horizon buttons only after focus. PopIn.js leaves DOM text
+        // from its three fragments adjacent ("Alpine TentType:Shelter"), while
+        // useA11y constructs a spaced accessible name. Assert the raw WCR
+        // rules and exact offending cells. Petalo must still be axe clean.
+        const regularHorizon = theme === "sap_horizon" || theme === "sap_horizon_dark"
+        expect(result.violations.map(({ id, nodes }) => [id, nodes.length]), path).toEqual([
+          ["aria-required-children", 10], ["aria-toggle-field-name", 1], ...(regularHorizon ? [["button-name", 15]] : []),
+          ["label-content-name-mismatch", 15],
+        ])
+        for (const { id, nodes } of result.violations) {
+          for (const node of nodes) {
+            if (id === "aria-required-children") {
+              expect(node.html).toMatch(/^<div role="row" .*data-virtual-row-index=/)
+              const related = node.any.flatMap(rule => rule.relatedNodes)
+              expect(related).toHaveLength(1)
+              expect(related[0]?.html).toMatch(/^<div data-subcomponent="true" data-subcomponent-row-index="\d+" tabindex="-1"/)
+            } else if (id === "aria-toggle-field-name") {
+              expect(node.html).toMatch(/^<div class="ui5-checkbox-root" role="checkbox" part="root" aria-checked="false" aria-disabled="true"/)
+              expect(node.target.flat().join(" ")).toContain('[data-name="internal_selection_column"]')
+            } else if (id === "label-content-name-mismatch") {
+              expect(node.html).toMatch(/^<div role="gridcell" data-column-id-cell="product" .*aria-labelledby=.*data-is-first-column="true"/)
+            } else {
+              expect(node.html).toMatch(/^<button [^>]*class="ui5-button-root" [^>]*aria-label=""/)
+              expect(JSON.stringify(node.target)).toMatch(/navigation-(?:right|down)-arrow/)
+            }
+          }
+          if (id === "label-content-name-mismatch") {
+            const cells = await Promise.all(nodes.map(node => {
+              const [selector] = node.target
+              expect(node.target).toHaveLength(1)
+              if (typeof selector !== "string") throw new Error("Expected a light DOM pop-in cell")
+              return page.locator(selector).evaluate(cell => ({
+                fixture: cell.closest("[data-fixture]")?.getAttribute("data-fixture"),
+                row: Number(cell.getAttribute("data-row-index")),
+              }))
+            }))
+            expect(cells).toHaveLength(15)
+            for (const mode of ["block", "inline", "without-header"]) {
+              const rows = cells.filter(cell => cell.fixture === `analytical-table-pop-in-${mode}`).map(cell => cell.row)
+              expect(rows.sort((a, b) => a - b)).toEqual([1, 2, 3, 4, 5])
+            }
+          }
+        }
       }
     })
   }
@@ -272,6 +476,78 @@ test("controlled sorting and the custom Filter renderer keep the owned menu and 
   expect(digits).toEqual([...digits].sort((a, b) => a - b))
 })
 
+test("fixtures: scroll 100,000 rows and 50 columns within a bounded frame sequence", async ({ page }, info) => {
+  test.setTimeout(60_000)
+  const entry = resolve("analytical-table-performance-test.js")
+  const virtual = "\0analytical-table-performance-test"
+  const source = `
+    import { createElement as h } from "react";
+    import { createRoot } from "react-dom/client";
+    import { AnalyticalTable } from "@/components/ui/analytical-table";
+
+    const data = Array.from({ length: 100_000 }, (_, id) => ({ id }));
+    const columns = Array.from({ length: 50 }, (_, col) => ({
+      id: String(col), header: "Measure " + col, width: 116,
+      accessorFn: row => row.id * 50 + col,
+    }));
+    createRoot(document.getElementById("performance-example")).render(h(AnalyticalTable, {
+      columns, data, visibleRows: 8, overscanCount: 2, overscanCountHorizontal: 2,
+      "aria-label": "Wide inventory", defaultColumnPinning: { start: ["0"], end: [] },
+    }));
+  `
+  const bundle = await build({
+    configFile: false, publicDir: false, logLevel: "silent", resolve: { alias: aliases },
+    define: { "process.env.NODE_ENV": JSON.stringify("production") },
+    plugins: [{ name: "analytical-table-performance-test", resolveId: id => id === entry ? virtual : undefined,
+      load: id => id === virtual ? source : undefined }],
+    build: { write: false, lib: { entry, formats: ["iife"], name: "AnalyticalTablePerformanceTest" } },
+  })
+  const output = Array.isArray(bundle) ? bundle[0] : bundle
+  const script = "output" in output && output.output.find(file => file.type === "chunk")?.code
+  const css = readFileSync("dist/index.html", "utf8").match(/href="([^"]+\.css)"/)?.[1]
+  if (!script || !css) throw new Error("Missing AnalyticalTable performance fixture assets")
+  const path = "/analytical-table-performance-test.html"
+  await page.route("**" + path, route => route.fulfill({
+    contentType: "text/html; charset=utf-8",
+    body: `<!doctype html><html lang="en" data-theme="sap_horizon">
+      <head><link rel="stylesheet" href="${css}"></head><body>
+        <main id="performance-example" style="width: 840px"></main>
+        <script>${script.replaceAll("</script", "<\/script")}</script>
+      </body></html>`,
+  }))
+  await page.goto(path)
+  const grid = page.getByRole("grid", { name: "Wide inventory" })
+  await expect(grid).toHaveAttribute("aria-rowcount", "100000")
+  await expect(grid).toHaveAttribute("aria-colcount", "50")
+  await expect(cell(grid, 1, 0)).toHaveText("0", { timeout: 25_000 })
+
+  const result = await grid.evaluate(async viewport => {
+    const vertical = viewport.scrollHeight - viewport.clientHeight
+    const horizontal = viewport.scrollWidth - viewport.clientWidth
+    const frames = 32
+    const frame = () => new Promise<number>(resolve => requestAnimationFrame(resolve))
+    const start = await frame()
+    let maxRows = 0
+    let maxColumns = 0
+    for (let step = 1; step <= frames; step++) {
+      viewport.scrollTo(horizontal * step / frames, vertical * step / frames)
+      await frame()
+      maxRows = Math.max(maxRows, viewport.querySelectorAll('[role="row"][aria-rowindex]').length)
+      maxColumns = Math.max(maxColumns, viewport.querySelectorAll('[role="columnheader"]').length)
+    }
+    return { ms: await frame() - start, maxRows, maxColumns }
+  })
+  await expect(grid.locator('[aria-rowindex="100001"]')).toBeAttached()
+  await expect(grid.locator('[role="columnheader"][aria-colindex="50"]')).toBeAttached()
+  await expect(grid.locator('[role="columnheader"][aria-colindex="1"]')).toHaveAttribute("data-frozen", "true")
+  const measurements = info.outputPath("virtual-scroll-measurements.json")
+  writeFileSync(measurements, JSON.stringify(result))
+  await info.attach("virtual-scroll-measurements", { contentType: "application/json", path: measurements })
+  expect(result.maxRows).toBeLessThanOrEqual(16)
+  expect(result.maxColumns).toBeLessThanOrEqual(16)
+  expect(result.ms).toBeLessThan(4_000)
+})
+
 test("fixtures: built-in filters accept string cells from controlled state and custom editors", async ({ page }) => {
   const entry = resolve("analytical-table-filter-test.js")
   const virtual = "\0analytical-table-filter-test"
@@ -353,3 +629,249 @@ test("fixtures: built-in filters accept string cells from controlled state and c
   }
   expect(errors).toEqual([])
 })
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`group headers and rows retain focus, disclosure semantics and announcements in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-group-demo-${dir}`)
+    const grid = demo.locator('[data-slot="analytical-table-grid"]')
+    const header = grid.getByRole("columnheader", { name: "Category Grouped" })
+    await expect(header).toHaveAttribute("aria-colindex", "1")
+    await header.focus()
+    await header.press("Enter")
+    const ungroup = grid.getByRole("menuitem", { name: /^Ungroup/ })
+    await expect(ungroup).toBeFocused()
+    await ungroup.press("Enter")
+    const normal = grid.getByRole("columnheader", { name: "Category", exact: true })
+    await expect(normal).toBeFocused()
+    await expect(normal).toHaveAttribute("aria-colindex", "2")
+    await normal.press("Space")
+    const group = grid.getByRole("menuitem", { name: /^Group/ })
+    await expect(group).toBeFocused()
+    await group.press("Enter")
+    await expect(header).toBeFocused()
+    await expect(demo.getByRole("status", { name: "Grouped columns" })).toHaveText("category")
+    await expect(grid.getByRole("columnheader", { name: "Stock" })).not.toHaveAttribute("aria-haspopup")
+
+    const row = grid.getByRole("row", { name: /^Shelter \(2\)/ })
+    await expect(row).toHaveAttribute("aria-level", "1")
+    await expect(row).toHaveAttribute("aria-expanded", "false")
+    const cell = row.getByRole("gridcell", { name: /^Shelter \(2\)/ })
+    const expand = cell.getByRole("button", { name: "Expand Node" })
+    await expect(expand).toHaveAttribute("tabindex", "-1")
+    await expect(row).not.toHaveAttribute("id", "fake-group-row")
+    await expect(cell).not.toHaveAttribute("id", "fake-group-cell")
+    await header.press("ArrowDown")
+    await expect(cell).toBeFocused()
+    await cell.press("F4")
+    await expect(cell).toBeFocused()
+    await expect(row).toHaveAttribute("aria-expanded", "true")
+    await expect(cell).toHaveAttribute("aria-expanded", "true")
+    await expect(cell).toHaveAccessibleDescription("To collapse the row, press the spacebar.")
+    await expect(cell.getByRole("button", { name: "Collapse Node" })).toBeVisible()
+    await expect(demo.getByRole("alert")).toHaveText("Row expanded")
+    await expect(grid.locator("[data-repeated-category]").first()).toHaveText("Shelter")
+
+    await cell.press(dir === "rtl" ? "ArrowLeft" : "ArrowRight")
+    const adjacent = row.locator('[data-column-id="product"]')
+    await expect(adjacent).toBeFocused()
+    await adjacent.press("Shift+Space")
+    await expect(row).toHaveAttribute("aria-expanded", "true")
+    await adjacent.press("Space")
+    await expect(row).toHaveAttribute("aria-expanded", "false")
+    await expect(adjacent).toBeFocused()
+    await expect(demo.getByRole("alert")).toHaveText("Row collapsed")
+  })
+}
+
+test("groups recompute custom localized aggregates on filtering and data changes", async ({ page }) => {
+  const demo = page.locator("#analytical-table-group-demo-ltr")
+  const grid = demo.getByRole("treegrid")
+  const stock = grid.getByRole("row", { name: /^Shelter/ }).locator("[data-aggregate]")
+  await expect(stock).toHaveText("3.120,5")
+  await demo.getByRole("button", { name: "Receive ten items" }).click()
+  await expect(stock).toHaveText("3.140,5")
+  const search = demo.getByRole("textbox", { name: "Search grouped inventory" })
+  await search.fill("Ridge")
+  await expect(grid.getByRole("row", { name: /^Shelter \(1\)/ })).toBeVisible()
+  await expect(stock).toHaveText("521,5")
+  await expect(grid.getByRole("row", { name: /^Cooking/ })).toHaveCount(0)
+  await search.clear()
+  await expect(stock).toHaveText("3.140,5")
+})
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`paired group rows expose their hierarchy while preserving WCR cell states in ${dir}`, async ({ page, context }) => {
+    const reference = await context.newPage()
+    try {
+      const cases = {
+        "group-collapsed": [[1, false], [1, false]],
+        "group-expanded": [[1, true], null, null, [1, false]],
+        "group-nested": [[1, true], [2, true], null, [2, false], [1, false]],
+        "group-de-aggregates": [[1, false], [1, false]],
+      } as const
+      for (const [name, rows] of Object.entries(cases)) {
+        const id = `analytical-table-${name}`
+        const query = `theme=sap_horizon&dir=${dir}&only=${id}`
+        await Promise.all([page.goto(`/index.html?fixtures&ref=wcr&${query}`), reference.goto(`/wcr.html?${query}`)])
+        await Promise.all([page, reference].map(canvas => expect(canvas.locator("html")).toHaveAttribute("data-ready", "true")))
+        const fixture = `[data-fixture="${id}"]`
+        for (const [canvas, role, required] of [[page, "treegrid", false], [reference, "grid", undefined]] as const) {
+          const { ax } = await captureAX(canvas, fixture)
+          const [host] = ax as { children: { role: string; properties: { required?: boolean } }[] }[]
+          expect(host.children[0].role).toBe(role)
+          expect(host.children[0].properties.required).toBe(required)
+        }
+        const ours = page.locator(fixture).getByRole("treegrid").getByRole("row")
+        const wcr = reference.locator(fixture).getByRole("grid").getByRole("row")
+        await expect(ours).toHaveCount(rows.length + 1)
+        await expect(wcr).toHaveCount(rows.length + 1)
+        for (const [index, expected] of rows.entries()) {
+          const row = ours.nth(index + 1)
+          const nativeRow = wcr.nth(index + 1)
+          await expect(nativeRow).not.toHaveAttribute("aria-level")
+          await expect(nativeRow).not.toHaveAttribute("aria-expanded")
+          if (expected === null) {
+            await expect(row).not.toHaveAttribute("aria-level")
+            await expect(row).not.toHaveAttribute("aria-expanded")
+            continue
+          }
+          const [level, expanded] = expected
+          await expect(row).toHaveAttribute("aria-level", String(level))
+          await expect(row).toHaveAttribute("aria-expanded", String(expanded))
+          for (const [node, canvas] of [[row, page], [nativeRow, reference]] as const) {
+            const pivot = node.getByRole("gridcell").filter({ has: canvas.getByRole("button", {
+              name: expanded ? "Collapse Node" : "Expand Node",
+            }) })
+            await expect(pivot).toHaveAttribute("aria-expanded", String(expanded))
+            await expect(pivot).toHaveAccessibleName(/\(\d+\)/)
+          }
+        }
+      }
+    } finally {
+      await reference.close()
+    }
+  })
+}
+
+for (const dir of ["ltr", "rtl"] as const) {
+  test(`tree rows keep owned hierarchy, row details and selection in ${dir}`, async ({ page }) => {
+    const demo = page.locator(`#analytical-table-row-demo-${dir}`)
+    const grid = demo.getByRole("treegrid", { name: "Inventory hierarchy" })
+    const camping = grid.getByRole("gridcell", { name: /^Camping(?: Product)?$/ })
+    const parent = grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Camping(?: Product)?$/ }) })
+    await expect(parent).toHaveAttribute("aria-level", "1")
+    await expect(parent).toHaveAttribute("aria-expanded", "false")
+    await expect(parent).toHaveAttribute("aria-setsize", "2")
+    await expect(parent).toHaveAttribute("aria-posinset", "1")
+    await expect(camping).toHaveAttribute("aria-expanded", "false")
+    await expect(demo.locator("#fake-tree-row, #fake-tree-cell")).toHaveCount(0)
+    await camping.focus()
+    await camping.press(dir === "rtl" ? "ArrowLeft" : "ArrowRight")
+    const shelter = grid.getByRole("gridcell", { name: /^Shelter(?: Product)?$/ })
+    await expect(shelter).toBeVisible()
+    await expect(camping).toBeFocused()
+    await expect(parent).toHaveAttribute("aria-expanded", "true")
+    const inspector = grid.getByRole("button", { name: "Inspect Camping" })
+    await expect(inspector).toBeVisible()
+    await camping.press("ArrowDown")
+    const panel = inspector.locator("xpath=ancestor::*[@data-slot='analytical-table-sub-component']")
+    await expect(panel).toBeFocused()
+    await panel.press("F2")
+    await expect(inspector).toBeFocused()
+    await inspector.press("F2")
+    await expect(panel).toBeFocused()
+    await panel.press("ArrowUp")
+    await expect(camping).toBeFocused()
+    await inspector.click()
+    await expect(demo.getByLabel("Selected row IDs")).toBeEmpty()
+    await expect(demo.locator('[data-slot="analytical-table-announcement"]')).toContainText("Row expanded")
+    await shelter.focus()
+    await shelter.press("+")
+    await expect(grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })).toBeVisible()
+    await expect(grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ }) })).toHaveAttribute("aria-level", "3")
+    await shelter.press("-")
+    await expect(grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })).toHaveCount(0)
+    await camping.press(dir === "rtl" ? "ArrowRight" : "ArrowLeft")
+    await expect(parent).toHaveAttribute("aria-expanded", "false")
+    await expect(inspector).toHaveCount(0)
+    const selector = parent.locator('[data-selection-cell="true"]')
+    await selector.press("Space")
+    await expect(selector).toHaveAttribute("aria-selected", "true")
+    await expect(demo.getByLabel("Selected row IDs")).toHaveText("0,0.0,0.0.0,0.1")
+    await expect(demo.getByLabel("Row event")).toHaveText("Selected Camping")
+    const disabled = grid.getByRole("row").filter({ has: page.getByRole("gridcell", { name: /^Camp Lantern(?: Product)?$/ }) }).locator("[data-selection-disabled]")
+    await expect(disabled).toHaveAttribute("aria-disabled", "true")
+    await disabled.press("Enter")
+    await expect(demo.getByLabel("Selected row IDs")).toHaveText("0,0.0,0.0.0,0.1")
+    const header = grid.getByRole("columnheader", { name: "Selection Column" })
+    await expect(header).not.toHaveAttribute("data-selection-cell")
+    await header.press("Enter")
+    await expect(selector).toHaveAttribute("aria-selected", "true")
+    await selector.press("Space")
+    await expect(selector).toHaveAttribute("aria-selected", "false")
+    await expect(demo.getByLabel("Selected row IDs")).toBeEmpty()
+    await expect(demo.locator('[data-slot="analytical-table-announcement"]')).toContainText("deselected")
+    await camping.click({ button: "right" })
+    await expect(demo.getByLabel("Row event")).toHaveText("Camping: product")
+  })
+}
+
+test("fixtures: select all, shift range, partial and single selection retain distinct modes", async ({ page }) => {
+  const query = "/index.html?fixtures&ref=wcr&only=analytical-table-"
+  const grid = page.getByRole("grid", { name: "Inventory" })
+  await page.goto(query + "select-multiple-rowselector")
+  const selectors = grid.locator('[role="gridcell"][data-selection-cell]')
+  const countSelected = () => grid.locator('[role="row"][data-is-selected]')
+  await expect(countSelected()).toHaveCount(1)
+  await expect(grid.getByRole("columnheader", { name: "Selection Column" }).locator("[data-state=indeterminate]")).toBeVisible()
+  await grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ }).click()
+  await expect(countSelected()).toHaveCount(1)
+  await selectors.nth(0).press("Enter")
+  await expect(selectors.nth(0)).toHaveAttribute("aria-selected", "true")
+  await selectors.nth(3).press("Shift+Space")
+  await expect(countSelected()).toHaveCount(4)
+  await grid.getByRole("columnheader", { name: "Selection Column" }).press("Space")
+  await expect(countSelected()).toHaveCount(5)
+  await page.goto(query + "select-single-rowonly")
+  await expect(grid.getByRole("columnheader", { name: "Selection Column" })).toHaveCount(0)
+  await expect(countSelected()).toHaveCount(1)
+  const alpine = grid.getByRole("gridcell", { name: /^Alpine Tent(?: Product)?$/ })
+  await alpine.press("Space")
+  await expect(alpine).toHaveAttribute("aria-selected", "true")
+  await expect(countSelected()).toHaveCount(1)
+})
+
+for (const dir of ["ltr", "rtl"] as const) {
+  test(`fixtures: paired tree rows expose their hierarchy and disclosure names in ${dir}`, async ({ page, context }) => {
+    const reference = await context.newPage()
+    try {
+      const fixture = "analytical-table-tree-expanded"
+      const query = `theme=sap_horizon&dir=${dir}&only=${fixture}`
+      await Promise.all([page.goto(`/index.html?fixtures&ref=wcr&${query}`), reference.goto(`/wcr.html?${query}`)])
+      const canvas = [page, reference]
+      for (const target of canvas) await expect(target.locator("html")).toHaveAttribute("data-ready", "true")
+      const [actual, native] = canvas.map(target => target.locator(`[data-fixture="${fixture}"]`).getByRole("treegrid").getByRole("row"))
+      for (const [index, [level, setsize, posinset]] of [[1, 2, 1], [2, 2, 1], [3, 1, 1], [2, 2, 2], [1, 2, 2]].entries()) {
+        const row = actual.nth(index + 1)
+        const nativeRow = native.nth(index + 1)
+        await expect(row).toHaveAttribute("aria-level", String(level))
+        await expect(row).toHaveAttribute("aria-setsize", String(setsize))
+        await expect(row).toHaveAttribute("aria-posinset", String(posinset))
+        await expect(nativeRow).not.toHaveAttribute("aria-level")
+        await expect(nativeRow).not.toHaveAttribute("aria-expanded")
+        if (index > 1) continue
+        await expect(row).toHaveAttribute("aria-expanded", "true")
+        const firstActual = row.getByRole("gridcell").first()
+        const firstNative = nativeRow.getByRole("gridcell").first()
+        for (const cell of [firstActual, firstNative]) await expect(cell).toHaveAttribute("aria-expanded", "true")
+        await expect(firstActual.getByRole("button")).toHaveAccessibleName("Collapse Node")
+        const nativeButton = firstNative.locator("ui5-button").getByRole("button")
+        await expect(nativeButton).toHaveAccessibleName("")
+        await nativeButton.focus()
+        await expect(nativeButton).toHaveAccessibleName("Collapse Node")
+      }
+    } finally {
+      await reference.close()
+    }
+  })
+}

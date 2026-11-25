@@ -44,7 +44,7 @@ uncommitted draft and stray branch there.
 New components (wave H) come before polish (P, X, S5) while the library is young. Users run Windows and macOS,
 and the owner and agents develop on macOS. Linux CI supplies a second platform with keyboard behaviour closer
 to Windows. E8 set up tier 1 for the working loop, tier 2 for card acceptance and tier 3 for milestones.
-[RUN.md](RUN.md#milestones-and-pushing) holds the CI and publishing rules.
+[INTEGRATION.md](INTEGRATION.md#6-milestone-and-publishing) holds the CI and publishing rules.
 
 ## 2026-11-18 — Browsers stay out of the owner's way
 

@@ -1,7 +1,7 @@
 # H7b — Close Input suggestions full-grid acceptance
 
 Continue on `codex/H7` in `.worktrees/H7`. Merge local main first and keep this reviewed card and
-the [H7 return](../returns/H7.md) when resolving their duplicate additions. Budget: 2 hypotheses per failing
+the [H7 return](../../returns/done/H7.md) when resolving their duplicate additions. Budget: 2 hypotheses per failing
 check, about 2 hours, and 0 pushes.
 
 ## Review findings

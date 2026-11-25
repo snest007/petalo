@@ -247,11 +247,14 @@
 }
 
 /* WCR ColumnHeader/index.js offsets single-line text by the icon count, with .75rem for the icon band's edges. */
-.fiori-at-header-cell:is([data-sorted], [data-filtered]) .fiori-at-header-text {
+.fiori-at-header-cell:is([data-sorted], [data-filtered], [data-grouped]) .fiori-at-header-text {
   margin-inline-end: calc(.8125rem + .75rem);
 }
-.fiori-at-header-cell[data-sorted][data-filtered] .fiori-at-header-text {
+.fiori-at-header-cell:is([data-sorted][data-filtered], [data-sorted][data-grouped], [data-filtered][data-grouped]) .fiori-at-header-text {
   margin-inline-end: calc(2 * .8125rem + .75rem);
+}
+.fiori-at-header-cell[data-sorted][data-filtered][data-grouped] .fiori-at-header-text {
+  margin-inline-end: calc(3 * .8125rem + .75rem);
 }
 .fiori-at-header-icons { color: var(--sapContent_IconColor); gap: .125rem; }
 .fiori-at-header-icons > svg { width: .8125rem; height: .8125rem; }
@@ -325,3 +328,155 @@
   background: var(--fiori-input-bottom-border-color);
 }
 .fiori-at-header-filter .fiori-field > input { width: auto; box-sizing: content-box; }
+
+/* WCR AnalyticalTable.module.css tableGroupHeader and expandGroupButton. */
+.fiori-at-row[data-grouped] {
+  font-family: var(--fiori-wcr-x-analyticaltable-headerfontfamily);
+  background: var(--sapList_TableGroupHeaderBackground);
+  border-color: var(--sapList_TableGroupHeaderBorderColor);
+}
+.fiori-at-row[data-grouped] .fiori-at-cell {
+  border-inline-end-color: transparent;
+}
+.fiori-at-row[data-grouped] .fiori-at-cell[data-frozen] {
+  background: var(--sapList_TableGroupHeaderBackground);
+  box-shadow: inset 0 -1px 0 var(--sapList_TableGroupHeaderBorderColor);
+}
+.fiori-at-group-toggle {
+  all: unset;
+  display: inline;
+  margin-inline-start: calc(-1 * var(--at-padding));
+  flex-shrink: 0;
+}
+.fiori-at-group-toggle > svg {
+  box-sizing: content-box;
+  display: block;
+  color: var(--sapContent_IconColor);
+  inline-size: .75rem;
+  block-size: .75rem;
+  padding: .625rem;
+}
+
+/* WCR useStyling and useRowSelectionColumn reserve zero padding for display columns. */
+.fiori-at :is(.fiori-at-header-cell, .fiori-at-cell)[data-display] { padding: 0; }
+.fiori-at [data-selection-cell] { cursor: pointer; }
+.fiori-at .fiori-at-header-cell[data-selection-cell] { display: flex; justify-content: center; align-items: center; }
+.fiori-at .fiori-at-check.fiori-checkbox {
+  padding: 0;
+  width: auto;
+  height: auto;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: none;
+}
+.fiori-at-row[data-row-selectable] { cursor: pointer; }
+.fiori-at-row[data-row-selectable]:hover { background-color: var(--sapList_Hover_Background); }
+.fiori-at-row[data-row-selectable]:active {
+  color: var(--sapList_Active_TextColor);
+  background-color: var(--sapList_Active_Background);
+}
+.fiori-at-row[data-is-selected] {
+  background: var(--sapList_SelectionBackgroundColor);
+  border-block-end-color: var(--sapList_SelectionBorderColor);
+}
+.fiori-at-row[data-is-selected] .fiori-at-cell[data-frozen] {
+  background: var(--sapList_SelectionBackgroundColor);
+  box-shadow: inset 0 -1px 0 var(--sapList_SelectionBorderColor);
+}
+.fiori-at-row[data-is-selected]:hover { background-color: var(--sapList_Hover_SelectionBackground); }
+.fiori-at [data-selection-disabled],
+.fiori-at [data-selection-cell][aria-disabled] { cursor: default; }
+.fiori-at-header-cell[data-highlight-header] { border-inline-end-color: transparent; }
+.fiori-at-cell:first-child:has(.fiori-at-row-highlight) { border-inline: none; }
+.fiori-at-row-highlight, .fiori-at-row-navigation { inline-size: 100%; block-size: 100%; }
+.fiori-at-row-highlight { align-self: start; block-size: calc(100% - 1px); }
+.fiori-at-row-highlight[data-value-state="positive"] { background: var(--sapSuccessColor); }
+.fiori-at-row-highlight[data-value-state="negative"] { background: var(--sapErrorColor); }
+.fiori-at-row-highlight[data-value-state="critical"] { background: var(--sapWarningColor); }
+.fiori-at-row-highlight[data-value-state="information"] { background: var(--sapInformationColor); }
+.fiori-at-row-highlight[data-value-state="indication01"] { background: var(--sapIndicationColor_1); }
+.fiori-at-row-highlight[data-value-state="indication02"] { background: var(--sapIndicationColor_2); }
+.fiori-at-row-highlight[data-value-state="indication03"] { background: var(--sapIndicationColor_3); }
+.fiori-at-row-highlight[data-value-state="indication04"] { background: var(--sapIndicationColor_4); }
+.fiori-at-row-highlight[data-value-state="indication05"] { background: var(--sapIndicationColor_5); }
+.fiori-at-row-highlight[data-value-state="indication06"] { background: var(--sapIndicationColor_6); }
+.fiori-at-row-highlight[data-value-state="indication07"] { background: var(--sapIndicationColor_7); }
+.fiori-at-row-highlight[data-value-state="indication08"] { background: var(--sapIndicationColor_8); }
+.fiori-at-row[data-navigated] .fiori-at-row-navigation { background: var(--sapList_SelectionBorderColor); }
+.fiori-at-cell:has(+ [data-navigation-cell]) { border-inline-end-color: transparent; }
+/* Expandable.js uses a transparent Button in Horizon and an interactive Icon in HC. */
+.fiori-at-tree-control {
+  block-size: var(--fiori-wcr-x-analyticaltableexpandbuttonheight);
+  margin-inline-end: .125rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.fiori-at .fiori-at-tree-button {
+  block-size: 100%;
+  color: var(--sapTextColor);
+  font-size: .75rem;
+}
+.fiori-at .fiori-at-tree-button svg { inline-size: .75rem; block-size: .75rem; color: var(--sapTextColor); }
+.fiori-at-tree-icon {
+  all: unset;
+  color: var(--sapContent_IconColor);
+  padding: .375rem;
+  cursor: pointer;
+  display: flex;
+}
+.fiori-at-tree-icon > svg {
+  inline-size: var(--fiori-wcr-x-analyticaltableexpandiconheight);
+  block-size: var(--fiori-wcr-x-analyticaltableexpandiconheight);
+}
+.fiori-at-tree-spacer {
+  box-sizing: content-box;
+  inline-size: var(--fiori-wcr-x-analyticaltableexpandindicatorwidth);
+  flex-shrink: 0;
+  margin-inline-end: .5rem;
+}
+.fiori-at-tree-spacer[data-hc] { margin-inline-end: 0; }
+.fiori-at-row-detail {
+  position: absolute;
+  inset-inline: 0;
+  box-sizing: border-box;
+}
+.fiori-at-row-detail:focus-visible {
+  outline: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+  outline-offset: calc(-1 * var(--sapContent_FocusWidth));
+}
+
+/* The existing sticky viewport owns both axes, so the native and themed
+   alternatives need no second scrollbar with a mirrored scroll position. */
+.fiori-at-grid[data-scrollbar] { scrollbar-width: auto; }
+.fiori-at-grid[data-scrollbar="fiori"] {
+  scrollbar-color: var(--sapScrollBar_FaceColor) var(--sapScrollBar_TrackColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar {
+  inline-size: var(--sapScrollBar_Dimension);
+  block-size: var(--sapScrollBar_Dimension);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-thumb {
+  background: var(--sapScrollBar_FaceColor);
+  border: 1px solid var(--sapScrollBar_BorderColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-thumb:hover {
+  background: var(--sapScrollBar_Hover_FaceColor);
+}
+.fiori-at-grid[data-scrollbar="fiori"]::-webkit-scrollbar-track { background: var(--sapScrollBar_TrackColor); }
+
+/* WCR defaults/Column/PopIn.js and AnalyticalTable.module.css. */
+.fiori-at-pop-in { inline-size: 100%; min-inline-size: 0; }
+.fiori-at-pop-in-primary {
+  block-size: var(--at-primary-row-height);
+  display: flex;
+  overflow: hidden;
+}
+.fiori-at-pop-in-primary > :first-child { padding-block-start: .25rem; }
+.fiori-at-pop-in-header { color: var(--sapContent_LabelColor); block-size: var(--at-pop-in-header-height); }
+.fiori-at-pop-in-value {
+  block-size: var(--at-primary-row-height);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fiori-at-pop-in-field[data-display="Inline"] { display: flex; gap: .5rem; }

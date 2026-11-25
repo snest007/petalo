@@ -24,7 +24,7 @@ implementation, and a good choice when you want a maintained library you consume
 - **No Shadow DOM.** Every element is in your DOM, so Tailwind classes, your CSS, `className` on any part,
   `querySelector` and testing tools reach it. UI5 Web Components render inside Shadow DOM, where outside styles only
   reach what a component exposes through CSS variables, `::part()` and slots.
-- **Composable parts.** Components are built from small exported pieces (291 exports across the registry, e.g.
+- **Composable parts.** Components are built from small exported pieces (236 runtime exports across 86 UI entries, e.g.
   `Select`, `SelectTrigger`, `SelectContent`, `SelectItem`) instead of one closed element, and 26 components accept
   `asChild` to render as your own element (a router link, for example).
 - **React-native data flow.** Controlled and uncontrolled props (`value` / `onValueChange`, `open` /
@@ -49,7 +49,7 @@ yourself (`npx shadcn add --diff` shows what changed), as with any shadcn regist
 | Density | cozy (default), compact (`data-density="compact"`, works on any subtree) |
 | Tokens | 1479 `--sap*` variables per theme + 1477 component parameters from UI5 (main + fiori packages) |
 | Icons | 704 SAP Horizon icons, tree-shakeable |
-| Components | **Actions** Button, ButtonBadge, SplitButton, ToggleButton, SegmentedButton · **Forms** Label, Input, TextArea, Select, ComboBox, MultiComboBox, MultiInput (+Token, Tokenizer), NumericInput, StepInput, CheckBox, RadioGroup, Switch, Slider/RangeSlider, RatingIndicator, FileUploader, ColorPalette, ColorPalettePopover, ColorPicker, Form · **Dates** Calendar, DatePicker, DateRangePicker, TimePicker, DateTimePicker, DynamicDateRange · **Data** Table, DataTable (TanStack, virtualized), AnalyticalTable (column layout), List, Tree, Timeline, UploadCollection, ObjectStatus, ObjectNumber, ObjectIdentifier · **Overlays** Dialog, Popover, ResponsivePopover, Menu, Toast, ViewSettingsDialog, ValueHelpDialog, AdaptFiltersDialog, UserMenu · **Display** MessageStrip, Tag, Avatar/AvatarGroup, Card, Panel, BusyIndicator, ProgressIndicator, Link, Title, Text, ExpandableText, Carousel, MediaGallery, HeroBanner, IllustratedMessage · **Navigation** Tabs (IconTabBar), Breadcrumbs, Toolbar, Bar, FilterBar, ShellBar, Search, ProductSwitch, NotificationList, SideNavigation, Wizard, VariantManagement · **Layout** Page, DynamicPage, ObjectPage, FlexibleColumnLayout (+`useFlexibleColumnLayout`), DynamicSideContent, NavigationLayout, SplitterLayout |
+| Components | **Actions** Button, ButtonBadge, SplitButton, ToggleButton, SegmentedButton · **Forms** Label, Input, TextArea, Select, ComboBox, MultiComboBox, MultiInput (+Token, Tokenizer), NumericInput, StepInput, CheckBox, RadioGroup, Switch, Slider/RangeSlider, RatingIndicator, FileUploader, ColorPalette, ColorPalettePopover, ColorPicker, Form · **Dates** Calendar, DatePicker, DateRangePicker, TimePicker, DateTimePicker, DynamicDateRange · **Data** Table, DataTable (TanStack, virtualized), AnalyticalTable (virtualized rows and columns, grouping, infinite scroll, pop-in and F2 editing), List, Tree, Timeline, UploadCollection, ObjectStatus, ObjectNumber, ObjectIdentifier · **Overlays** Dialog, MessageBox, Popover, ResponsivePopover, Menu, Toast, ViewSettingsDialog, ValueHelpDialog, SelectDialog, AdaptFiltersDialog, UserMenu · **Display** MessageStrip, Tag, Avatar/AvatarGroup, Card, Panel, BusyIndicator, ProgressIndicator, Link, Title, Text, ExpandableText, Carousel, MediaGallery, HeroBanner, IllustratedMessage · **Navigation** Tabs (IconTabBar), Breadcrumbs, Toolbar, Bar, FilterBar, ShellBar, Search, ProductSwitch, NotificationList, SideNavigation, Wizard, VariantManagement · **Layout** Page, DynamicPage, ObjectPage, FlexibleColumnLayout (+`useFlexibleColumnLayout`), DynamicSideContent, NavigationLayout, SplitterLayout |
 | Floorplans (blocks) | `app-shell`, `launchpad` (shell + side navigation), `list-report`, `object-page-floorplan`, `master-detail` (flexible column layout), `wizard-page`, `empty-states` — preview at `/block.html?name=<block>`, install with `npx shadcn add @petalo/<block>` |
 | Illustrations | 118 SAP illustrations (72 Fiori + 46 TNT) in Scene/Dialog/Spot/Dot sizes; `illustrations-core` (14 common states) ships with IllustratedMessage, the rest as `@petalo/illustration-<name>` |
 | Verified | 600 fixtures pixel-diffed vs UI5 2.28 in 4 themes × 2 densities (4800 cells, worst 1.6%); components without a UI5 Web Component (FilterBar, ValueHelpDialog, ObjectPage, Object*) checked against SAP's guideline images; axe; 1,418 Playwright tests incl. Fiori keyboard models, phone layouts and RTL; 4,073 Storybook render/axe/Controls checks |
@@ -186,15 +186,9 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) for component ownership and reference fi
 
 ## Not done yet
 
-The backlog with task cards is in [docs/plan](docs/plan/README.md) (open cards in `docs/plan/tasks/`, finished ones in
-`docs/plan/tasks/done/`). Calendars are Gregorian only, by design. None of the following blocks using the library.
-
-- **Accessibility and localization parity with UI5, library-wide:** the comparison and ratchet infrastructure (cards
-  E4, E5) and the per-group fixes (wave P) are in progress.
-- **Extension points** for every component (wave X, after its P card), following [the extension contract](docs/extension-contract.md).
-- **From [issue #1](https://github.com/snest007/petalo/issues/1)** (wave H): AnalyticalTable, Calendar extension
-  points, Input suggestions + MessageBox, SplitButton, ButtonBadge, NumericInput, SelectDialog and the remaining lower-priority components.
-- **Storybook coverage gate** (card S5).
+Upcoming work includes closer accessibility and localization parity with UI5, more component extension points,
+and gaps in component and Storybook coverage. The [backlog](docs/plan/README.md) tracks current priorities and
+individual cards.
 
 ## License
 

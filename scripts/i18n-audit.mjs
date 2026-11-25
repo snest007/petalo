@@ -106,6 +106,9 @@ const nativeKeys = name => {
   // Public subcomponents owned by the same registry item; fixture wrapper imports are not audit roots.
   const children = { card: ['CardHeader'], calendar: ['CalendarLegend', 'CalendarLegendItem'], table: ['TableHeaderRow','TableHeaderCell','TableRow','TableCell','TableGroupRow','TableSelectionMulti','TableSelectionSingle','TableGrowing','TableRowAction','TableRowActionNavigation'], list: ['ListItemStandard','ListItemCustom','ListItemGroup'], tree: ['TreeItem'], 'notification-list': ['NotificationListItem','NotificationListGroupItem'], 'upload-collection': ['UploadCollectionItem'], tabs: ['Tab','TabSeparator'], menu: ['MenuItem','MenuItemGroup'], tokenizer: ['Token'] }
   for (const child of children[name] ?? []) for (const pkg of packages) if (existsSync(`node_modules/@ui5/${pkg}/dist/${child}.js`)) sources.push(`node_modules/@ui5/${pkg}/dist/${child}.js`)
+  if (name === 'input') for (const file of ['features/InputSuggestions', 'SuggestionItem', 'SuggestionItemGroup']) {
+    sources.push(`node_modules/@ui5/webcomponents/dist/${file}.js`)
+  }
   const seen = new Set()
   const keys = sources.flatMap(file => scan(file, seen))
   const related = {
@@ -224,6 +227,8 @@ function resolveKey(name, key, seen = new Set()) {
   if (seen.size > 1 && name === 'button' && /^BUTTON_BADGE_(?:ONE_ITEM|MANY_ITEMS)$/.test(key)) return undefined
   const owner = resolutions[name]
   if (!owner) return undefined
+  // The new texts are enabled by the Input suggestion slot, which other callers do not mount.
+  if (name === 'input' && seen.size > 1 && !['VALUE_STATE_ERROR', 'VALUE_STATE_WARNING', 'VALUE_STATE_SUCCESS', 'VALUE_STATE_INFORMATION'].includes(key)) return undefined
   if (owner.rows[key]) return owner.rows[key]
   // DateTimePicker renders both Calendar and TimePicker. Their native DayPicker
   // and SegmentedButton each consume LIST_ITEM_SELECTED; implementing one must
@@ -288,14 +293,49 @@ function wcrRows(component, name) {
       }
     }
   }
-  return [...imports].sort(([a], [b]) => a.localeCompare(b)).map(([symbol, nativeReferences]) => {
+  const rows = [...imports].sort(([a], [b]) => a.localeCompare(b)).map(([symbol, nativeReferences]) => {
     const definition = wcrEnglish[symbol]
-    const property = resolveKey(component, definition.key)
+    const property = resolveKey(component, definition.key) ?? resolveKey(component, `wcr:${definition.key}`)
     const reason = unreachable[`${component}/${definition.key}`]
     const status = property ? 'ok' : reason ? 'not rendered' : shipped.includes(component) ? 'gap' : 'reference only'
     return {
       ...definition, source: 'wcr', nativeReferences, status,
       property: property ?? reason ?? (status === 'gap' ? 'No implemented provider/override text owner' : 'Port pending'),
+    }
+  })
+  if (component !== 'message-box') return rows
+  // MessageBox delegates the region labels and the emphasized action description
+  // to the UI5 Dialog and Button it composes. Retain their Web Component domain.
+  for (const [key, native] of [
+    ['DIALOG_HEADER_ARIA_LABEL', 'Dialog'], ['DIALOG_CONTENT_ARIA_LABEL', 'Dialog'],
+    ['DIALOG_FOOTER_ARIA_LABEL', 'Dialog'], ['BUTTON_ARIA_TYPE_EMPHASIZED', 'Button'],
+  ]) {
+    const source = `node_modules/@ui5/webcomponents/dist/${native}.js`
+    const nativeReferences = [...(keyReferences(source)[key] ?? [])]
+    const property = resolveKey(component, key)
+    rows.push({ key, ...englishDefinition(component, key, nativeReferences, property ?? ''), nativeReferences,
+      status: property ? 'ok' : 'gap', property: property ?? 'No implemented text owner' })
+  }
+  return rows.sort((a, b) => a.key.localeCompare(b.key))
+}
+
+
+function selectDialogDelegateRows() {
+  // SelectDialog/index.js supplies the slots and design that activate these
+  // Web Component channels. Keep their UI5 domain in the WCR owner's inventory.
+  return Object.entries({
+    BUTTON_ARIA_TYPE_EMPHASIZED: 'Button.js:372',
+    DIALOG_CONTENT_ARIA_LABEL: 'Dialog.js:335',
+    DIALOG_FOOTER_ARIA_LABEL: 'Dialog.js:338',
+    DIALOG_HEADER_ARIA_LABEL: 'Dialog.js:332',
+    INPUT_CLEAR_ICON_ACC_NAME: 'Input.js:1157',
+    LIST_ITEM_ACTIVE: 'ListItem.js:320',
+  }).map(([key, path]) => {
+    const nativeReferences = [`node_modules/@ui5/webcomponents/dist/${path}`]
+    const property = resolveKey('select-dialog', key)
+    return {
+      key, ...englishDefinition('select-dialog', key, nativeReferences, property ?? ''),
+      nativeReferences, property: property ?? 'No implemented provider/override text owner', status: property ? 'ok' : 'gap',
     }
   })
 }
@@ -310,6 +350,11 @@ for (const [component, reason] of [
   ['split-button', 'SplitButtonTemplate only renders decorative Button icons.'],
   ['numeric-input', 'NumericInputTemplate hides private step icons; InputPopoverTemplate uses a decorative state icon.'],
 ]) unrendered(component, ['ICON_ARIA_TYPE_IMAGE', 'ICON_ARIA_TYPE_INTERACTIVE'], reason)
+unrendered('input', ['POPOVER_ARIA_DESCRIBEDBY_RESIZABLE', 'POPOVER_HANDLE_ARIA_ROLEDESCRIPTION',
+  'POPOVER_RESIZE_HANDLE_ARIA_LABEL', 'POPOVER_RESIZE_HANDLE_TOOLTIP'],
+  'InputSuggestionsTemplate and InputPopoverTemplate leave their Popup resize handles disabled.')
+unrendered('input', ['ICON_ARIA_TYPE_IMAGE', 'ICON_ARIA_TYPE_INTERACTIVE'],
+  'InputPopoverTemplate uses a decorative state icon. Consumer-provided Input icons own their own accessible names.')
 unrendered('button-badge', ['TAG_ERROR', 'TAG_INFORMATION', 'TAG_ROLE_DESCRIPTION', 'TAG_SUCCESS'], 'ButtonBadgeTemplate only renders a noninteractive Critical Tag.')
 unrendered('split-button', ['BUSY_INDICATOR_TITLE', 'BUTTON_ROLE_DESCRIPTION', 'LINK_ROLE_DESCRIPTION', 'LABEL_COLON', 'BUTTON_BADGE_ONE_ITEM', 'BUTTON_BADGE_MANY_ITEMS'],
   'SplitButtonTemplate renders plain inner buttons without loading, badge, associated label or CustomAnnouncement metadata.')
@@ -327,14 +372,6 @@ unrendered('numeric-input', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STA
 
 for (const [card, keys] of [
   ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
-  ['H4 tree, selection and row states', [
-    'ALL_ROWS_DESELECTED', 'ALL_ROWS_DESELECTED_FILTERED', 'ALL_ROWS_SELECTED', 'ALL_ROWS_SELECTED_FILTERED',
-    'COLLAPSE_NODE', 'DESELECT_ALL', 'EXPAND_NODE',
-    'HIGHLIGHT_COLUMN', 'NAVIGATION_COLUMN', 'ROW_COLLAPSED', 'ROW_DESELECTED', 'ROW_DESELECTED_MULTI',
-    'ROW_DESELECTED_MULTI_FILTERED', 'ROW_EXPANDED', 'ROW_SELECTED', 'ROW_SELECTED_MULTI',
-    'ROW_SELECTED_MULTI_FILTERED', 'SELECT_ALL',
-    'SELECTION_COLUMN',
-  ]],
   ['H5 overlay', ['INVALID_TABLE']],
 ]) unrendered('analytical-table', keys.map(key => `wcr:${key}`), `Native channel activates with ${card}.`)
 
@@ -371,7 +408,9 @@ const audit = shipped.filter(component => !wcrComponents[component]).map(compone
   return { key, ...definition, property, status, ...(status === 'gap' ? triage.get(`${component}/${key}`) ?? { triage: 'owner-review', triageNote: 'Newly inventoried native channel requires owning P-card review.' } : {}), nativeReferences }
 }) }))
 for (const [component, [native, owner]] of Object.entries(wcrComponents)) {
-  audit.push({ component, owner, reference: 'wcr', rows: wcrRows(component, native) })
+  const rows = wcrRows(component, native)
+  if (component === 'select-dialog' && shipped.includes(component)) rows.push(...selectDialogDelegateRows())
+  audit.push({ component, owner, reference: 'wcr', rows })
 }
 audit.sort((a, b) => a.component.localeCompare(b.component))
 const escape = s => String(s).replaceAll('|', '\\|').replaceAll('\n', '<br>')

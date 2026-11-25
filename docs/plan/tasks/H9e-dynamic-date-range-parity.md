@@ -21,3 +21,16 @@ component, fixtures, tests, stories and related inventory and usage-routing entr
   axe and behavior checks followed by tier 2. Install `@petalo/dynamic-date-range` as the only requested item in a
   fresh consumer, build and render it, and verify typed expressions and a custom option. Tick H9e.
 - Budget is two hypotheses per failing check, about two hours, and zero pushes.
+
+## Review of the H9e checkpoint
+
+`codex/H9e` at `1ae2b54` passes all 117 pixel comparisons, all 24 localized comparisons,
+the focused stories and the installed consumer. After two repairs the LTR and RTL tree comparisons
+still differ on every open editor category. See the [H9e return](../returns/H9e.md) for raw capture paths,
+case counts and the pinned template evidence.
+
+Start the next focused comparison with the date-only Calendar shortcut and announcement lifecycle,
+then the native List's preset text and sentinels. The name and role differences in the amount and
+date-time editors repeat the H9b issue. The review needs an owner decision about using exact,
+source-backed native deviations for these named controls and whether any shared picker work belongs
+in scope. Preserve the current interactive semantics. All prior acceptance checks still apply.

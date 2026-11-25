@@ -19,10 +19,20 @@ const customizationProofs = {
   "AnalyticalTableHeaderCell.className": "analytical-table-custom",
   "AnalyticalTableHeaderCell.children": "analytical-table-custom",
   "DynamicDateRange.className": "dynamic-date-range",
+  "SelectDialog.className": "select-dialog",
+  "SelectDialog.renderItem": "select-dialog",
   "SplitterLayout.className": "splitter-layout",
   "SplitterLayout.children": "splitter-layout",
   "SplitterElement.className": "splitter-layout",
   "SplitterElement.children": "splitter-layout",
+  "Input.children": "h7-input-custom",
+  "SuggestionItem.className": "h7-input-custom",
+  "SuggestionItem.renderContent": "h7-input-custom",
+  "SuggestionItemGroup.children": "h7-input-custom",
+  "SuggestionItemGroup.className": "h7-input-custom",
+  "MessageBox.className": "h7-message-box-custom",
+  "MessageBox.children": "h7-message-box-custom",
+  "MessageBox.icon": "h7-message-box-custom",
   "ToolbarButton.badge": "h8-badge-custom",
   "ToggleButton.badge": "h8-badge-custom",
   "SplitButton.menu": "split-button",
@@ -538,7 +548,6 @@ const customizationProofs = {
 const nonFunctionalCustomizations = {
   "AdditionalText.text": "list.tsx exports this shared Tree implementation helper with the comment not meant for direct use; ListItemStandard.additionalText and TreeNode.additionalText are the public slots.",
   "CardHeader.children": "CardHeader renders its own title/subtitle/avatar/action children after spreading native div props; use its named slots.",
-  "Input.children": "Input owns a native void input and its validation/icon siblings; children inherited from input props are not a rendering slot.",
   "ProductSwitchItem.children": "ProductSwitchItem renders its text/subtitle/image slots after spreading native props, replacing inherited children.",
   "SearchItem.children": "SearchItem renders its text/description/image/actions after spreading native li props, replacing inherited children.",
   "Checkbox.asChild": "CheckboxProps explicitly omits consumer children; the inherited Radix flag cannot select a caller host.",
@@ -601,7 +610,7 @@ for (const file of program.getSourceFiles().filter((source) => /registry\/ui\/[^
 }
 let code: string, css: string
 const names = fixtureFiles.map((file) => file.slice(0, -4))
-const supplementalNames = ["analytical-table-custom", "data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels"]
+const supplementalNames = ["analytical-table-custom", "data-table-custom", "data-table-empty", "picker-field-custom", "popup-controls-custom", "render-helpers-custom", "adapt-filter-custom", "responsive-custom", "select-slots-custom", "variant-custom", "h8-badge-custom", "h8-native-channels", "h7-input-custom", "h7-message-box-custom", "h7-hostile", "h7-value-state-links"]
 test.beforeAll(async () => {
   const imports = Object.keys(metadata).map((file, index) => `import * as M${index} from ${JSON.stringify(resolve(`registry/ui/${file}`))};`).join("\n")
   const fixtures = fixtureFiles.map((file, index) => `import F${index} from ${JSON.stringify(resolve(`docs/src/fixtures/${file}`))};`).join("\n")
@@ -657,11 +666,32 @@ test.beforeAll(async () => {
         C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock empty',minRows:1,
           NoDataComponent:()=> 'No orders'}),
         C('AnalyticalTable',{data:[],columns:tableColumns,'aria-label':'Analytical stock loading',minRows:1,loading:true,
-          LoadingComponent:()=> 'Loading orders'})),
+          LoadingComponent:()=> 'Loading orders'}),
+        h('div',{style:{width:300}},C('AnalyticalTable',{
+          data:[{name:'Ada',category:'Hardware'}], minRows:1,
+          columns:[{accessorKey:'name',header:'Item name',width:250},
+            {accessorKey:'category',header:'Category',responsiveMinWidth:400,responsivePopIn:true,popinDisplay:'Inline',
+              PopInHeader:()=>h('strong',{role:'button',tabIndex:99,id:'foreign-pop-in-label'},'Stock category')}],
+          'aria-label':'Responsive analytical stock', adjustTableHeightOnPopIn:true,
+          getCellProps:()=>({role:'button',id:'foreign-pop-in-cell','aria-selected':true,'aria-labelledby':'foreign-pop-in-label',tabIndex:99})
+        }))),
       'h8-badge-custom':()=>h(React.Fragment,{},
         C('Button',{badge:C('ButtonBadge',{design:'InlineText',text:'1',texts:{oneItem:count=>count+' update'}})},'Inbox'),
         C('ToggleButton',{badge:badge(),defaultPressed:true},'Pinned'),
         C('Toolbar',{'aria-label':'Badge actions'},C('ToolbarButton',{badge:badge()},'Notifications'))),
+      'h7-input-custom':()=>C('Input',{showSuggestions:true,defaultOpen:true,'aria-label':'City'},
+        C('SuggestionItemGroup',{headerText:'Europe'}, h(modules.find(m=>m.Input).SuggestionItem,{text:'Berlin',additionalText:'DE',
+          renderContent:({defaultContent})=>defaultContent}))),
+      'h7-value-state-links':()=>C('Input',{showSuggestions:true,defaultOpen:true,defaultValue:'Be',
+        'aria-label':'Shipping city',valueState:'negative',texts:{stateLinks:'Review two references',stateLinksMac:'Review two references'},
+        valueStateMessage:h('span',{},h('a',{href:'#first'},'First link'),' ',h('a',{href:'#second'},'Second link'))},
+        h(modules.find(m=>m.Input).SuggestionItem,{text:'Berlin'})),
+      'h7-hostile':()=>h(React.Fragment,{},
+        C('Input',{showSuggestions:true,defaultOpen:true,'aria-label':'City'},
+          h(modules.find(m=>m.Input).SuggestionItem,{text:'Berlin',additionalText:'DE',role:'menuitem',
+            id:'foreign-option',tabIndex:99,'aria-selected':true,renderContent:()=>h('em',{},'Berlin near the river')})),
+        C('MessageBox',{open:true,portal:false,role:'region','aria-modal':false,tabIndex:99,'aria-labelledby':'foreign-title'},'Review order.')),
+      'h7-message-box-custom':()=>C('MessageBox',{open:true,portal:false,icon:h('span',{},'?')},'Review order.'),
       'h8-native-channels':()=>h(React.Fragment,{},
         h('span',{id:'quantity-label'},'Stock quantity'),
         C('NumericInput',{'aria-label':'Order quantity',defaultValue:12,max:10,texts:{aboveMaximum:count=>'Maximum '+count}}),
@@ -674,7 +704,7 @@ test.beforeAll(async () => {
       'data-table-empty':()=>C('DataTable',{data:[],columns:tableColumns,'aria-label':'Custom empty data table',noData:text('Custom no rows')}),
       'picker-field-custom':()=>h(PickerConsumer),
       'popup-controls-custom':()=>C('Dialog',{defaultOpen:true},C('DialogTrigger',{},'Open dialog'),C('DialogOverlay',{},text('Custom overlay')),C('DialogContent',{portal:false},C('DialogTitle',{},'Custom dialog title'),C('DialogDescription',{},'Custom description'),C('DialogClose',{},'Close dialog'))),
-      'render-helpers-custom':()=>h(React.Fragment,{},C('Popover',{defaultOpen:true},C('PopoverTrigger',{},'Open popover'),C('PopoverContent',{portal:false,'aria-label':'Custom popover'},C('PopoverClose',{},'Close popover'))),C('Toolbar',{'aria-label':'Custom toolbar'},C('ToolbarItem',{},button('Custom toolbar item'))),C('FilterBarToggle',{},'Toggle filters'),C('ShellBarBadge',{},'Custom badge'),C('List',{selectionMode:'single',defaultSelectedValues:['custom']},C('ListItemStandard',{value:'custom',text:text('Custom text'),description:text('Custom description'),additionalText:text('Custom additional'),image:text('Custom image')})),C('MultiInput',{'aria-label':'Custom suggestions',defaultOpen:true},C('SuggestionItem',{text:'Custom suggestion'})),C('Table',{'aria-label':'Custom empty table',noData:text('Custom table no data')},C('TableHeaderRow',{},C('TableHeaderCell',{action:button('Custom header action')},'Name')))),
+      'render-helpers-custom':()=>h(React.Fragment,{},C('Popover',{defaultOpen:true},C('PopoverTrigger',{},'Open popover'),C('PopoverContent',{portal:false,'aria-label':'Custom popover'},C('PopoverClose',{},'Close popover'))),C('Toolbar',{'aria-label':'Custom toolbar'},C('ToolbarItem',{},button('Custom toolbar item'))),C('FilterBarToggle',{},'Toggle filters'),C('ShellBarBadge',{},'Custom badge'),C('List',{selectionMode:'single',defaultSelectedValues:['custom']},C('ListItemStandard',{value:'custom',text:text('Custom text'),description:text('Custom description'),additionalText:text('Custom additional'),image:text('Custom image')})),C('MultiInput',{'aria-label':'Custom suggestions',defaultOpen:true},h(modules.find(m=>m.MultiInput).SuggestionItem,{text:'Custom suggestion'})),C('Table',{'aria-label':'Custom empty table',noData:text('Custom table no data')},C('TableHeaderRow',{},C('TableHeaderCell',{action:button('Custom header action')},'Name')))),
       'adapt-filter-custom':()=>C('AdaptFiltersDialog',{open:true,onOpenChange:()=>{},filters:[{key:'name',label:'Custom filter',required:true,render:({id,disabled,valueState,valueStateMessage})=>h('div',{'data-custom-filter':'name'},C('Input',{id,disabled,valueState,valueStateMessage,'aria-label':'Custom filter field',defaultValue:'Ada'}))}],values:{name:[]},visibleKeys:['name'],onApply:()=>{},portal:false,modal:false,className:'custom-filter-dialog'}),
       'responsive-custom':()=>C('ResponsivePopover',{defaultOpen:true},C('ResponsivePopoverTrigger',{},'Open responsive'),C('ResponsivePopoverAnchor',{},text('Responsive anchor')),C('ResponsivePopoverContent',{portal:false,headerText:'Owned responsive title',phoneHeader:text('Custom phone header'),phoneFooter:button('Custom phone footer'),phoneClassName:'custom-phone'},button('Custom responsive content'))),
       'select-slots-custom':()=>h(React.Fragment,{},C('Select',{defaultOpen:true},C('SelectTrigger',{'aria-label':'Custom select'},C('SelectValue',{placeholder:text('Custom placeholder')},text('Custom value'))),C('SelectContent',{portal:false},C('SelectItem',{value:'first'},'First'),C('SelectSeparator',{},text('Custom separator')),C('SelectItem',{value:'second'},'Second'))),C('MenuSeparator',{},text('Custom menu separator')),C('PickerPopoverBody',{valueState:'negative',message:text('Custom body message')},text('Custom body content')),C('List',{selectionMode:'single',defaultSelectedValues:['custom']},C('ListItemStandard',{value:'custom'},text('Custom child title'))),C('Toolbar',{'aria-label':'Custom separator toolbar'},C('ToolbarSpacer',{},text('Custom spacer')),C('ToolbarSeparator',{},text('Custom separator'))),C('TabsSeparator',{},text('Custom tab separator')),C('ShellBarSearch',{'aria-label':'Custom shell suggestions',defaultOpen:true,defaultValue:'Ada'},C('SearchItem',{text:'Ada'}))),
@@ -822,6 +852,13 @@ test("repaired semantic custom hosts warn when hostile ownership props are ignor
     await expect.poll(() => warnings.some((warning) => warning.includes(`${part}: ignored custom host ownership prop`))).toBe(true)
   }
   warnings.length = 0
+  await page.evaluate(() => (window as any).e4Customization.mount("select-dialog", "select-dialog-custom", true))
+  const row = page.getByRole("listitem").filter({ hasText: "In review" })
+  await expect(row).not.toHaveAttribute("id", "foreign")
+  for (const prop of ["role", "id", "tabIndex", "aria-selected"]) {
+    expect(warnings.some(warning => warning.includes("SelectDialog: ignored item ownership prop " + prop))).toBe(true)
+  }
+  warnings.length = 0
   await page.evaluate(() => (window as any).e4Customization.mount("render-helpers-custom", "render-helpers-custom", true))
   await expect(page.getByRole("dialog", { name: "Custom popover", exact: true })).toBeVisible()
   expect(warnings.some((warning) => warning.includes("Popover.Content: ignored custom host ownership prop aria-label"))).toBe(true)
@@ -944,4 +981,55 @@ test("AnalyticalTable protects custom cell semantics and preserves native grid n
     message.includes(`AnalyticalTable cell: ignored owned prop "${attribute}"`))).toBe(true)
   await expect(page.getByRole("grid", { name: "Analytical stock empty" }).getByRole("gridcell")).toHaveText("No orders")
   await expect(page.getByRole("progressbar", { name: "Please wait" })).toHaveText("Loading orders")
+  const responsive = page.getByRole("grid", { name: "Responsive analytical stock" })
+  const popIn = responsive.getByRole("gridcell", { name: "Item name Ada Stock category: Hardware" })
+  const header = popIn.locator('[data-slot="analytical-table-pop-in-header"]')
+  await expect(popIn).toHaveAttribute("aria-colindex", "1")
+  await expect(popIn).toHaveAttribute("tabindex", "-1")
+  await expect(popIn).not.toHaveAttribute("aria-selected")
+  await expect(popIn).not.toHaveAttribute("id", "foreign-pop-in-cell")
+  const references = (await popIn.getAttribute("aria-labelledby"))!.split(" ")
+  expect(references).toContain(await header.getAttribute("id"))
+  expect(references).not.toContain("foreign-pop-in-label")
+  await expect(header.locator("#foreign-pop-in-label")).toHaveAttribute("tabindex", "-1")
+  await expect(popIn.getByRole("button")).toHaveCount(0)
+  expect(warnings.some(message => message.includes('AnalyticalTable cell: ignored owned prop "aria-labelledby"'))).toBe(true)
+})
+
+test("H7 content slots protect option and alertdialog ownership", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", (message) => { if (message.type() === "warning") warnings.push(message.text()) })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("h7-hostile", "h7-hostile", false))
+  const option = page.getByRole("option", { name: "Berlin near the river" })
+  await expect(option).toBeVisible()
+  await expect(option).toHaveAttribute("tabindex", "-1")
+  await expect(option).toHaveAttribute("aria-selected", "false")
+  await expect(page.locator("#foreign-option")).toHaveCount(0)
+  const box = page.getByRole("alertdialog", { name: "Confirmation Review order." })
+  await expect(box).toHaveAttribute("aria-modal", "true")
+  await expect(box).toHaveAttribute("tabindex", "-1")
+  for (const [part, props] of [["Input.SuggestionItem", ["id", "role", "tabIndex", "aria-selected"]],
+    ["MessageBox", ["role", "tabIndex", "aria-modal", "aria-labelledby"]]] as const) {
+    for (const prop of props) expect(warnings).toContainEqual(expect.stringContaining(`${part}: ignored custom host ownership prop ${prop}`))
+  }
+})
+
+test("H7 value-state links announce a shortcut and lead back into the suggestions", async ({ page }) => {
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("h7-value-state-links", "h7-value-state-links", false))
+  const input = page.getByRole("textbox", { name: "Shipping city" })
+  await input.focus()
+  await expect(input).toHaveAccessibleDescription("Suggestions Available Value State Error First link Second link Review two references")
+  const modifier = await page.evaluate(() => /Mac/.test(navigator.platform) ? "Meta" : "Control")
+  await input.press(`${modifier}+Alt+F8`)
+  const first = page.getByRole("link", { name: "First link" })
+  const second = page.getByRole("link", { name: "Second link" })
+  await expect(first).toBeFocused()
+  await first.press("Tab")
+  await expect(second).toBeFocused()
+  await second.press("ArrowDown")
+  await expect(input).toBeFocused()
+  await expect(input).toHaveValue("Berlin")
+  await expect(page.getByRole("option", { name: "Berlin" })).toHaveAttribute("aria-selected", "true")
 })

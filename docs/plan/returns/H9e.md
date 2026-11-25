@@ -57,3 +57,18 @@ The stored baseline has no additions and the visual matrix uses the regular 2% t
 Full reports are under `.integration/H9e/` and `test-results/`. The final tree capture is
 `test-results/a11y-capture-2026-11-24T01-25-35-184Z-91686/a11y-tree-report.json`. The final test summary is
 `test-results/summary-2026-11-24T01-25-35-184Z-91686.log`.
+
+## Review of `1ae2b54`
+
+The reviewer checked the final capture, the installed reference templates and the branch scope.
+LTR and RTL both retain the same 188 lines across the eight open cases. The underlying differences
+include empty announcement outlets and the native List's projected text, as well as real name and role
+differences on the amount and date-time editors. The source templates render the amount, unit and From/To
+labels separately from their controls and render the Date/Time SegmentedButton without a group name.
+The branch preserves the existing named controls and does not change shared StepInput, DateTimePicker
+or SegmentedButton production code. No tree baseline entries were added.
+
+H9e returns unchecked. This is the same open-editor parity issue that survived H9b. Before another
+implementation run, settle how to compare the source-confirmed unassociated labels and the native
+amount textbox while retaining the React controls' names and spinbutton semantics. Keep the rule 9
+case-specific source proof and real interaction checks. No additional card was opened for the same issue.

@@ -13,6 +13,7 @@ for (const file of owners) {
   for (const match of source.matchAll(/(?:function|const)\s+([A-Z]\w*)\b/g)) exported.set(match[1], file.replace(/\.tsx$/, ""))
 }
 const aliases = {
+  SuggestionItem: "input", SuggestionItemGroup: "input",
   TextArea: "textarea", CheckBox: "checkbox", ComboBoxItem: "combobox", ComboBoxItemGroup: "combobox", Option: "select", OptionGroup: "select",
   MultiComboBoxItem: "multi-combobox", MultiComboBoxItemGroup: "multi-combobox", RadioButton: "radio-group",
   ListItemStandard: "list", ListItemCustom: "list", ListItemGroup: "list", ListItemBase: "list", ListItem: "list",
@@ -95,6 +96,7 @@ const h1Texts = [
   ["wcr:EXPAND_PRESS_SPACE", "expandRow", "index.js"],
   ["wcr:COLLAPSE_PRESS_SPACE", "collapseRow", "index.js"],
 ]
+const inputSuggestionsProof = "tests/input.spec.ts: Input suggestions preview, selection, announcements and phone editor"
 const verifiedTexts = {
   "segmented-button.LIST_ITEM_SELECTED": { equivalent: "SegmentedButton.texts.selected", proof: "tests/segmented-button.spec.ts: selection announces assertively and deselection does not announce", status: "fixed in E4" },
   "segmented-button.SEGMENTEDBUTTON_ARIA_DESCRIBEDBY": { equivalent: "SegmentedButton.texts.itemDescription / SegmentedButtonItem.texts.itemDescription", proof: "tests/segmented-button.spec.ts: item description and description-ref reach the UI5 owning element", status: "fixed in E4" },
@@ -157,8 +159,25 @@ for (const [key, equivalent] of [
   ["DYNAMIC_DATE_RANGE_POPOVER_ACCESSIBLE_NAME", "popoverName"],
 ]) verifiedTexts[`dynamic-date-range.${key}`] = { equivalent: `DynamicDateRange.texts.${equivalent}`, status: "ok",
   proof: "tests/dynamic-date-range.spec.ts: DynamicDateRange field and picker expose their translated names and value summary" }
+for (const [key, equivalent] of [
+  ["CANCEL", "cancel"], ["CLEAR", "clear"], ["SEARCH", "search"], ["SELECT", "select"],
+  ["SELECTED", "selected"], ["SELECTED_ITEMS", "selectedItems"], ["BUTTON_ARIA_TYPE_EMPHASIZED", "confirmDescription"], ["LIST_ITEM_ACTIVE", "itemActive"],
+]) verifiedTexts[`select-dialog.${key}`] = { equivalent: `SelectDialog.texts.${equivalent}`, status: "ok",
+  proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" }
 verifiedTexts["splitter-layout.PRESS_ARROW_KEYS_TO_MOVE"] = { equivalent: "SplitterLayout.texts.keyboardHint", status: "ok",
   proof: "tests/splitter-layout.spec.ts: SplitterLayout keyboard bounds and steps" }
+for (const [key, equivalent] of [
+  ["INPUT_AVALIABLE_VALUES", "popupLabel"], ["INPUT_SUGGESTIONS", "description"],
+  ["INPUT_SUGGESTIONS_TITLE", "title"], ["INPUT_SUGGESTIONS_ONE_HIT", "oneHit"],
+  ["INPUT_SUGGESTIONS_MORE_HITS", "moreHits"], ["INPUT_SUGGESTIONS_NO_HIT", "noHit"],
+  ["INPUT_SUGGESTIONS_EXPANDED", "expanded"], ["INPUT_SUGGESTIONS_COLLAPSED", "collapsed"],
+  ["INPUT_SUGGESTIONS_OK_BUTTON", "ok"], ["INPUT_SUGGESTIONS_CANCEL_BUTTON", "cancel"],
+  ["LIST_ITEM_POSITION", "position"], ["LIST_ITEM_GROUP_HEADER", "groupHeader"],
+  ["VALUE_STATE_LINK", "stateLink"], ["VALUE_STATE_LINK_MAC", "stateLinkMac"],
+  ["VALUE_STATE_LINKS", "stateLinks"], ["VALUE_STATE_LINKS_MAC", "stateLinksMac"],
+  ["VALUE_STATE_TYPE_ERROR", "negativeType"], ["VALUE_STATE_TYPE_WARNING", "criticalType"],
+  ["VALUE_STATE_TYPE_SUCCESS", "positiveType"], ["VALUE_STATE_TYPE_INFORMATION", "informationType"],
+]) verifiedTexts[`input.${key}`] = { equivalent: `Input.texts.${equivalent}`, proof: inputSuggestionsProof, status: "ok" }
 
 const rows = [], sourceFiles = new Map()
 for (const pkg of packages) {
@@ -188,7 +207,9 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/TableCustomAnnouncement.js", "table"],
   ["node_modules/@ui5/webcomponents/dist/CustomAnnouncement.js", "list,table"],
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js", "select-dialog"],
   ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
+  ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)
 const textRows = [], announcements = []
 for (const [file, owner] of sourceFiles) {
@@ -205,6 +226,9 @@ for (const [file, owner] of sourceFiles) {
     if (file.endsWith("/ComboBox.js") && (lines[index].includes("announce(`${groupHeaderText}") || lines[index].includes("announce(`${currentItemAdditionalText}"))) Object.assign(row, { status: "fixed in E4", equivalent: "ComboBox owned polite alert: group header or additionalText plus displayed non-group position while open; additionalText alone while closed", proof: "tests/combobox.spec.ts: ComboBox [ltr/rtl] keyboard announcements use displayed rows, group headers and additional text" })
     if (file.endsWith("/List.js") && lines[index].includes("announce(selectedText")) Object.assign(row, { status: "fixed in E4", equivalent: "List/Tree owned polite alerts in the nearest modal ancestor or document.body (Tree inherits this native List selection channel)", proof: "tests/list.spec.ts: List selection changes announce politely with the same selected/not-selected text; tests/tree.spec.ts: Tree [RTL] custom content cannot replace owned role, states, ids or tab stops; Tree text overrides keep selection descriptions and polite announcements connected" })
     if (file.endsWith("/Select.js") && lines[index].includes("announce(text")) Object.assign(row, { status: "fixed in E4", equivalent: "Select's owned polite alert announces selected text; open state adds the same position text", proof: "tests/select.spec.ts: Select group summary and selection announcements preserve UI5 text and politeness" })
+    if (owner === "select-dialog" && lines[index].includes("announce(i18nBundle.getText(SELECTED_ITEMS")) Object.assign(row, {
+      status: "ok", equivalent: "SelectDialog's polite live region reports the number of selected items",
+      proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" })
     if (file.endsWith("/ListItemCustom.js")) Object.assign(row, { equivalent: "ListItemCustom focus name/connected label targets verified for custom text + Fiori Button; other widget/state hooks still gap", proof: "tests/list.spec.ts: List custom focus description matches UI5 content and controls and clears on blur" })
   }
 }
@@ -225,6 +249,26 @@ for (const [key, field, source] of [
   ["LIST_ITEM_ACTIVE", "menuItemActive", "node_modules/@ui5/webcomponents/dist/ListItemBase.js"],
   ["INPUT_CLEAR_ICON_ACC_NAME", "clearFilter", "node_modules/@ui5/webcomponents/dist/Input.js"],
 ]) textRows.push({ owner: "analytical-table", key, equivalent: `AnalyticalTable.texts.${field}`, status: "ok", source })
+
+const h4Proof = "tests/analytical-table.spec.ts: paired tree rows expose their hierarchy and disclosure names; tree rows keep owned hierarchy, row details and selection; select all, shift range, partial and single selection retain distinct modes"
+for (const [file, texts] of [
+  ["defaults/Column/Expandable.js", [["EXPAND_NODE", "expandNode"], ["COLLAPSE_NODE", "collapseNode"]]],
+  ["hooks/useA11y.js", [["SELECTION_COLUMN", "selectionColumn"], ["HIGHLIGHT_COLUMN", "highlightColumn"], ["NAVIGATION_COLUMN", "navigationColumn"]]],
+  ["hooks/useRowSelectionColumn.js", [["SELECT_ALL", "selectAllLabel"], ["DESELECT_ALL", "deselectAllLabel"]]],
+  ["hooks/useToggleRowExpand.js", [["ROW_EXPANDED", "rowExpanded"], ["ROW_COLLAPSED", "rowCollapsed"]]],
+  ["hooks/useSelectionChangeCallback.js", [
+    ["ROW_SELECTED", "rowSelected"], ["ROW_DESELECTED", "rowDeselected"],
+    ["ROW_SELECTED_MULTI", "rowSelectedMulti"], ["ROW_DESELECTED_MULTI", "rowDeselectedMulti"],
+    ["ROW_SELECTED_MULTI_FILTERED", "rowSelectedFiltered"], ["ROW_DESELECTED_MULTI_FILTERED", "rowDeselectedFiltered"],
+    ["ALL_ROWS_SELECTED", "allRowsSelected"], ["ALL_ROWS_DESELECTED", "allRowsDeselected"],
+    ["ALL_ROWS_SELECTED_FILTERED", "visibleRowsSelected"], ["ALL_ROWS_DESELECTED_FILTERED", "visibleRowsDeselected"],
+  ]],
+]) {
+  for (const [key, field] of texts) {
+    textRows.push({ owner: "analytical-table", key: `wcr:${key}`, equivalent: `AnalyticalTable.texts.${field}`,
+      status: "ok", proof: h4Proof, source: `${h1Source}/${file}` })
+  }
+}
 
 // The allowed consumer spec owns the exact runtime proof map and source-backed
 // nonfunctional classifications; unknown public points stay gap.
@@ -267,6 +311,18 @@ custom.push({
   owner: "analytical-table", point: "AnalyticalTable.columns.Filter", source: "registry/ui/analytical-table.tsx",
   declaration: "AnalyticalTable.columns.Filter", status: "ok", functional: true,
   proof: "tests/analytical-table.spec.ts: controlled sorting and the custom Filter renderer keep the owned menu and header",
+})
+
+custom.push({
+  owner: "analytical-table", point: "AnalyticalTable.columns.PopInHeader", source: "registry/ui/analytical-table.tsx",
+  declaration: "AnalyticalTable.columns.PopInHeader", status: "ok", functional: true,
+  proof: "tests/a11y-tree-customizations.spec.ts: AnalyticalTable protects custom cell semantics and preserves native grid naming",
+})
+
+custom.push({
+  owner: "select-dialog", point: "SelectDialog.getItemProps", source: "registry/ui/select-dialog.tsx",
+  declaration: "SelectDialog.getItemProps", status: "ok", functional: true,
+  proof: "tests/select-dialog.spec.ts: SelectDialog custom content keeps selection and keyboard ownership (ltr/rtl)",
 })
 
 const live = owners.flatMap((file) => read(`registry/ui/${file}`).split("\n").flatMap((line, index) =>

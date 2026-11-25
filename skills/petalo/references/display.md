@@ -236,7 +236,7 @@ Explain application messages in context within a page or section.
 
 - Confirm a completed action briefly without requiring a response. → [toast](overlays.md#toast)
 - An empty or unavailable area needs an illustration and a recovery or next-step action. → [illustrated-message](display.md#illustrated-message)
-- Interrupt the flow to require an explicit decision or immediate response. → [dialog](overlays.md#dialog)
+- Require an explicit response. Use MessageBox for standard actions, or Dialog for a custom workflow. → [dialog](overlays.md#dialog), [message-box](overlays.md#message-box)
 - Show the state of an individual object inside a table cell or list item. → [object-status](data.md#object-status)
 
 Main exports: `MessageStrip`.

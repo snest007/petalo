@@ -2,10 +2,11 @@ import * as React from "react"
 import {
   AnalyticalTable, useAnalyticalTable, type AnalyticalTableBodyProps,
   type AnalyticalTableColumnDef, type AnalyticalTableInstance, type AnalyticalTableProps,
-  type ColumnFiltersState, type SortingState,
+  type AnalyticalTableSelectedRows, type ColumnFiltersState, type ExpandedState, type GroupingState, type SortingState,
 } from "@/components/ui/analytical-table"
 import { FioriLocaleProvider } from "@/lib/fiori-locale"
 import { defineDemo } from "./types"
+import { treeInventory, type Inventory as TreeInventory } from "../fixtures/analytical-table.cases"
 
 type Inventory = { product: string; category: string; stock: number }
 export const inventory: Inventory[] = Array.from({ length: 75 }, (_, index) => ({
@@ -23,6 +24,7 @@ const customColumns: AnalyticalTableColumnDef<Inventory>[] = [
   columns[0], {
     ...columns[1],
     filterable: true,
+    Grouped: ({ defaultContent }) => <strong>{defaultContent}</strong>,
     filter: (rows, [columnId], value) => rows.filter(row => row.getValue(columnId) === value),
     Filter: ({ value, setFilter, accessibleNameRef }) => (
       <select value={String(value ?? "")} aria-labelledby={accessibleNameRef}
@@ -42,6 +44,15 @@ const customColumns: AnalyticalTableColumnDef<Inventory>[] = [
     </span>,
   },
 ]
+const narrowCustomColumns: AnalyticalTableColumnDef<Inventory>[] = customColumns.map(column => {
+  if ("accessorKey" in column && column.accessorKey === "category") return {
+    ...column, responsiveMinWidth: 400, responsivePopIn: true, popinDisplay: "Inline",
+    PopInHeader: () => <strong>Inventory category</strong>,
+  }
+  if ("accessorKey" in column && column.accessorKey === "stock") return { ...column, responsiveMinWidth: 400 }
+  return column
+})
+
 function InventoryBody({ children }: AnalyticalTableBodyProps) {
   const { model } = useAnalyticalTable<Inventory>()
   // Attach inventory analytics metadata to the virtual rows without inserting
@@ -53,11 +64,14 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
   const tableRef = React.useRef<AnalyticalTableInstance<Inventory>>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [filters, setFilters] = React.useState<ColumnFiltersState>([])
+  const [groupBy, setGroupBy] = React.useState<GroupingState>([])
   const [visibility, setVisibility] = React.useState<Record<string, boolean>>({})
   const [order, setOrder] = React.useState<string[]>([])
   const [sizing, setSizing] = React.useState<Record<string, number>>({})
   const [pinning, setPinning] = React.useState({ start: [] as string[], end: [] as string[] })
   const [empty, setEmpty] = React.useState(false)
+  const [showDetails, setShowDetails] = React.useState(false)
+  const [narrow, setNarrow] = React.useState(false)
   const [feedback, setFeedback] = React.useState("")
   const tools = { onColumnResize: ({ columnWidth }: { columnWidth: number }) => setFeedback(String(columnWidth)),
     onAutoResize: ({ width }: { width: number }) => setFeedback(String(width)),
@@ -68,11 +82,19 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
       <button type="button" onClick={() => tableRef.current?.resetColumnSizing()}>Reset widths</button>
       <button type="button" onClick={() => setVisibility(current => ({ category: current.category === false }))}>Toggle category</button>
       <button type="button" onClick={() => setEmpty(previous => !previous)}>Toggle products</button>
+      <button type="button" onClick={() => setShowDetails(previous => !previous)} aria-pressed={showDetails}>Toggle details</button>
+      <button type="button" onClick={() => setNarrow(previous => !previous)} aria-pressed={narrow}>Narrow table</button>
+      <button type="button" onClick={() => setGroupBy(previous => previous.length ? [] : ["category"])}
+        aria-pressed={groupBy.length > 0}>Group categories</button>
     </div>
+    <div className={narrow ? "w-72 max-w-full" : "min-w-0"}>
     <FioriLocaleProvider locale="en-US" texts={{ "wcr:LIST_NO_DATA": "Inventory is empty" }}>
-      <AnalyticalTable data={empty ? [] : inventory} columns={customColumns} aria-label="Custom inventory"
+      <AnalyticalTable data={empty ? [] : inventory} columns={narrow ? narrowCustomColumns : customColumns} aria-label="Custom inventory"
+        adjustTableHeightOnPopIn={narrow}
         tableRef={tableRef} tableOptions={{ getRowId: (_, index) => `product-${index}`, meta: { source: "inventory" } }}
         sorting={sorting} onSortingChange={setSorting} columnFilters={filters} onColumnFiltersChange={setFilters}
+        groupBy={groupBy} onGroupByChange={setGroupBy}
+        renderRowSubComponent={showDetails ? ({ row }) => <p>Inspect stock for {row.original.product}</p> : undefined}
         onSort={({ sortDirection }) => setFeedback(sortDirection)}
         onFilter={({ value }) => setFeedback(String(value ?? ""))}
         columnVisibility={visibility} onColumnVisibilityChange={setVisibility}
@@ -92,6 +114,7 @@ export function CustomAnalyticalTable({ hostile = false }: { hostile?: boolean }
         } : { className: "analytical-table-merged-cell" }}
         NoDataComponent={({ defaultContent }) => <strong>{defaultContent}</strong>} />
     </FioriLocaleProvider>
+    </div>
     <output aria-label="Last column action">{feedback}</output>
   </div>
 }
@@ -141,18 +164,142 @@ export function AnalyticalTableSortFilterDemo({ dir }: Pick<AnalyticalTableProps
   </div>
 }
 
+const groupingData: Inventory[] = [
+  { product: "Alpine Tent", category: "Shelter", stock: 1299.5 },
+  { product: "Ridge Mat", category: "Shelter", stock: 260.75 },
+  { product: "Trail Stove", category: "Cooking", stock: 54.75 },
+  { product: "Trail Kettle", category: "Cooking", stock: 13.25 },
+]
+const groupingColumns: AnalyticalTableColumnDef<Inventory>[] = [
+  columns[0],
+  { ...columns[1],
+    Grouped: ({ defaultContent }) => <strong data-group-title="">{defaultContent}</strong>,
+    RepeatedValue: ({ value }) => <small data-repeated-category="">{String(value)}</small> },
+  { ...columns[2], disableGroupBy: true, aggregateValue: (value) => Number(value) * 2,
+    aggregate: (values) => values.reduce<number>((total, value) => total + Number(value), 0),
+    Aggregated: ({ defaultContent }) => <strong data-aggregate="">{defaultContent}</strong> },
+]
+
+export function AnalyticalTableGroupingDemo({ dir, hostile = false }: Pick<AnalyticalTableProps<Inventory>, "dir"> & { hostile?: boolean }) {
+  const [groupBy, setGroupBy] = React.useState<GroupingState>(["category"])
+  const [expanded, setExpanded] = React.useState<ExpandedState>({})
+  const [query, setQuery] = React.useState("")
+  const [data, setData] = React.useState(groupingData)
+  const [feedback, setFeedback] = React.useState("")
+  return <div id={`analytical-table-group-demo-${dir ?? "ltr"}`} className="grid w-full max-w-xl gap-2">
+    <div className="flex flex-wrap gap-3">
+      <label>Search grouped inventory <input value={query} onChange={event => setQuery(event.target.value)} /></label>
+      <button type="button" onClick={() => setData(previous => previous.map((row, index) => index === 0 ? { ...row, stock: row.stock + 10 } : row))}>Receive ten items</button>
+    </div>
+    <AnalyticalTable data={data} columns={groupingColumns} dir={dir} locale="de-DE" aria-label="Grouped inventory"
+      groupable groupBy={groupBy} onGroupByChange={setGroupBy} expanded={expanded} onExpandedChange={setExpanded}
+      globalFilter={query} minRows={3} visibleRows={6}
+      onGroup={({ groupedColumns }) => setFeedback(groupedColumns.join(", "))}
+      getRowProps={row => hostile && row.getIsGrouped() ? { role: "button", "aria-level": 9, "aria-expanded": false, id: "fake-group-row", tabIndex: 8 } : {}}
+      getCellProps={cell => hostile && cell.getIsGrouped() ? { role: "button", "aria-expanded": false, id: "fake-group-cell", tabIndex: 9 } : {}} />
+    <output aria-label="Grouped columns">{feedback}</output>
+  </div>
+}
+
+const treeColumns: AnalyticalTableColumnDef<TreeInventory>[] = [
+  { accessorKey: "product", header: "Product", width: 174 },
+  { accessorKey: "category", header: "Category", width: 128 },
+  { accessorKey: "stock", header: "Stock", width: 120 },
+]
+const featureRows = treeInventory.map((row, index) => ({ ...row, blocked: index === 1, highlight: index === 0 ? "Positive" : "Information" } as const))
+
+export function AnalyticalTableRowFeaturesDemo({ dir, hostile = false }: Pick<AnalyticalTableProps<TreeInventory>, "dir"> & { hostile?: boolean }) {
+  const [selected, setSelected] = React.useState<AnalyticalTableSelectedRows>({})
+  const [expanded, setExpanded] = React.useState<ExpandedState>({})
+  const [navigated, setNavigated] = React.useState("1")
+  const [event, setEvent] = React.useState("")
+  return <div id={`analytical-table-row-demo-${dir ?? "ltr"}`} className="grid w-full max-w-xl gap-2">
+    <AnalyticalTable data={featureRows} columns={treeColumns} aria-label="Inventory hierarchy" dir={dir}
+      isTreeTable getSubRows={row => row.subRows} selectionMode="Multiple" selectionBehavior="Row"
+      selectedRowIds={selected} onSelectedRowIdsChange={setSelected} expanded={expanded} onExpandedChange={setExpanded}
+      selectSubRows indeterminateRowSelection withRowHighlight withNavigationHighlight markNavigatedRow={row => row.id === navigated}
+      isRowSelectable={row => !row.original.blocked} defaultVisibleRows={5} minRows={3}
+      shouldIgnoreRowClick={event => (event.target as Element).closest("[data-inventory-action]") !== null}
+      onRowClick={({ row }) => setNavigated(row.id)}
+      onRowSelect={detail => setEvent(detail.row ? `Selected ${detail.row.original.product}` : "Changed all rows")}
+      onRowContextMenu={({ row, column, event }) => { event.preventDefault(); setEvent(`${row.original.product}: ${column?.id}`) }}
+      renderRowSubComponent={({ row }) => row.depth === 0 && !row.original.blocked ?
+        <div className="p-2"><button type="button" data-inventory-action="">Inspect {row.original.product}</button></div> : null}
+      subComponentsBehavior="IncludeHeightExpandable"
+      getRowProps={row => hostile && row.id === "0" ? { role: "button", "aria-level": 9, "aria-expanded": true, id: "fake-tree-row", tabIndex: 8 } : {}}
+      getCellProps={cell => hostile && cell.row.id === "0" && cell.column.id === "product" ?
+        { role: "button", "aria-expanded": true, id: "fake-tree-cell", tabIndex: 9 } : {}} />
+    <output aria-label="Selected row IDs">{Object.keys(selected).sort().join(",")}</output>
+    <output aria-label="Row event">{event}</output>
+  </div>
+}
+
+const pagedInventory = 15
+function ProductNameEditor({ product, onApply }: { product: string; onApply: (next: string) => void }) {
+  const [value, setValue] = React.useState(product)
+  return <div className="flex items-center gap-2">
+    <input aria-label="Product name" value={value} onChange={event => setValue(event.target.value)} className="min-w-0" />
+    <button type="button" aria-label="Apply product name" onClick={() => onApply(value)}>Apply</button>
+  </div>
+}
+
+export function AnalyticalTableVirtualDemo({ dir }: Pick<AnalyticalTableProps<Inventory>, "dir">) {
+  const tableRef = React.useRef<AnalyticalTableInstance<Inventory>>(null)
+  const [count, setCount] = React.useState(pagedInventory)
+  const [loading, setLoading] = React.useState(false)
+  const [known, setKnown] = React.useState(false)
+  const [grouped, setGrouped] = React.useState(false)
+  const [event, setEvent] = React.useState("")
+  const [requests, setRequests] = React.useState(0)
+  const [names, setNames] = React.useState<Record<number, string>>({})
+  const loadedRows = React.useMemo(() => inventory.slice(0, count).map((row, index) =>
+    names[index] === undefined ? row : { ...row, product: names[index] }), [count, names])
+  const editableColumns = React.useMemo<AnalyticalTableColumnDef<Inventory>[]>(() => [
+    { ...columns[0], interactiveElementName: "Input and button",
+      cellLabel: ({ row }) => `${row.original.product} Apply`,
+      cell: ({ row }) => <ProductNameEditor product={row.original.product}
+        onApply={product => setNames(previous => ({ ...previous, [row.index]: product }))} />,
+    },
+    ...columns.slice(1),
+  ], [])
+  const append = () => { setCount(previous => previous + pagedInventory); setLoading(false) }
+  return <div className="grid w-full max-w-xl gap-2" id={`analytical-table-virtual-${dir ?? "ltr"}`}>
+    <div className="flex flex-wrap gap-3">
+      <button type="button" onClick={() => tableRef.current?.scrollToItem(0, "start")}>Scroll to first product</button>
+      <button type="button" onClick={() => tableRef.current?.scrollToItem(count - 1, "end")}>Scroll to last loaded product</button>
+      <button type="button" onClick={append} disabled={!loading}>Finish loading products</button>
+      <label><input type="checkbox" checked={known} onChange={event => setKnown(event.target.checked)} /> Show total products</label>
+      <label><input type="checkbox" checked={grouped} onChange={event => setGrouped(event.target.checked)} /> Group loaded products</label>
+    </div>
+    <AnalyticalTable data={loadedRows} columns={editableColumns} aria-label="Editable inventory"
+      tableRef={tableRef} dir={dir} visibleRows={grouped ? 2 : 4} minRows={grouped ? 2 : 3} overscanCount={1} overscanCountHorizontal={1} nativeScrollbar
+      groupable={grouped} groupBy={grouped ? ["category"] : []}
+      infiniteScroll infiniteScrollThreshold={grouped ? 1 : 2} totalRowCount={known ? inventory.length : undefined}
+      loading={loading} loadingDelay={0} f2CellEdit
+      onTableScroll={({ detail }) => setEvent(`Scrolled ${detail.rows.length} loaded products`)}
+      onLoadMore={() => { setRequests(previous => previous + 1); setLoading(true) }} />
+    <output aria-label="Scroll event">{event}</output>
+    <output aria-label="Page requests">{requests}</output>
+  </div>
+}
+
 export default defineDemo({
   category: "Data", title: "AnalyticalTable", order: 55,
   docs: [{
     name: "analytical-table",
-    description: "A virtualized Fiori grid with resizable, reorderable, hideable and freezable columns, plus sorting and filtering.",
+    description: "A virtualized Fiori grid with resizable, reorderable, hideable and freezable columns, plus sorting, filtering, grouping and aggregation.",
     props: [
       { name: "columnSizing / columnOrder / columnVisibility / columnPinning", type: "TanStack v9 state", description: "Each slice has a matching default and onChange prop. Pins use the logical start edge." },
       { name: "sorting / columnFilters / globalFilter", type: "Controlled or uncontrolled state", description: "Use the matching defaults and change callbacks. The global query matches across eligible columns." },
       { name: "sortable / filterable / sortPriority", type: "boolean / boolean / string[]", description: "Offer header actions and order active multi-sort columns. Columns can opt in or out individually." },
+      { name: "groupable / disableGroupBy", type: "boolean", description: "Offer Group and Ungroup in column header menus. A column can opt out with disableGroupBy." },
+      { name: "groupBy / expanded", type: "GroupingState / ExpandedState", description: "Experimental controlled state with corresponding defaults and callbacks. Grouping uses ordered column IDs; expansion uses the model's generated row IDs." },
       { name: "scaleWidthMode", type: "Default | Smart | Grow", description: "Allocate widths evenly, prioritize typical content, or fit the longest sampled values." },
       { name: "visibleRowCountMode", type: "Fixed | Auto | AutoWithEmptyRows | Interactive", description: "Set viewport height from rows, available space, or the pointer resizer." },
       { name: "tableOptions / tableRef", type: "Partial<TableOptions> / Ref<AnalyticalTableInstance>", description: "Add engine options, scroll to a row or column, focus a cell, or reset sizing." },
+      { name: "overscanCount / overscanCountHorizontal", type: "number", description: "Mount extra rows and columns around the viewport to smooth scrolling." },
+      { name: "infiniteScroll / totalRowCount / onLoadMore", type: "boolean / number / scroll event", description: "Request the next page near the end of the loaded rows. Set the server total when it is known." },
+      { name: "nativeScrollbar / f2CellEdit", type: "boolean", description: "Use browser scrollbars and enable Tab through editors and between a header and its body column." },
       { name: "classNames / components / texts / locale", type: "Experimental extension API", description: "Style owned parts, arrange the virtual body and localize grid text." },
     ],
   }],
@@ -161,12 +308,21 @@ export default defineDemo({
     <AnalyticalTableColumnDemo dir="rtl" />
     <AnalyticalTableSortFilterDemo />
     <AnalyticalTableSortFilterDemo dir="rtl" />
+    <AnalyticalTableGroupingDemo />
+    <AnalyticalTableGroupingDemo dir="rtl" hostile />
+    <AnalyticalTableRowFeaturesDemo />
+    <AnalyticalTableRowFeaturesDemo dir="rtl" hostile />
+    <AnalyticalTableVirtualDemo />
+    <AnalyticalTableVirtualDemo dir="rtl" />
     <section className="grid gap-2">
       <h3>Customise</h3>
       <p>Use <code>classNames</code> with the typed slot names or the <code>analytical-table-*</code> data attributes. Pinned and dragged columns expose <code>data-frozen</code> and <code>data-dragging</code>. ARIA names and descriptions target the inner grid.</p>
       <p>The experimental <code>components.Body</code> receives the virtual rows as children. Arrange those children in an inert layout. Use <code>useAnalyticalTable()</code> for the model, actions and protected row, header and cell getters. Render row and cell content within the supplied hosts. F2 moves focus into and out of a custom cell.</p>
       <p>Copy the Custom example into an app after installing <code>@petalo/analytical-table</code>. Import its parts and types from <code>components/ui/analytical-table</code>. Keep the replacement at the Body boundary when updating the registry item.</p>
       <p>The experimental column <code>Filter</code> slot receives the current value, a setter, the default editor and the label reference. The Custom example supplies a category selector and sorts stock by its final digit.</p>
+      <p>Use the experimental column <code>Grouped</code>, <code>RepeatedValue</code> and <code>Aggregated</code> renderers to customize content inside the grid cells. The table owns the group disclosure, expanded states, level, names and keyboard handling. Add a built-in <code>aggregate</code> or a function. <code>aggregateValue</code> can transform leaf values before the outermost aggregate. The group example computes localized stock totals.</p>
+      <p>The experimental <code>renderRowSubComponent</code> slot receives the owning row and table context. Its host handles measured height. The Custom example activates it with Toggle details. Select rows with controlled <code>selectedRowIds</code>, or supply <code>defaultSelectedRowIds</code>. Use <code>isRowSelectable</code> to protect ineligible rows and <code>shouldIgnoreRowClick</code> to reserve activation for embedded actions.</p>
+      <p>Choose Narrow table to move Category into the product cell with the experimental <code>PopInHeader</code> content slot. The grid owns the label and value IDs and keeps the resulting accessible name on the product cell.</p>
       <h4>Custom</h4>
       <CustomAnalyticalTable />
     </section>

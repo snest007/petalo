@@ -35,10 +35,28 @@ export type FixtureSet<P = any> = {
 type FixtureA11yDiff = {
   ignore: string[]
   reason: string
+  /** Zero-based AnalyticalTable body rows whose WCR detail regions lack the required gridcell role. */
+  analyticalTableDetailRows?: number[]
+  /** The pinned WCR disabled-selection plugin leaves an inactive header instruction. */
+  analyticalTableDisabledSelection?: true
+  /** Display column whose hidden header text repeats the existing accessible name. */
+  analyticalTableHeaderText?: number
+  /** H5 loaded-table busy row preserves the WCR progress announcement inside the grid. */
+  analyticalTableBusyRow?: true
   /** Exact UI5 form-associated shadow hosts with implicit invalid=false. */
   ui5FormHosts?: string[]
+  /** Exact empty UI5 popup/List focus sentinels and the anonymous UI5 popup host. */
+  ui5FocusScaffolding?: string[]
+  /** Popup.js resolves custom header name references in the host before emitting aria-label. */
+  messageBoxNameRef?: true
+  /** InputSuggestionsTemplate's phone Dialog allocates empty Popup announcement outlets. */
+  inputPhoneAlerts?: true
+  /** PopoverTemplate's nested banner appears as a group in the desktop Input. */
+  inputSuggestionBanner?: { ax: string; snapshot: string }
   /** Only exact, closed PopupTemplate shells painted in place by the fixture. */
   pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }
+  /** Fixed SelectDialog capture topology, after verifying the pinned Dialog shell. */
+  selectDialogShape?: "single" | "multiple" | "selected" | "empty"
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */

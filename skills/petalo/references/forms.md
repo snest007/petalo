@@ -119,15 +119,15 @@ Choose one suggested value by typing, with filtering and optional free-text entr
 ### Use when
 
 - Let users find one suggested value by typing, typically across 20–200 options.
-- Accept a custom value alongside suggestions when the task permits free text.
+- Use the picker arrow to show choices before the user types. Validate the committed value when selection from the list is required.
 - Keep selection in a field when one suggestion label is enough to identify the value.
 - Choose filter for the supplied ComboBoxItem entries; onCommit receives text and onSelectionChange reports a matched item or null.
 
 ### Don't use when
 
-- Choose one of 2–12 predefined options without typing or free text; sort alphabetically above 8. Use Input for text without suggestions. → [select](forms.md#select), [input](forms.md#input)
+- Choose one of 2–12 predefined options without typing or free text; sort alphabetically above 8. Use Input for free text with optional suggestions. → [select](forms.md#select), [input](forms.md#input)
 - Collect several values: fewer than 200 predefined options need MultiComboBox; free-form, caller-validated entries or datasets above 200 need MultiInput. → [multi-combobox](forms.md#multi-combobox), [multi-input](forms.md#multi-input)
-- Find a value above 200 entries, search several attributes, or define conditions in a separate search task. → [value-help-dialog](overlays.md#value-help-dialog)
+- Open SelectDialog to choose from a searchable list. Use ValueHelpDialog for more than 200 entries, several searchable attributes, or conditions. → [value-help-dialog](overlays.md#value-help-dialog), [select-dialog](overlays.md#select-dialog)
 - Browse business items with List or expand a hierarchy with Tree rather than choose a field value. → [list](data.md#list), [tree](data.md#tree)
 - Submit a content-search query with optional scopes rather than choose a field value. → [search](navigation.md#search)
 
@@ -189,6 +189,7 @@ Enter one line of text, a number or a formatted string.
 - Let users enter a name, number, password, URL, phone number or email address in one line.
 - Keep a visible field label; use a placeholder only for a hint or example.
 - Use valueState and valueStateMessage to explain validation issues and how to resolve them.
+- Offer optional suggestions while allowing a free-text value with showSuggestions and SuggestionItem. On phones, edit in a full-screen dialog.
 
 ### Don't use when
 
@@ -198,7 +199,7 @@ Enter one line of text, a number or a formatted string.
 - Edit a locale-aware number with NumericInput, use StepInput for increment and decrement buttons, or use Slider for a visual scale. → [numeric-input](forms.md#numeric-input), [step-input](forms.md#step-input), [slider](forms.md#slider)
 - Collect several values: use MultiComboBox for fewer than 200 predefined options, or MultiInput for caller-validated entries and datasets above 200. → [multi-combobox](forms.md#multi-combobox), [multi-input](forms.md#multi-input)
 
-Main exports: `Input`, `InputIcon`.
+Main exports: `Input`, `InputIcon`, `SuggestionItem`, `SuggestionItemGroup`.
 
 ```bash
 npx shadcn add @petalo/input
@@ -263,7 +264,7 @@ Collect several values as caller-managed tokens, with suggestions and optional v
 ### Don't use when
 
 - Select only predefined options from fewer than 200 values and let the control manage selected option tokens. → [multi-combobox](forms.md#multi-combobox)
-- Collect one value: use Input without suggestions, ComboBox for type-ahead across 20–200, or Select for 2–12 fixed options without typing (sort alphabetically above 8). → [input](forms.md#input), [combobox](forms.md#combobox), [select](forms.md#select)
+- Collect one value: use Input for free text with optional suggestions, ComboBox for type-ahead across 20–200, or Select for 2–12 fixed options without typing (sort alphabetically above 8). → [input](forms.md#input), [combobox](forms.md#combobox), [select](forms.md#select)
 - Provide the actual search across several attributes or condition editor, especially above 200 entries; the field only opens the caller-supplied surface. → [value-help-dialog](overlays.md#value-help-dialog)
 - Inspect and remove existing tokens without entering new values. → [tokenizer](forms.md#tokenizer)
 

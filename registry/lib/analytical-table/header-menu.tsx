@@ -65,6 +65,9 @@ export function AnalyticalHeaderMenu({ id, anchorId, rtl, align, className, befo
     position()
     items(popup)[0]?.focus({ preventScroll: true })
     function outside(event: Event) {
+      // The in-place oracle fixture takes the surface out of the top layer
+      // while keeping its content painted. Only an active popup owns focus.
+      if (!popup!.matches(":popover-open")) return
       if (event.target instanceof Node && !popup!.contains(event.target) && !anchor!.contains(event.target)) closeRef.current()
     }
     doc.addEventListener("pointerdown", outside, true)

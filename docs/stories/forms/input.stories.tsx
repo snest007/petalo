@@ -2,7 +2,7 @@ import * as React from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useArgs } from "storybook/preview-api"
 import { fn } from "storybook/test"
-import { Input, InputIcon, type InputProps } from "@/components/ui/input"
+import { Input, InputIcon, SuggestionItem, SuggestionItemGroup, type InputProps } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Icon } from "@/components/ui/icon"
 import { search } from "@/lib/fiori-icons"
@@ -51,3 +51,25 @@ export const LabelledField: Story = { render: function CompanyField() {
 
 export const AccessibleDescription: Story = { args: { "aria-description": "Use the supplier number" } }
 export const RTLAccessibleDescription: Story = { args: { "aria-description": "Use the supplier number" }, globals: { dir: "rtl" } }
+
+export const Suggestions: Story = {
+  render: () => <Input showSuggestions defaultOpen aria-label="City" defaultValue="Be" filter="StartsWith">
+    <SuggestionItem text="Berlin" additionalText="DE" />
+    <SuggestionItem text="Bern" additionalText="CH" />
+  </Input>,
+}
+export const SuggestionsCustomise: Story = {
+  render: () => <Input showSuggestions defaultOpen aria-label="Shipping city" classNames={{ additionalText: "tabular-nums" }}>
+    <SuggestionItemGroup headerText="Europe">
+      <SuggestionItem text="Berlin" additionalText="DE" renderContent={({ defaultContent }) => defaultContent} />
+    </SuggestionItemGroup>
+  </Input>,
+}
+export const SuggestionsRTL: Story = { ...SuggestionsCustomise, globals: { dir: "rtl" } }
+export const SuggestionsValueState: Story = {
+  render: () => <Input showSuggestions defaultOpen aria-label="City" defaultValue="Be" noTypeahead filter="StartsWith"
+    valueState="negative" valueStateMessage="Check the shipping address.">
+    <SuggestionItem text="Berlin" additionalText="DE" />
+    <SuggestionItem text="Bern" additionalText="CH" />
+  </Input>,
+}
