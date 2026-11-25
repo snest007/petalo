@@ -1,0 +1,170 @@
+/* WCR 2.28.2 AnalyticalCardHeader.module.css and NumericSideIndicator.module.css.
+   The fixed KPI dimensions and spacing come from the WCR stylesheet. */
+.fiori-analytical-card-header {
+  position: relative;
+  /* WCR's root width excludes padding when used without a CSS reset. */
+  box-sizing: content-box;
+  padding: 1rem;
+  background: var(--sapTile_Background);
+  font-family: var(--sapFontFamily);
+  line-height: normal;
+  outline: none;
+}
+.fiori-analytical-card-header[data-interactive] { cursor: pointer; }
+.fiori-analytical-card-header:focus-visible::before {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: var(--fiori-card-header-focus-offset);
+  border: var(--fiori-card-header-focus-border);
+  border-radius: var(--fiori-card-header-focus-radius) var(--fiori-card-header-focus-radius)
+    var(--fiori-card-header-focus-bottom-radius) var(--fiori-card-header-focus-bottom-radius);
+}
+.fiori-analytical-card-header__titles {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+}
+.fiori-analytical-card-header__title-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.fiori-analytical-card-header__title,
+.fiori-analytical-card-header__subtitle-row,
+.fiori-analytical-card-header__description {
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: start;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+}
+.fiori-analytical-card-header__title {
+  font-family: var(--sapFontHeaderFamily);
+  font-weight: var(--sapFontHeaderWeight, normal);
+  font-size: var(--sapFontHeader6Size);
+  color: var(--sapTile_TitleTextColor);
+  -webkit-line-clamp: 3;
+}
+.fiori-analytical-card-header__status {
+  font-size: var(--sapFontSmallSize);
+  color: var(--sapTile_TextColor);
+  text-align: end;
+  margin-inline-start: 1rem;
+  margin-block-start: .125rem;
+}
+.fiori-analytical-card-header__subtitle-row {
+  position: relative;
+  min-height: 1rem;
+  flex-grow: 1;
+  display: flex;
+  align-items: flex-end;
+  font-size: var(--sapFontSize);
+  font-weight: 400;
+  color: var(--sapTile_TextColor);
+  margin-block-start: .5rem;
+  width: 100%;
+  -webkit-line-clamp: 2;
+}
+.fiori-analytical-card-header__measurement {
+  margin-inline-start: .25rem;
+  padding-inline-start: .25rem;
+  border-inline-start: var(--sapList_BorderWidth) solid var(--sapTile_TextColor);
+}
+.fiori-analytical-card-header__indicators {
+  display: flex;
+  align-items: flex-start;
+  margin-block-start: .25rem;
+}
+.fiori-analytical-card-header__main-indicator {
+  display: inline-flex;
+  justify-content: flex-start;
+  position: relative;
+  color: var(--sapNeutralTextColor);
+  white-space: nowrap;
+  text-align: end;
+  text-overflow: ellipsis;
+  font-size: 2.25rem;
+  font-weight: 400;
+}
+.fiori-analytical-card-header__value {
+  padding-block-start: .125rem;
+  height: 2.875rem;
+  box-sizing: content-box;
+  font-family: var(--sapFontLightFamily);
+}
+.fiori-analytical-card-header__trend-scale {
+  display: grid;
+  text-overflow: ellipsis;
+  text-align: center;
+  box-sizing: content-box;
+  height: 2.125rem;
+  padding-inline-start: .375rem;
+  padding-block: .5rem .375rem;
+}
+.fiori-analytical-card-header__trend,
+.fiori-analytical-card-header__scale { grid-area: 1 / 1; }
+.fiori-analytical-card-header__trend-scale > .fiori-analytical-card-header__trend {
+  width: var(--sapFontSmallSize);
+  height: var(--sapFontSmallSize);
+  color: currentColor;
+}
+.fiori-analytical-card-header__scale {
+  margin-block-start: .9375rem;
+  font-size: var(--sapFontSmallSize);
+}
+.fiori-analytical-card-header__gap { flex: 1 0 1rem; max-width: 3rem; }
+.fiori-analytical-card-header__side-indicators {
+  display: flex;
+  padding-block: .5rem;
+  min-width: 0;
+}
+.fiori-analytical-card-header__side-indicators > * { margin-inline-end: 1rem; }
+.fiori-analytical-card-header__description {
+  display: -webkit-box;
+  width: 100%;
+  margin-block-start: .25rem;
+  color: var(--sapTile_TextColor);
+  font-size: var(--sapFontSmallSize);
+  font-weight: 400;
+  line-height: .875rem;
+  max-height: .875rem;
+  -webkit-line-clamp: 1;
+}
+.fiori-numeric-side-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  position: relative;
+  min-width: 0;
+  font-family: var(--sapFontFamily);
+  font-size: var(--sapFontSmallSize);
+  color: var(--sapTile_TextColor);
+}
+.fiori-numeric-side-indicator__title {
+  text-align: end;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  padding-block-end: .25rem;
+  max-width: 100%;
+}
+.fiori-numeric-side-indicator__value {
+  display: -webkit-inline-box;
+  -webkit-box-orient: vertical;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.fiori-analytical-card-header[data-state="positive"] .fiori-analytical-card-header__main-indicator,
+.fiori-numeric-side-indicator[data-state="positive"] .fiori-numeric-side-indicator__value { color: var(--sapPositiveTextColor); }
+.fiori-analytical-card-header[data-state="negative"] .fiori-analytical-card-header__main-indicator,
+.fiori-numeric-side-indicator[data-state="negative"] .fiori-numeric-side-indicator__value { color: var(--sapNegativeTextColor); }
+.fiori-analytical-card-header[data-state="critical"] .fiori-analytical-card-header__main-indicator,
+.fiori-numeric-side-indicator[data-state="critical"] .fiori-numeric-side-indicator__value { color: var(--sapCriticalTextColor); }
+.fiori-numeric-side-indicator[data-state="neutral"] .fiori-numeric-side-indicator__value { color: var(--sapNeutralTextColor); }

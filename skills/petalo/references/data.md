@@ -118,6 +118,7 @@ Display a business amount or quantity together with its unit and optional semant
 
 ### Don't use when
 
+- Show the primary KPI and its supporting values above a chart in a card. → [analytical-card-header](display.md#analytical-card-header)
 - Describe an object state in words or with an icon rather than an amount. → [object-status](data.md#object-status)
 - Show how much of a running process is complete on a 0–100% scale. → [progress-indicator](display.md#progress-indicator)
 

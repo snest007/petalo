@@ -2,6 +2,7 @@
 
 | Item | Summary |
 | --- | --- |
+| [analytical-card-header](#analytical-card-header) | Summarize a primary KPI with supporting indicators above an analytical card. |
 | [avatar](#avatar) | Represent people or business entities with recognizable images, initials or placeholders. |
 | [busy-indicator](#busy-indicator) | Show that work is running when its completion percentage is unknown. |
 | [card](#card) | Preview focused business content and offer access to its underlying page or task. |
@@ -18,6 +19,26 @@
 | [tag](#tag) | Draw attention to a category, condition or quantity with a compact enclosed marker. |
 | [text](#text) | Display read-only body text in an application content area. |
 | [title](#title) | Name pages and sections with explicit heading semantics. |
+
+## analytical-card-header
+
+Summarize a primary KPI with supporting indicators above an analytical card.
+
+### Use when
+
+- Show a main number, its trend and up to two supporting values.
+- Place the KPI header above a chart inside Card.
+
+### Don't use when
+
+- Introduce content with a title, avatar or an independent action. → [card](display.md#card)
+- Display an isolated semantic number inside a table or form. → [object-number](data.md#object-number)
+
+Main exports: `AnalyticalCardHeader`, `NumericSideIndicator`.
+
+```bash
+npx shadcn add @petalo/analytical-card-header
+```
 
 ## avatar
 
@@ -73,6 +94,7 @@ Preview focused business content and offer access to its underlying page or task
 
 ### Don't use when
 
+- Lead a chart card with a primary KPI, trend and supporting indicators. → [analytical-card-header](display.md#analytical-card-header)
 - Group information inside a page and let users collapse it rather than preview an independent destination. → [panel](display.md#panel)
 - Introduce a product home page with a greeting, context and task shortcuts. → [hero-banner](display.md#hero-banner)
 

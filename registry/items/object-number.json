@@ -10,6 +10,10 @@
     ],
     "avoidWhen": [
       {
+        "when": "Show the primary KPI and its supporting values above a chart in a card.",
+        "use": ["analytical-card-header"]
+      },
+      {
         "when": "Describe an object state in words or with an icon rather than an amount.",
         "use": [
           "object-status"

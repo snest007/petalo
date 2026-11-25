@@ -62,9 +62,10 @@ test.describe("i18n source audit", () => {
     const baseline = JSON.parse(readFileSync("tests/i18n-audit-baseline.json", "utf8")) as AuditBaseline
     expect(auditRatchetProblems(audit, baseline)).toEqual([])
     for (const group of audit) {
-      expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:10|[0-9])$/ : /^P(?:2a|[1-6])$/)
+      expect(group.owner, group.component).toMatch(group.reference === "wcr" ? /^H(?:0|[1-9][0-9]*)$/ : /^P(?:2a|[1-6])$/)
       expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
     }
+    expect(audit.find(group => group.component === "analytical-card-header")?.owner).toBe("H11")
     for (const key of ["BUTTON_BADGE_ONE_ITEM", "BUTTON_BADGE_MANY_ITEMS"]) {
       expect(audit.find(group => group.component === "button")?.rows.find(row => row.key === key)?.status).toBe("fixed in E5")
       expect(audit.find(group => group.component === "split-button")?.rows.find(row => row.key === key)?.status).toBe("not rendered")

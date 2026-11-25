@@ -7,7 +7,7 @@ Read [AGENTS.md](../../AGENTS.md) before starting a card.
 
 | Wave | Open or planned | Scheduling |
 |---|---|---|
-| H (new components) | H6, H6b, H6c, H11, H11b, H12–H14 | **Next: [H11b AnalyticalCardHeader action ownership](tasks/H11b-analytical-card-header-event-ownership.md)** on the H11 branch. H12–H14 meet their listed dependencies and await scheduling. |
+| H (new components) | H6, H6b, H6c, H12–H14 | **Next: [H12 ActionSheet](tasks/H12-action-sheet.md)** is ready to start. H13 and H14 meet their listed dependencies and await scheduling. |
 | P (accessibility and localization parity) | P1–P6, P2a | [P2a](tasks/P2a-parity-calendar-date-pickers.md) runs just before H6 → H6b → H6c. The other P cards follow new component work. |
 | X (extension rollout) | X1–X40 candidates | Plan each group after its P card. |
 | S (Storybook) | S5 | Schedule after new component work. |
@@ -40,8 +40,6 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [ ] [H11 AnalyticalCardHeader and NumericSideIndicator](tasks/H11-analytical-card-header.md) — M (after H0, E4, E5)
-- [ ] [H11b Preserve AnalyticalCardHeader action ownership](tasks/H11b-analytical-card-header-event-ownership.md) — S (continue on `codex/H11`)
 - [ ] [H12 ActionSheet](tasks/H12-action-sheet.md) — M (after H0, E4, E5)
 - [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
 - [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
@@ -71,6 +69,8 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [x] [H10 NavigationMenu](tasks/done/H10-navigation-menu.md) — M (after H0, E4, E5)
 - [x] [H10b NavigationMenu built parity and open-state acceptance](tasks/done/H10b-navigation-menu-built-parity.md) — S (continue the [H10 return](returns/done/H10.md))
 - [x] [H10c NavigationMenu composed icon alignment](tasks/done/H10c-navigation-menu-composed-icons.md) — S (continue the [H10b return](returns/done/H10b.md))
+- [x] [H11 AnalyticalCardHeader and NumericSideIndicator](tasks/done/H11-analytical-card-header.md) — M (after H0, E4, E5)
+- [x] [H11b Preserve AnalyticalCardHeader action ownership](tasks/done/H11b-analytical-card-header-event-ownership.md) — S (continue on `codex/H11`)
 
 </details>
 
@@ -96,7 +96,7 @@ Maintain the row format below for the [localization audit](../../scripts/i18n-au
 | P2a | calendar, date-picker, date-range-picker, date-time-picker (split from P2 on 2026-11-17 so the Calendar pilot runs first) |
 | P3 | table, data-table, list, tree, timeline, upload-collection, object-status, object-number, object-identifier |
 | P4 | dialog, message-box, popover, responsive-popover, menu, navigation-menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
-| P5 | avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
+| P5 | analytical-card-header, avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
 | P6 | bar, breadcrumbs, filter-bar, notification-list, product-switch, search, shell-bar, side-navigation, tabs, toolbar, variant-management, wizard, dynamic-page, dynamic-side-content, flexible-column-layout, navigation-layout, object-page, page, f6-navigation, variants |
 
 Register Wave H components under the P group for their demo category. Apply

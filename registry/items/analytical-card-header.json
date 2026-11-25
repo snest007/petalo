@@ -1,0 +1,14 @@
+{
+  "title": "AnalyticalCardHeader",
+  "description": "Fiori KPI card header with localized values, semantic trend and state, and NumericSideIndicator.",
+  "registryDependencies": ["@petalo/card", "@petalo/icons", "@petalo/locale"],
+  "usage": {
+    "summary": "Summarize a primary KPI with supporting indicators above an analytical card.",
+    "useWhen": ["Show a main number, its trend and up to two supporting values.", "Place the KPI header above a chart inside Card."],
+    "avoidWhen": [
+      { "when": "Introduce content with a title, avatar or an independent action.", "use": ["card"] },
+      { "when": "Display an isolated semantic number inside a table or form.", "use": ["object-number"] }
+    ],
+    "source": "sap-fiori-guidelines"
+  }
+}
