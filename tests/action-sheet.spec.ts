@@ -3,7 +3,7 @@ import AxeBuilder from "@axe-core/playwright"
 import { expect, test, type Page } from "@playwright/test"
 import pixelmatch from "pixelmatch"
 import { PNG } from "pngjs"
-import { sheetCases } from "../docs/src/fixtures/action-sheet.cases"
+import { longSheetHeader, sheetCases } from "../docs/src/fixtures/action-sheet.cases"
 
 const trigger = (page: Page) => page.locator("#action-sheet-demo").getByRole("button", { name: "Actions" })
 const sheet = (page: Page) => page.getByRole("dialog", { name: "Available Actions" })
@@ -83,6 +83,36 @@ test.describe("ActionSheet on phones", () => {
     await expect(dialog).toHaveCount(0)
     await expect(trigger(page)).toBeFocused()
   })
+
+  for (const dir of ["ltr", "rtl"]) for (const title of ["without-title", "long-title"]) {
+    test(`phone ${title} matches the WCR heading in ${dir}`, async ({ page, context }) => {
+      const reference = await context.newPage()
+      const fixture = `action-sheet-${title}`
+      const query = `only=${fixture}&dir=${dir}`
+      await Promise.all([page.goto(`/index.html?fixtures&ref=wcr&${query}`), reference.goto(`/wcr.html?${query}`)])
+      await Promise.all([page, reference].map(tab => expect(tab.locator("html")).toHaveAttribute("data-ready", "true")))
+
+      const [actual, expected] = [page, reference].map(tab => tab.locator(`[data-fixture="${fixture}"]`)
+        .getByRole("dialog", { name: "Available Actions" }))
+      const [header, nativeHeader] = [actual, expected].map(dialog => dialog.getByRole("region", { name: "Header" }))
+      await expect(header).toBeVisible()
+      await expect(header).toHaveCSS("height", await nativeHeader.evaluate(node => getComputedStyle(node).height))
+      if (title === "long-title") {
+        const heading = header.getByRole("heading", { name: longSheetHeader, exact: true })
+        const nativeHeading = reference.getByRole("heading", { name: longSheetHeader, exact: true })
+        await expect(heading).toHaveCSS("white-space", "nowrap")
+        await expect(heading).toHaveCSS("text-overflow", "ellipsis")
+        await expect(heading).toHaveCSS("direction", dir)
+        expect(await heading.evaluate(node => node.scrollWidth > node.clientWidth)).toBe(true)
+        expect((await heading.boundingBox())?.width).toBe((await nativeHeading.boundingBox())?.width)
+      } else {
+        await expect(header.getByRole("heading")).toHaveCount(0)
+      }
+      expect(await actual.ariaSnapshot()).toBe(await expected.ariaSnapshot())
+      const result = await new AxeBuilder({ page }).include(`[data-fixture="${fixture}"]`).analyze()
+      expect(result.violations.map(item => item.id)).toEqual([])
+    })
+  }
 
   const themes = ["sap_horizon", "sap_horizon_dark", "sap_horizon_hcb", "sap_horizon_hcw"]
   const passes = themes.flatMap(theme => ["cozy", "compact"].map(density => ({ theme, density, dir: "ltr" })))

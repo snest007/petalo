@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useArgs } from "storybook/preview-api"
 import { ActionSheet, type ActionSheetProps } from "@/components/ui/action-sheet"
 import { actions } from "../../src/fixtures/action-sheet"
-import { sheetHeader } from "../../src/fixtures/action-sheet.cases"
+import { longSheetHeader, sheetHeader } from "../../src/fixtures/action-sheet.cases"
 import { fioriMeta } from "../_lib/meta"
 
 type Args = ActionSheetProps & { phone?: boolean }
@@ -30,6 +30,8 @@ const inlineDocs = { docs: { story: { inline: false, height: "360px" } } }
 export const Playground: Story = {}
 export const Open: Story = { args: { open: true }, parameters: inlineDocs }
 export const Phone: Story = { args: { open: true, phone: true }, parameters: inlineDocs }
+export const PhoneWithoutTitle: Story = { ...Phone, args: { ...Phone.args, headerText: "" } }
+export const PhoneLongTitle: Story = { ...Phone, args: { ...Phone.args, headerText: longSheetHeader } }
 export const WithoutCancel: Story = { ...Phone, args: { ...Phone.args, hideCancelButton: true } }
 export const RTL: Story = { ...Open, globals: { dir: "rtl" } }
 export const Customise: Story = {

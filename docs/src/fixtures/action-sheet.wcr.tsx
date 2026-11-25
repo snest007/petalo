@@ -7,7 +7,7 @@ import { isPhone } from "@ui5/webcomponents-base/dist/Device.js"
 import { renderFinished } from "@ui5/webcomponents-base/dist/Render.js"
 import type { ComponentRef } from "react"
 import { defineFixtures } from "../fixture-types"
-import { sheetActions, sheetCases, sheetHeader } from "./action-sheet.cases"
+import { sheetActions, sheetCases, type SheetCase } from "./action-sheet.cases"
 import { placeInPlace } from "./ui5-popup-in-place"
 
 function pinSheet(host: ComponentRef<typeof ActionSheet> | null) {
@@ -26,11 +26,11 @@ function pinSheet(host: ComponentRef<typeof ActionSheet> | null) {
   })
 }
 
-export default defineFixtures<{ custom?: boolean; hideCancel?: boolean }>({
+export default defineFixtures<SheetCase>({
   ...sheetCases,
   cases: [...sheetCases.cases],
-  react: ({ hideCancel }) => <div style={{ overflow: "hidden", padding: ".75rem", width: "20rem", boxSizing: "border-box" }}>
-    <ActionSheet ref={pinSheet} headerText={sheetHeader} hideCancelButton={hideCancel}
+  react: ({ hideCancel, headerText }) => <div style={{ overflow: "hidden", padding: ".75rem", width: "20rem", boxSizing: "border-box" }}>
+    <ActionSheet ref={pinSheet} headerText={headerText} hideCancelButton={hideCancel}
       style={{ width: "100%" }} open={false}>
       {sheetActions.map(action => <Button key={action.id} disabled={"disabled" in action ? action.disabled : undefined}
         icon={"icon" in action ? action.icon : undefined}>{action.label}</Button>)}

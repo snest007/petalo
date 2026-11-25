@@ -27,15 +27,23 @@
   box-shadow: var(--fiori-wcr-actionsheet-headerboxshadow);
 }
 
+/* ResponsivePopoverTemplate.js retains the phone header with no title supplied. */
 .fiori-action-sheet[data-device="phone"] [data-slot="action-sheet-header"] {
+  display: flex;
+  align-items: center;
   width: 100%;
+  block-size: var(--fiori-x-responsive-popover-header-height);
   padding-inline: var(--fiori-popup-header-footer-padding-s);
 }
 
+/* ResponsivePopover.css.js reserves the close-button width. Title.css.js
+   renders wrappingType=None as a single line with ellipsis. */
 .fiori-action-sheet[data-device="phone"] [data-slot="action-sheet-title"] {
-  display: flex;
-  align-items: center;
-  min-height: var(--fiori-x-responsive-popover-header-height);
+  max-inline-size: calc(100% - var(--fiori-button-base-min-width));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
   margin: 0;
   color: var(--fiori-wcr-actionsheet-mobileheadertextcolor);
   font-family: var(--sapFontHeaderFamily);
