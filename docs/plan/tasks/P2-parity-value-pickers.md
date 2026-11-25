@@ -8,7 +8,7 @@ run the full tree matrix).
 
 ## Components
 
-`combobox`, `multi-combobox`, `multi-input`, `token`, `tokenizer`, `file-uploader`, `color-palette`, `color-palette-popover`, `color-picker`, `time-picker`, `picker-field`. (`calendar` and the three date pickers moved to **P2a** on 2026-11-17.)
+`combobox`, `multi-combobox`, `multi-input`, `token`, `tokenizer`, `file-uploader`, `color-palette`, `color-palette-popover`, `color-picker`, `time-picker`, `picker-field`, `dynamic-date-range`. (`calendar` and the three date pickers moved to **P2a** on 2026-11-17.)
 
 ## Review finding
 

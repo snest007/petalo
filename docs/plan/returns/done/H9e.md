@@ -72,3 +72,46 @@ H9e returns unchecked. This is the same open-editor parity issue that survived H
 implementation run, settle how to compare the source-confirmed unassociated labels and the native
 amount textbox while retaining the React controls' names and spinbutton semantics. Keep the rule 9
 case-specific source proof and real interaction checks. No additional card was opened for the same issue.
+
+## 2026-11-25 owner decision and acceptance
+
+Merged local main `e9f3827` into the card branch before verification. The owner approved
+the [case-specific comparison](../../decisions.md#2026-11-25--preserve-accessible-controls-in-dynamicdaterange-editors).
+The exact checks reconcile the native label and role deviations in the amount and date-time range editors, the
+unnamed Date/Time listbox, duplicated native preset text, empty pinned-fixture announcement outlets, and the
+Calendar year shortcut spelling. They verify the expected names, values, states, references, and node shapes
+before reconciliation. Shared picker production code and the stored accessibility-tree baseline were unchanged.
+
+The first focused run passed both tree matrices and all nine visual passes. Four new interaction tests failed
+to start from their intended React route or opener. The follow-up scoped the tests to the mounted demo and
+used its live opener. All 15 interaction tests passed, including LTR and RTL amount and unit edits, From/To
+names and focus, the UI5 and React selection announcement, the year shortcut and focus return.
+
+Full Tier 2 compared all 26 DynamicDateRange trees with zero unresolved differences. The 117 visual cells
+passed with a maximum difference of 0.7310%, and all 24 localization checks passed. Generation, typecheck,
+registry build, the accessibility ratchet and a fresh item-only install passed. The installed project verified
+typed expressions, a custom editor, named actions and focus return. Evidence is in `.integration/H9e/`.
+
+```text
+1972 passed, 0 failed, 0 flaky, 0 skipped (784.7s) | Log: test-results/summary-2026-11-25T01-41-26-265Z-42606.log | PORT=4310 SAPUI5_PORT=4311
+4662 passed, 0 failed, 0 flaky, 0 skipped (887.6s) | Log: test-results/summary-2026-11-25T01-54-31-828Z-45839.log | STORYBOOK_PORT=4320
+```
+
+Shared test files required the full Tier 2 route, one main suite and one Storybook suite. Zero CI pushes.
+The card and this note stay in place for reviewer archive.
+
+## Reviewer verification
+
+Reviewed `e78d7a7` against local main `c0ac410`. Kept both NavigationMenu and DynamicDateRange's
+exact tree comparisons and RTL coverage. Regenerated the audit tables and 48 language packs, and
+verified that all 67,248 translations checked against the two parent revisions retained their values.
+The merge introduced no shared picker production changes or accessibility-tree baseline updates.
+
+```text
+235 passed, 0 failed, 0 flaky, 0 skipped (447.8s) | Log: test-results/summary-2026-11-25T03-24-58-868Z-75569.log | PORT=4310 SAPUI5_PORT=4311
+46 passed, 0 failed, 0 flaky, 0 skipped (20.1s) | Log: test-results/summary-2026-11-25T03-32-57-638Z-76613.log | STORYBOOK_PORT=4320
+```
+
+The focused reviewer suites cover both components, the full Web Components accessibility-tree inventory,
+the localized matrix, Storybook and usage guidance. Logs are in the reviewer worktree under
+`.integration/review-h9e/`.

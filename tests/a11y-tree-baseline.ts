@@ -11,7 +11,7 @@ export type TreeBaseline = { version: 1; entries: BaselineEntry[] }
 export const groups: Record<string, string[]> = {
   H1: ["analytical-table"],
   P1: "button split-button button-badge numeric-input segmented-button toggle-button label input textarea checkbox radio-group switch slider rating-indicator step-input select form".split(" "),
-  P2: "combobox multi-combobox multi-input token tokenizer file-uploader color-palette color-palette-popover color-picker time-picker picker-field".split(" "),
+  P2: "combobox multi-combobox multi-input token tokenizer file-uploader color-palette color-palette-popover color-picker time-picker picker-field dynamic-date-range".split(" "),
   P2a: "calendar date-picker date-range-picker date-time-picker".split(" "),
   P3: "table data-table list tree timeline upload-collection object-status object-number object-identifier".split(" "),
   P4: "dialog message-box popover responsive-popover menu navigation-menu toast user-menu value-help-dialog view-settings-dialog adapt-filters-dialog select-dialog".split(" "),

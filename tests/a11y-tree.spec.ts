@@ -25,7 +25,7 @@ for (const direction of ["ltr", "rtl"] as const) test(`all Web Component accessi
         unpairedReason: "No checked-in Web Component renderer for the owning fixture set; no reference was silently inferred.",
       }, null, 2))
       expect([...referenceIds].sort(), "Every paired React fixture needs exactly one native fixture, in both directions").toEqual([...pairedIds].sort())
-      const directionalIds = direction === "ltr" ? referenceIds : referenceIds.filter((id) => /^(analytical-table|input-suggestions|navigation-menu|split-button|button-badge|numeric-input|slider|step-input|carousel|calendar|date-picker|date-range-picker|date-time-picker|time-picker|segmented-button)/.test(id))
+      const directionalIds = direction === "ltr" ? referenceIds : referenceIds.filter((id) => /^(analytical-table|input-suggestions|navigation-menu|split-button|button-badge|numeric-input|slider|step-input|carousel|calendar|date-picker|date-range-picker|dynamic-date-range|date-time-picker|time-picker|segmented-button)/.test(id))
       writeMatrixCoverage(`webcomponents/${direction}`, directionalIds)
       if (!process.env.E4_A11Y_COMPONENT && existsSync("tests/a11y-tree-baseline.json")) expect(staleCaseCoverage(`webcomponents/${direction}`, directionalIds)).toEqual([])
       const ids = directionalIds.filter((id) => !process.env.E4_A11Y_COMPONENT || id.startsWith(`${process.env.E4_A11Y_COMPONENT}-`))

@@ -154,6 +154,15 @@ for (const key of ["NUMBERINPUT_DEC_ICON_TITLE", "NUMBERINPUT_INC_ICON_TITLE"]) 
   }
 }
 
+verify("DynamicDateRange", "accessibleNameRef", "aria-labelledby or aria-label reaches the textbox",
+  "tests/dynamic-date-range.spec.ts: DynamicDateRange resolves the field name at the native input")
+for (const [key, equivalent] of [
+  ["DYNAMIC_DATE_RANGE_SELECTED_TEXT", "selected"],
+  ["DYNAMIC_DATE_RANGE_EMPTY_SELECTED_TEXT", "emptySelection"],
+  ["DYNAMIC_DATE_RANGE_NAVIGATION_ICON_TOOLTIP", "back"],
+  ["DYNAMIC_DATE_RANGE_POPOVER_ACCESSIBLE_NAME", "popoverName"],
+]) verifiedTexts[`dynamic-date-range.${key}`] = { equivalent: `DynamicDateRange.texts.${equivalent}`, status: "ok",
+  proof: "tests/dynamic-date-range.spec.ts: DynamicDateRange field and picker expose their translated names and value summary" }
 for (const [key, equivalent] of [
   ["CANCEL", "cancel"], ["CLEAR", "clear"], ["SEARCH", "search"], ["SELECT", "select"],
   ["SELECTED", "selected"], ["SELECTED_ITEMS", "selectedItems"], ["BUTTON_ARIA_TYPE_EMPHASIZED", "confirmDescription"], ["LIST_ITEM_ACTIVE", "itemActive"],

@@ -98,6 +98,10 @@ const aliases = { checkbox: 'CheckBox', combobox: 'ComboBox', 'multi-combobox': 
 const nativeKeys = name => {
   const native = aliases[name] ?? name.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('')
   const sources = packages.flatMap(pkg => existsSync(`node_modules/@ui5/${pkg}/dist/${native}.js`) ? [`node_modules/@ui5/${pkg}/dist/${native}.js`] : [])
+  if (name === 'dynamic-date-range') {
+    const options = 'node_modules/@ui5/webcomponents/dist/dynamic-date-range-options'
+    sources.push(...readdirSync(options).filter(file => file.endsWith('.js')).map(file => `${options}/${file}`))
+  }
   if (name === 'illustrated-message') sources.push(...readdirSync('node_modules/@ui5/webcomponents-fiori/dist/illustrations').filter(file => file.endsWith('.js')).map(file => `node_modules/@ui5/webcomponents-fiori/dist/illustrations/${file}`))
   // Public subcomponents owned by the same registry item; fixture wrapper imports are not audit roots.
   const children = { card: ['CardHeader'], calendar: ['CalendarLegend', 'CalendarLegendItem'], table: ['TableHeaderRow','TableHeaderCell','TableRow','TableCell','TableGroupRow','TableSelectionMulti','TableSelectionSingle','TableGrowing','TableRowAction','TableRowActionNavigation'], list: ['ListItemStandard','ListItemCustom','ListItemGroup'], tree: ['TreeItem'], 'notification-list': ['NotificationListItem','NotificationListGroupItem'], 'upload-collection': ['UploadCollectionItem'], tabs: ['Tab','TabSeparator'], menu: ['MenuItem','MenuItemGroup'], 'navigation-menu': ['NavigationMenuItem','Menu','MenuItem','ListItem','ResponsivePopover'], tokenizer: ['Token'] }
@@ -386,6 +390,27 @@ for (const [card, keys] of [
   ['H3 grouping and aggregates', ['GROUP', 'GROUPED', 'UNGROUP']],
   ['H5 overlay', ['INVALID_TABLE']],
 ]) unrendered('analytical-table', keys.map(key => `wcr:${key}`), `Native channel activates with ${card}.`)
+
+unrendered('dynamic-date-range', ['ACC_STATE_DISABLED', 'ACC_STATE_EMPTY', 'ACC_STATE_MULTIPLE_CONTROLS', 'ACC_STATE_READONLY',
+  'ACC_STATE_REQUIRED', 'ACC_STATE_SINGLE_CONTROL', 'LISTITEMCUSTOM_TYPE_TEXT'],
+  'DynamicDateRangePopoverTemplate renders only ListItemStandard and never uses the CustomAnnouncement path.')
+unrendered('dynamic-date-range', ['ARIA_LABEL_LIST_ITEM_CHECKBOX', 'ARIA_LABEL_LIST_ITEM_RADIO_BUTTON', 'CHECKBOX_ARIA_TYPE',
+  'CHECKBOX_CHECKED', 'CHECKBOX_NOT_CHECKED', 'FORM_CHECKABLE_REQUIRED', 'FORM_SELECTABLE_REQUIRED2'],
+  'DynamicDateRangePopoverTemplate renders List(selectionMode=Single), which never creates selection controls.')
+unrendered('dynamic-date-range', ['BUTTON_BADGE_ONE_ITEM', 'BUTTON_BADGE_MANY_ITEMS', 'BUTTON_ROLE_DESCRIPTION', 'LINK_ROLE_DESCRIPTION'],
+  'DynamicDateRangePopoverTemplate and its built-in editors never set badge or accessibleRole on Button.')
+unrendered('dynamic-date-range', ['DIALOG_HEADER_ARIA_LABEL', 'DIALOG_FULLSCREEN_MAXIMIZE', 'DIALOG_FULLSCREEN_RESTORE'],
+  'DynamicDateRangePopoverTemplate sets _hideHeader on ResponsivePopover and never enables fullscreen actions on its phone Dialog.')
+unrendered('dynamic-date-range', ['ICON_ARIA_TYPE_IMAGE'],
+  'DynamicDateRangeInputTemplate uses Decorative and Interactive icon modes only.')
+unrendered('dynamic-date-range', ['INPUT_CLEAR_ICON_ACC_NAME', 'INPUT_AVALIABLE_VALUES', 'INPUT_SUGGESTIONS', 'INPUT_SUGGESTIONS_COLLAPSED',
+  'INPUT_SUGGESTIONS_EXPANDED', 'INPUT_SUGGESTIONS_MORE_HITS', 'INPUT_SUGGESTIONS_NO_HIT', 'INPUT_SUGGESTIONS_OK_BUTTON', 'INPUT_SUGGESTIONS_ONE_HIT'],
+  'DynamicDateRangeInputTemplate and the built-in editors never enable Input suggestions or the clear icon.')
+unrendered('dynamic-date-range', ['POPOVER_ARIA_DESCRIBEDBY_RESIZABLE', 'POPOVER_HANDLE_ARIA_ROLEDESCRIPTION',
+  'POPOVER_RESIZE_HANDLE_ARIA_LABEL', 'POPOVER_RESIZE_HANDLE_TOOLTIP'],
+  'DynamicDateRangePopoverTemplate and the built-in editors never make their popovers resizable.')
+unrendered('dynamic-date-range', ['VALUE_STATE_LINK', 'VALUE_STATE_LINKS', 'VALUE_STATE_LINKS_MAC', 'VALUE_STATE_LINK_MAC', 'VALUE_STATE_TYPE_SUCCESS'],
+  'DynamicDateRangeInputTemplate and the built-in editors provide no value state link or positive value state.')
 
 for (const component of shipped) if (!ownerByComponent[component] && !wcrComponents[component]) throw new Error(`Missing owning card for ${component}`)
 const audit = shipped.filter(component => !wcrComponents[component]).map(component => ({ component, owner: ownerByComponent[component], rows: [...new Set([...nativeByComponent[component], ...Object.keys(resolutions[component].rows).filter(key => key in defaults)])].sort().map(key => {

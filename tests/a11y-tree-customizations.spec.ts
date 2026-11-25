@@ -18,6 +18,7 @@ const customizationProofs = {
   "AnalyticalTableCell.children": "analytical-table-custom",
   "AnalyticalTableHeaderCell.className": "analytical-table-custom",
   "AnalyticalTableHeaderCell.children": "analytical-table-custom",
+  "DynamicDateRange.className": "dynamic-date-range",
   "SelectDialog.className": "select-dialog",
   "SelectDialog.renderItem": "select-dialog",
   "SplitterLayout.className": "splitter-layout",

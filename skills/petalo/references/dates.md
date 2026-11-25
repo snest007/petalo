@@ -6,6 +6,7 @@
 | [date-picker](#date-picker) | Enter or select one localized Gregorian date. |
 | [date-range-picker](#date-range-picker) | Enter a localized Gregorian start and end date as one interval. |
 | [date-time-picker](#date-time-picker) | Enter one localized Gregorian date and time together. |
+| [dynamic-date-range](#dynamic-date-range) | Choose a date filter that can resolve relative to when it is run. |
 | [picker-field](#picker-field) | Compose a custom text field and picker with caller-owned value rules. |
 | [time-picker](#time-picker) | Enter or select a localized time without a date. |
 
@@ -43,6 +44,7 @@ Enter or select one localized Gregorian date.
 
 ### Don't use when
 
+- Offer relative periods such as Today or Last 7 Days alongside absolute dates. → [dynamic-date-range](dates.md#dynamic-date-range)
 - Enter a start and end date as one interval. → [date-range-picker](dates.md#date-range-picker)
 - Enter both a date and a time in one field. → [date-time-picker](dates.md#date-time-picker)
 - Keep the calendar visible or select separate days. → [calendar](dates.md#calendar)
@@ -66,6 +68,7 @@ Enter a localized Gregorian start and end date as one interval.
 
 ### Don't use when
 
+- Offer relative periods such as Today or Last 7 Days alongside absolute dates. → [dynamic-date-range](dates.md#dynamic-date-range)
 - Choose only one date. → [date-picker](dates.md#date-picker)
 - Enter a date together with a time rather than a date interval. → [date-time-picker](dates.md#date-time-picker)
 - Keep a calendar visible or select separate, non-contiguous days. → [calendar](dates.md#calendar)
@@ -99,6 +102,26 @@ Main exports: `DateTimePicker`, `DateTimeSelection`.
 
 ```bash
 npx shadcn add @petalo/date-time-picker
+```
+
+## dynamic-date-range
+
+Choose a date filter that can resolve relative to when it is run.
+
+### Use when
+
+- Offer presets such as Today, Last 7 Days and Next 2 Months in a report filter.
+- Allow relative and absolute periods in the same field.
+
+### Don't use when
+
+- Enter one fixed calendar date. → [date-picker](dates.md#date-picker)
+- Enter only a fixed start and end date. → [date-range-picker](dates.md#date-range-picker)
+
+Main exports: `DynamicDateRange`.
+
+```bash
+npx shadcn add @petalo/dynamic-date-range
 ```
 
 ## picker-field

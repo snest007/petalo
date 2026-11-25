@@ -59,6 +59,8 @@ type FixtureA11yDiff = {
   selectDialogShape?: "single" | "multiple" | "selected" | "empty"
   /** Exact native popup and focus row semantics for the H10 in-place pair. */
   navigationMenu?: true
+  /** Source-pinned DynamicDateRange editor tree for an exact open fixture. */
+  dynamicDateRangeEditor?: true
   /** Exact H8 composed Menu boundary, including the native focus guards and item hint. */
   splitButtonMenu?: { item: string; opener: string; dialog: string; activeHint: string }
   /** NumericInputTemplate's nested value-state slot loses its supplied text in the native description. */
