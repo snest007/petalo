@@ -1,0 +1,24 @@
+{
+  "title": "ActionSheet",
+  "description": "An anchored list of actions that becomes a bottom-aligned dialog with Cancel on phones.",
+  "registryDependencies": [
+    "@petalo/responsive-popover",
+    "@petalo/popover",
+    "@petalo/button",
+    "@petalo/icons",
+    "@petalo/locale",
+    "@petalo/use-is-phone"
+  ],
+  "usage": {
+    "summary": "Offer a short list of labeled actions from one button, with a bottom-aligned sheet on phones.",
+    "useWhen": [
+      "Keep a short list of labeled actions anchored to its trigger on larger screens.",
+      "Move those actions into a bottom-aligned dialog with Cancel on phones."
+    ],
+    "avoidWhen": [
+      { "when": "Commands need submenus or should follow the standard Fiori menu pattern.", "use": ["menu"] },
+      { "when": "The overlay contains contextual fields or other mixed content.", "use": ["responsive-popover"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

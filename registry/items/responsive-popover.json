@@ -37,6 +37,12 @@
         "use": [
           "menu"
         ]
+      },
+      {
+        "when": "Show a bottom-aligned list of actions with Cancel on phones.",
+        "use": [
+          "action-sheet"
+        ]
       }
     ],
     "source": "ui5-apidoc"

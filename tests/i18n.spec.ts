@@ -66,6 +66,7 @@ test.describe("i18n source audit", () => {
       expect(group.rows.filter(row => row.status === "gap").every(row => row.triage), `${group.component}: preserve gap triage`).toBe(true)
     }
     expect(audit.find(group => group.component === "analytical-card-header")?.owner).toBe("H11")
+    expect(audit.find(group => group.component === "action-sheet")?.owner).toBe("H12")
     for (const key of ["BUTTON_BADGE_ONE_ITEM", "BUTTON_BADGE_MANY_ITEMS"]) {
       expect(audit.find(group => group.component === "button")?.rows.find(row => row.key === key)?.status).toBe("fixed in E5")
       expect(audit.find(group => group.component === "split-button")?.rows.find(row => row.key === key)?.status).toBe("not rendered")

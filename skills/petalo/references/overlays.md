@@ -2,6 +2,7 @@
 
 | Item | Summary |
 | --- | --- |
+| [action-sheet](#action-sheet) | Offer a short list of labeled actions from one button, with a bottom-aligned sheet on phones. |
 | [adapt-filters-dialog](#adapt-filters-dialog) | Personalize filter fields, their order and values in a staged dialog before applying changes. |
 | [dialog](#dialog) | Pause the current task for a focused decision, confirmation or contained editing task. |
 | [menu](#menu) | Let users choose commands from an opened hierarchy of menu items. |
@@ -14,6 +15,26 @@
 | [user-menu](#user-menu) | Expose signed-in user information, user-specific actions and sign out from the profile entry point. |
 | [value-help-dialog](#value-help-dialog) | Find business values through a searchable result table or define filter conditions in a dialog. |
 | [view-settings-dialog](#view-settings-dialog) | Adjust a list or table view through sorting, grouping and predefined filter choices. |
+
+## action-sheet
+
+Offer a short list of labeled actions from one button, with a bottom-aligned sheet on phones.
+
+### Use when
+
+- Keep a short list of labeled actions anchored to its trigger on larger screens.
+- Move those actions into a bottom-aligned dialog with Cancel on phones.
+
+### Don't use when
+
+- Commands need submenus or should follow the standard Fiori menu pattern. → [menu](overlays.md#menu)
+- The overlay contains contextual fields or other mixed content. → [responsive-popover](overlays.md#responsive-popover)
+
+Main exports: `ActionSheet`.
+
+```bash
+npx shadcn add @petalo/action-sheet
+```
 
 ## adapt-filters-dialog
 
@@ -143,6 +164,7 @@ Keep contextual content anchored on desktop and tablet, then show it in a full-s
 - Keep lightweight contextual content anchored on every device and within one-third of the phone screen. → [popover](overlays.md#popover)
 - Require a focused modal task and explicit confirmation on desktop as well as phone. → [dialog](overlays.md#dialog)
 - Show commands in menu rows or submenus without mixed contextual content. → [menu](overlays.md#menu)
+- Show a bottom-aligned list of actions with Cancel on phones. → [action-sheet](overlays.md#action-sheet)
 
 Main exports: `ResponsivePopover`, `ResponsivePopoverAnchor`, `ResponsivePopoverContent`, `ResponsivePopoverTrigger`.
 

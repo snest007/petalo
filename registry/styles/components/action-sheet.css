@@ -1,0 +1,63 @@
+/* WCR 2.28.2 ActionSheet.module.css.js and ActionSheet/index.js mobile scoping. */
+.fiori-action-sheet[data-device="desktop"] [data-slot="action-sheet-content"] {
+  padding: .1875rem .375rem;
+}
+
+/* Stretch the buttons after measuring the longest row's intrinsic size. */
+.fiori-action-sheet [data-slot="action-sheet-actions"] {
+  display: flex;
+  flex-direction: column;
+}
+
+.fiori-action-sheet [data-slot="action-sheet-action"],
+.fiori-action-sheet [data-slot="action-sheet-cancel"] {
+  margin: var(--fiori-wcr-x-buttontopbottompadding);
+}
+
+/* The block ui5-button hosts collapse adjoining vertical margins. */
+.fiori-action-sheet [data-action-index] + [data-action-index] { margin-block-start: 0; }
+
+.fiori-action-sheet.fiori-responsive-popover[data-device="phone"] {
+  background: var(--fiori-wcr-actionsheet-mobileheaderbackground);
+  box-shadow: var(--fiori-wcr-actionsheet-mobileheaderboxshadow);
+}
+
+.fiori-action-sheet[data-device="phone"] .fiori-responsive-popover__field-header {
+  background: transparent;
+  box-shadow: var(--fiori-wcr-actionsheet-headerboxshadow);
+}
+
+.fiori-action-sheet[data-device="phone"] [data-slot="action-sheet-header"] {
+  width: 100%;
+  padding-inline: var(--fiori-popup-header-footer-padding-s);
+}
+
+.fiori-action-sheet[data-device="phone"] [data-slot="action-sheet-title"] {
+  display: flex;
+  align-items: center;
+  min-height: var(--fiori-x-responsive-popover-header-height);
+  margin: 0;
+  color: var(--fiori-wcr-actionsheet-mobileheadertextcolor);
+  font-family: var(--sapFontHeaderFamily);
+  font-size: var(--sapFontHeader5Size);
+  font-weight: normal;
+  line-height: normal;
+}
+
+.fiori-action-sheet[data-device="phone"] [data-slot="responsive-popover-body"] {
+  min-height: 0;
+  padding: 0;
+}
+
+.fiori-action-sheet[data-device="phone"] [data-slot="action-sheet-actions"] {
+  box-sizing: border-box;
+  padding: .25rem .5rem;
+  overflow: auto;
+  max-height: 82vh;
+  background: var(--sapGroup_ContentBackground);
+}
+
+/* A projected, empty UI5 dialog footer draws only its border. */
+.fiori-action-sheet[data-device="phone"] [data-slot="responsive-popover-footer"] {
+  height: auto;
+}
