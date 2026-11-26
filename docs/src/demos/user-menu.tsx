@@ -1,15 +1,19 @@
 import * as React from "react"
 
 import { Avatar } from "@/components/ui/avatar"
+import { UserSettingsDialog } from "@/components/ui/user-settings-dialog"
 import { UserMenu, UserMenuItem } from "@/components/ui/user-menu"
 import { actionSettings, globe, sysHelp } from "@/lib/fiori-icons"
 
+import { fixedSettings, settingsItems } from "../fixtures/user-settings-dialog"
+import { settingsHeader } from "../fixtures/user-settings-dialog.cases"
 import { defineDemo } from "./types"
 
 function UserMenuDemo() {
   const [open, setOpen] = React.useState(false)
   const [opener, setOpener] = React.useState<HTMLElement | null>(null)
   const [last, setLast] = React.useState("none")
+  const [settingsOpen, setSettingsOpen] = React.useState(false)
   return (
     <div className="flex items-center gap-3">
       <Avatar
@@ -32,12 +36,14 @@ function UserMenuDemo() {
         showManageAccount
         onManageAccountClick={() => setLast("manage")}
         onSignOutClick={() => setLast("sign out")}
-        onItemClick={(v) => setLast(v)}
+        onItemClick={(v) => { setLast(v); if (v === "settings") setSettingsOpen(true) }}
       >
         <UserMenuItem value="settings" icon={actionSettings}>Settings</UserMenuItem>
         <UserMenuItem value="language" icon={globe} additionalText="English">Language</UserMenuItem>
         <UserMenuItem value="help" icon={sysHelp}>Help</UserMenuItem>
       </UserMenu>
+      <UserSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} opener={opener}
+        headerText={settingsHeader} items={settingsItems} fixedItems={fixedSettings} showSearchField />
       <span id="user-menu-demo-last" className="text-(--sapContent_LabelColor)">{`Last action: ${last}`}</span>
     </div>
   )

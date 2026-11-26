@@ -13,6 +13,7 @@
 | [toast](#toast) | Confirm a completed action or provide information in a non-disruptive message that disappears automatically. |
 | [use-is-phone](#use-is-phone) | Reactive UI5-style touch/phone detection with a data-fiori-device override. |
 | [user-menu](#user-menu) | Expose signed-in user information, user-specific actions and sign out from the profile entry point. |
+| [user-settings-dialog](#user-settings-dialog) | Let users inspect their account and review or change settings in categories. |
 | [value-help-dialog](#value-help-dialog) | Find business values through a searchable result table or define filter conditions in a dialog. |
 | [view-settings-dialog](#view-settings-dialog) | Adjust a list or table view through sorting, grouping and predefined filter choices. |
 
@@ -239,6 +240,7 @@ Expose signed-in user information, user-specific actions and sign out from the p
 
 ### Don't use when
 
+- Organize editable preferences across categories. → [user-settings-dialog](overlays.md#user-settings-dialog)
 - Offer general object or page commands without signed-in user information. → [menu](overlays.md#menu)
 - Let users switch between products rather than access their current user settings. → [product-switch](navigation.md#product-switch)
 
@@ -246,6 +248,26 @@ Main exports: `UserMenu`, `UserMenuItem`.
 
 ```bash
 npx shadcn add @petalo/user-menu
+```
+
+## user-settings-dialog
+
+Let users inspect their account and review or change settings in categories.
+
+### Use when
+
+- Group several user preferences by category and keep their settings in the same dialog.
+- Open the preferences from a Settings action in UserMenu.
+
+### Don't use when
+
+- Show account information alongside sign-out and other short actions. → [user-menu](overlays.md#user-menu)
+- Ask the user to confirm one independent operation. → [dialog](overlays.md#dialog)
+
+Main exports: `UserSettingsAccountView`, `UserSettingsAppearanceView`, `UserSettingsDialog`, `UserSettingsView`.
+
+```bash
+npx shadcn add @petalo/user-settings-dialog
 ```
 
 ## value-help-dialog

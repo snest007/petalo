@@ -7,7 +7,7 @@ Read [AGENTS.md](../../AGENTS.md) before starting a card.
 
 | Wave | Open or planned | Scheduling |
 |---|---|---|
-| H (new components) | H6, H6b, H6c, H13–H14 | **Next: [H13b preserve settings view state](tasks/H13b-user-settings-view-state.md)** before H13 integration. H14 meets its listed dependencies and awaits scheduling. |
+| H (new components) | H6, H6b, H6c, H13c–H14 | **Next: [H13c Notification settings views](tasks/H13c-user-settings-notifications.md)** follows H13/H13b. H14 meets its listed dependencies and awaits scheduling. |
 | P (accessibility and localization parity) | P1–P6, P2a | [P2a](tasks/P2a-parity-calendar-date-pickers.md) runs just before H6 → H6b → H6c. The other P cards follow new component work. |
 | X (extension rollout) | X1–X40 candidates | Plan each group after its P card. |
 | S (Storybook) | S5 | Schedule after new component work. |
@@ -40,8 +40,7 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
-- [ ] [H13b Preserve settings view state across categories](tasks/H13b-user-settings-view-state.md) — S (continue on `codex/H13`)
+- [ ] [H13c Notification settings views](tasks/H13c-user-settings-notifications.md) — M (after H13/H13b)
 - [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
 
 <details>
@@ -73,6 +72,8 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [x] [H11b Preserve AnalyticalCardHeader action ownership](tasks/done/H11b-analytical-card-header-event-ownership.md) — S (continue on `codex/H11`)
 - [x] [H12 ActionSheet](tasks/done/H12-action-sheet.md) — M (after H0, E4, E5)
 - [x] [H12b Match the ActionSheet phone title bar](tasks/done/H12b-action-sheet-phone-title.md) — S (continue on `codex/H12`)
+- [x] [H13 UserSettingsDialog](tasks/done/H13-user-settings-dialog.md) — L (after H0, E4, E5), [acceptance](returns/done/H13.md)
+- [x] [H13b Preserve settings view state across categories](tasks/done/H13b-user-settings-view-state.md) — S (continue on `codex/H13`)
 
 </details>
 
@@ -97,7 +98,7 @@ Maintain the row format below for the [localization audit](../../scripts/i18n-au
 | P2 | combobox, multi-combobox, multi-input, token, tokenizer, file-uploader, color-palette, color-palette-popover, color-picker, time-picker, picker-field, dynamic-date-range |
 | P2a | calendar, date-picker, date-range-picker, date-time-picker (split from P2 on 2026-11-17 so the Calendar pilot runs first) |
 | P3 | table, data-table, list, tree, timeline, upload-collection, object-status, object-number, object-identifier |
-| P4 | action-sheet, dialog, message-box, popover, responsive-popover, menu, navigation-menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
+| P4 | action-sheet, user-settings-dialog, dialog, message-box, popover, responsive-popover, menu, navigation-menu, toast, user-menu, value-help-dialog, view-settings-dialog, adapt-filters-dialog |
 | P5 | analytical-card-header, avatar, busy-indicator, card, carousel, expandable-text, hero-banner, illustrated-message, link, media-gallery, message-strip, panel, progress-indicator, tag, text, title |
 | P6 | bar, breadcrumbs, filter-bar, notification-list, product-switch, search, shell-bar, side-navigation, tabs, toolbar, variant-management, wizard, dynamic-page, dynamic-side-content, flexible-column-layout, navigation-layout, object-page, page, f6-navigation, variants |
 

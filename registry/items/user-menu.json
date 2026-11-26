@@ -17,6 +17,7 @@
       "Set showManageAccount only when a central profile-management destination exists."
     ],
     "avoidWhen": [
+      { "when": "Organize editable preferences across categories.", "use": ["user-settings-dialog"] },
       {
         "when": "Offer general object or page commands without signed-in user information.",
         "use": [

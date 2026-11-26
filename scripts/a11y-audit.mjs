@@ -22,6 +22,7 @@ const aliases = {
   Tab: "tabs", TabSeparator: "tabs", TabContainer: "tabs", TreeItem: "tree", TreeItemCustom: "tree", TreeItemBase: "tree",
   SideNavigationItem: "side-navigation", SideNavigationSubItem: "side-navigation", SideNavigationGroup: "side-navigation",
   ProductSwitchItem: "product-switch", CardHeader: "card", WizardStep: "wizard", BreadcrumbsItem: "breadcrumbs",
+  UserSettingsItem: "user-settings-dialog",
   UserMenuAccount: "user-menu", UserMenuItem: "user-menu", MediaGalleryItem: "media-gallery", CarouselItem: "carousel",
 }
 const sourceOwner = (name) => aliases[name] ?? exported.get(name)
@@ -197,6 +198,18 @@ verifiedTexts["navigation-menu.NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT"] = {
   proof: "NavigationMenuItem.js _accInfo requires associatedItem.isSelectable, only set by SideNavigationPopoverTemplate.js.",
 }
 
+const h13Proof = "tests/user-settings-dialog.spec.ts: names, navigates and announces the user settings"
+verify("UserSettingsItem", "accessibleName", "A supplementary name on the owned ListItemStandard", h13Proof)
+for (const [key, equivalent] of [
+  ["USER_SETTINGS_DIALOG_ACCESSIBLE_NAME", "name"], ["USER_SETTINGS_LIST_ARIA_ROLE_DESC", "itemRole"],
+  ["USER_SETTINGS_DIALOG_CLOSE_BUTTON_TEXT", "close"], ["USER_SETTINGS_DIALOG_SAVE_BUTTON_TEXT", "save"],
+  ["USER_SETTINGS_DIALOG_CANCEL_BUTTON_TEXT", "cancel"], ["USER_SETTINGS_DIALOG_NO_SEARCH_RESULTS_TEXT", "noResults"],
+  ["USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS", "noResultsAnnouncement"],
+  ["USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT", "oneResult"], ["USER_SETTINGS_DIALOG_SEARCH_MORE_RESULTS", "manyResults"],
+  ["USER_SETTINGS_ACCOUNT_EDIT_AVATAR_TXT", "UserSettingsAccountView.texts.edit"],
+  ["USER_SETTINGS_ACCOUNT_MANAGE_ACCOUNT_BUTTON_TXT", "UserSettingsAccountView.texts.manage"],
+]) verifiedTexts[`user-settings-dialog.${key}`] = { equivalent: equivalent.includes(".") ? equivalent : `UserSettingsDialog.texts.${equivalent}`, status: "ok", proof: h13Proof }
+
 const h12Proof = "tests/action-sheet.spec.ts: compares WCR phone labels and action positions"
 for (const [key, equivalent] of [
   ["AVAILABLE_ACTIONS", "availableActions"], ["CANCEL", "cancel"], ["X_OF_Y", "itemPosition"],
@@ -266,6 +279,8 @@ for (const [file, owner] of sourceFiles) {
     if (file.endsWith("/ComboBox.js") && (lines[index].includes("announce(`${groupHeaderText}") || lines[index].includes("announce(`${currentItemAdditionalText}"))) Object.assign(row, { status: "fixed in E4", equivalent: "ComboBox owned polite alert: group header or additionalText plus displayed non-group position while open; additionalText alone while closed", proof: "tests/combobox.spec.ts: ComboBox [ltr/rtl] keyboard announcements use displayed rows, group headers and additional text" })
     if (file.endsWith("/List.js") && lines[index].includes("announce(selectedText")) Object.assign(row, { status: "fixed in E4", equivalent: "List/Tree owned polite alerts in the nearest modal ancestor or document.body (Tree inherits this native List selection channel)", proof: "tests/list.spec.ts: List selection changes announce politely with the same selected/not-selected text; tests/tree.spec.ts: Tree [RTL] custom content cannot replace owned role, states, ids or tab stops; Tree text overrides keep selection descriptions and polite announcements connected" })
     if (file.endsWith("/Select.js") && lines[index].includes("announce(text")) Object.assign(row, { status: "fixed in E4", equivalent: "Select's owned polite alert announces selected text; open state adds the same position text", proof: "tests/select.spec.ts: Select group summary and selection announcements preserve UI5 text and politeness" })
+    if (owner === "user-settings-dialog" && lines[index].includes("announce(this._searchResultsText")) Object.assign(row, {
+      status: "ok", equivalent: "Polite live region names the current result count after search input", proof: h13Proof })
     if (owner === "select-dialog" && lines[index].includes("announce(i18nBundle.getText(SELECTED_ITEMS")) Object.assign(row, {
       status: "ok", equivalent: "SelectDialog's polite live region reports the number of selected items",
       proof: "tests/select-dialog.spec.ts: SelectDialog retains filtered multi-selection, announces the count, clears and cancels" })

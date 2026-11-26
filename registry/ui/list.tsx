@@ -179,6 +179,7 @@ type CoreOptions = {
   value?: string[]
   defaultValue?: string[]
   onValueChange?: (value: string[], detail: { item: string; selected: boolean }) => void
+  onBeforeValueChange?: (detail: { item: string; selected: boolean }) => boolean | void
   onItemClick?: (value: string) => void
   onItemDelete?: (value: string) => void
   deleteText: string
@@ -222,6 +223,8 @@ function useListCoreValue(opts: CoreOptions) {
   })
 
   const commit = React.useCallback((next: string[], item: string, isSel: boolean) => {
+    // List.js:onSelectionRequested reverts a canceled selection before announcing it.
+    if (optsRef.current.onBeforeValueChange?.({ item, selected: isSel }) === false) return
     if (optsRef.current.value === undefined) setInner(next)
     optsRef.current.onValueChange?.(next, { item, selected: isSel })
     // List.js:onSelectionRequested announces only an actual selection change;
@@ -381,6 +384,8 @@ type ListProps = Omit<React.ComponentProps<"div">, "defaultValue" | "onChange"> 
   value?: string[]
   defaultValue?: string[]
   onValueChange?: (value: string[], detail: { item: string; selected: boolean }) => void
+  /** Return false to keep the previous selection and suppress its announcement. */
+  onBeforeValueChange?: (detail: { item: string; selected: boolean }) => boolean | void
   /** Fired when an item is activated (click, Enter, Space), unless its type is inactive / detail. */
   onItemClick?: (value: string) => void
   /** Delete mode: the item's delete button was pressed (or Delete pressed on the item). */
@@ -422,6 +427,7 @@ function List({
   value,
   defaultValue,
   onValueChange,
+  onBeforeValueChange,
   onItemClick,
   onItemDelete,
   onMoveOver,
@@ -487,6 +493,7 @@ function List({
     value,
     defaultValue,
     onValueChange,
+    onBeforeValueChange,
     onItemClick,
     onItemDelete,
     deleteText: t.delete,
