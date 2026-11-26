@@ -40,7 +40,7 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5)
+- [x] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5), [acceptance](returns/H13.md)
 - [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
 
 <details>
