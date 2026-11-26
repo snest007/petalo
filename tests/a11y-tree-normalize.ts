@@ -1,6 +1,7 @@
 import { reconcileNavigationMenuFixture } from "./navigation-menu-a11y"
 import { reconcileSelectDialogFixture, type SelectDialogFixtureShape } from "./select-dialog-a11y"
 import { reconcileDynamicDateRangeEditor } from "./dynamic-date-range-a11y"
+import { reconcileUserSettingsDialog } from "./user-settings-dialog-a11y"
 import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs"
 import { expect, type Page } from "@playwright/test"
 import ts from "typescript"
@@ -672,10 +673,9 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
     if (allowed?.calendarHeaderBug) native = correctCalendarHeaderBugs(adjusted.ours, native, allowed.calendarHeaderBug)
     if (allowed?.pinnedPopupShell) {
-      if (allowed.pinnedPopupShell.kind === "settings-dialog") {
-        if (!/^user-settings-dialog-(general|account|appearance|search|empty|loading)$/.test(id)) throw new Error("Nested Dialog shell applies only to the H13 paired fixtures")
-      } else if (!/^(select-dialog|dynamic-date-range)-/.test(id)) throw new Error("Pinned popup shell applies only to H9 paired fixtures")
+      if (allowed.pinnedPopupShell.kind !== "settings-dialog" && !/^(select-dialog|dynamic-date-range)-/.test(id)) throw new Error("Pinned popup shell applies only to H9 paired fixtures")
       reconcilePinnedPopupShell(adjusted.ours, native, allowed.pinnedPopupShell)
+      if (allowed.pinnedPopupShell.kind === "settings-dialog") reconcileUserSettingsDialog(adjusted.ours, native, id)
     }
     if (allowed?.selectDialogShape) {
       if (!allowed.pinnedPopupShell || !id.startsWith("select-dialog-")) throw new Error("SelectDialog fixture shape requires its pinned Dialog shell")

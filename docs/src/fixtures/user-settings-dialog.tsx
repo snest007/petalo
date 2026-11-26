@@ -33,7 +33,7 @@ export default defineFixtures<SettingsCase>({
     "diff": {
       "ignore": [],
       "pinnedPopupShell": { "kind": "settings-dialog", "name": "User Settings" },
-      "reason": "UserSettingsDialogTemplate nests the closed Dialog inside a shadow host. Of PopupTemplate's shell, only the verified anonymous hosts, empty block layer and empty focus guards are implementation scaffolding."
+      "reason": "Compare the pinned Dialog through PopupTemplate's shadow shell. H13 verifies the exact empty announcement outlets, form and icon scaffolding, side group, duplicate tab relation, Avatar initials and BusyIndicator representation."
     }
   }],
   react: ({ active, search, empty, save, loading, styled }) => {

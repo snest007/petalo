@@ -660,6 +660,18 @@ test.beforeAll(async () => {
     };
 
     const seen=new Set(); const wrappers=new Map(); const h=React.createElement; let root; let sequence=0;
+    fixtures['user-settings-dialog-veto'] = {
+      cases: [{ id: 'user-settings-dialog-veto', props: {} }],
+      react: () => C('UserSettingsDialog', {
+        open: true, headerText: 'Settings', defaultValue: 'general',
+        onValueChange: id => id !== 'account',
+        items: [
+          {id:'general',text:'General',headerText:'General preferences'},
+          {id:'account',text:'Account',headerText:'Account preferences'},
+          {id:'appearance',text:'Appearance',headerText:'Appearance preferences'},
+        ],
+      }),
+    };
     const button=text=>C('Button',{},text), text=value=>h('span',{},value);
     const optional={
       'Avatar.badge':text('Verified'), 'List.header':text('Custom list header'), 'ListItemGroup.header':text('Custom group header'),
@@ -890,6 +902,27 @@ test("UserSettingsDialog customization keeps the owned view host and controls", 
   for (const attribute of ["role", "id", "tabindex", "aria-hidden"]) expect(await view.getAttribute(attribute)).toBeNull()
   await expect(view.getByRole("button", { name: "Change language", exact: true })).toBeVisible()
   expect(warnings).toEqual(expect.arrayContaining(["role", "id", "tabIndex", "aria-hidden"].map(key => `UserSettingsView: ignored ownership prop ${key}`)))
+})
+
+test("UserSettingsDialog announces only accepted category changes", async ({ page }) => {
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("user-settings-dialog-veto", "user-settings-dialog-veto", false))
+  const dialog = page.getByRole("dialog", { name: "User Settings", exact: true })
+  const general = dialog.getByRole("listitem", { name: /^General/ })
+  const account = dialog.getByRole("listitem", { name: /^Account/ })
+  const appearance = dialog.getByRole("listitem", { name: /^Appearance/ })
+  const outlet = dialog.locator('[data-slot="list-announcement"]')
+  await expect(general).toBeFocused()
+  await general.press("ArrowDown")
+  await expect(account).toBeFocused()
+  await account.press("Enter")
+  await expect(dialog.getByRole("heading", { name: "General preferences" })).toBeVisible()
+  await expect(outlet).toBeEmpty()
+  await account.press("ArrowDown")
+  await expect(appearance).toBeFocused()
+  await appearance.press("Enter")
+  await expect(dialog.getByRole("heading", { name: "Appearance preferences" })).toBeVisible()
+  await expect(outlet).toHaveText("Selected")
 })
 
 test("every current functional public customization has an explicit consumer proof", () => {

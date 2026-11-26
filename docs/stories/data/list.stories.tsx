@@ -65,6 +65,7 @@ type Story = StoryObj<typeof meta>
 export const Playground: Story = {}
 export const NoSelection: Story = {}
 export const Single: Story = { args: { selectionMode: "single", value: ["bananas"] } }
+export const CancelSelection: Story = { args: { selectionMode: "single", value: ["bananas"], onBeforeValueChange: ({ item }) => item !== "cherries" } }
 export const SingleStart: Story = { args: { selectionMode: "singleStart", value: ["bananas"] } }
 export const SingleEnd: Story = { args: { selectionMode: "singleEnd", value: ["bananas"] } }
 export const SingleAuto: Story = { args: { selectionMode: "singleAuto", value: ["bananas"] } }

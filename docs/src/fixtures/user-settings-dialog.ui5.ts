@@ -29,7 +29,11 @@ export default defineUi5(set, ({ active = "general", search, empty, save, loadin
     h("ui5-user-menu-account", { slot: "account", "title-text": settingsAccount.titleText,
       "subtitle-text": settingsAccount.subtitleText, description: settingsAccount.description, "avatar-initials": settingsAccount.avatarInitials }), h("div", {}, "Profile synchronized"))
   const appearance = h("ui5-user-settings-appearance-view", {}, h("div", { slot: "additionalContent" }, "Choose a theme."),
-    ...appearanceItems.map(entry => h("ui5-user-settings-appearance-view-item", { text: entry.text, icon: entry.icon, selected: entry.id === "light" })))
+    // UserSettingsAppearanceViewItem inherits ListItemCustom.accessibleName.
+    // Both consumers supply the visible theme title as the row's name.
+    ...appearanceItems.map(entry => h("ui5-user-settings-appearance-view-item", {
+      text: entry.text, "accessible-name": entry.text, icon: entry.icon, selected: entry.id === "light",
+    })))
   const host = h("ui5-user-settings-dialog", { "header-text": settingsHeader, "show-search-field": search, "save-mode": save },
     item("general", "General preferences", [
       h("ui5-user-settings-view", { slot: "tabs", text: "Language", selected: true }, h("ui5-button", {}, "Change language")),

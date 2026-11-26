@@ -204,14 +204,7 @@ function UserSettingsDialog({
     if (view === undefined) setViews(current => ({ ...current, [active.id]: next }))
     return true
   }
-  const activate = (next: string) => {
-    const item = all.find(setting => setting.id === next)
-    if (!item || item.disabled) return
-    // UserSettingsDialog.js mirrors the selection, then drills in on each activation.
-    if (next !== activeValue) {
-      if (onValueChange?.(next, item) === false) return
-      if (value === undefined) setInternalValue(next)
-    }
+  const drillIn = () => {
     if (narrow) {
       pendingFocus.current = "content"
       setDrilledIn(true)
@@ -228,7 +221,16 @@ function UserSettingsDialog({
   const list = (entries: readonly UserSettingsItem[], fixedList = false) => !!entries.length && (
     <List selectionMode="single" value={activeValue ? [activeValue] : []} separators="none"
       className={cn(fixedList ? "fiori-user-settings__fixed" : "fiori-user-settings__items", fixedList ? classNames?.fixedList : classNames?.list)}
-      data-settings-list={fixedList ? "fixed" : "main"} data-sap-ui-fastnavgroup="false" onItemClick={activate}>
+      data-settings-list={fixedList ? "fixed" : "main"} data-sap-ui-fastnavgroup="false"
+      onBeforeValueChange={({ item: id }) => {
+        const item = entries.find(setting => setting.id === id)
+        return !!item && onValueChange?.(id, item) !== false
+      }}
+      onValueChange={([next]) => {
+        if (value === undefined) setInternalValue(next)
+        drillIn()
+      }}
+      onItemClick={id => { if (id === activeValue) drillIn() }}>
       {entries.map(item => <ListItemStandard key={item.id} value={item.id} data-settings-row="" disabled={item.disabled}
         icon={item.icon === null ? undefined : item.icon ?? globe} type={narrow ? "navigation" : "active"}
         title={item.tooltip || item.text} aria-label={[item.text, item.accessibleName].filter(Boolean).join(" ")}
@@ -364,7 +366,8 @@ function UserSettingsAppearanceView({ items, additionalContent, headerText, valu
   return <UserSettingsView {...props}>
     {additionalContent}
     <List headerText={headerText} selectionMode="single" value={selected ? [selected] : []} data-sap-ui-fastnavgroup="false"
-      onValueChange={([next]) => { if (onValueChange?.(next) !== false && value === undefined) setLocalValue(next) }}>
+      onBeforeValueChange={({ item }) => onValueChange?.(item)}
+      onValueChange={([next]) => { if (value === undefined) setLocalValue(next) }}>
       {items.map(item => "items" in item ? <ListItemGroup key={item.id} headerText={item.headerText}>{item.items.map(row)}</ListItemGroup> : row(item))}
     </List>
   </UserSettingsView>
