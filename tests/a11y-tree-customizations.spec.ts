@@ -8,6 +8,8 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "ActionSheet.className": "action-sheet",
+  "ActionSheet.trigger": "action-sheet",
   "AnalyticalCardHeader.className": "analytical-card-header",
   "AnalyticalCardHeader.children": "analytical-card-header",
   "NumericSideIndicator.className": "analytical-card-header",
@@ -868,6 +870,24 @@ test("every current functional public customization has an explicit consumer pro
   expect(Object.keys(customizationProofs).filter((point) => !declarations.includes(point))).toEqual([])
   expect(Object.keys(nonFunctionalCustomizations).filter((point) => !declarations.includes(point))).toEqual([])
   expect(Object.keys(excludedCustomizationPoints).filter((point) => !declarations.includes(point))).toEqual([])
+})
+
+test("ActionSheet protects the trigger and its controlled dialog", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", message => { if (message.type() === "warning") warnings.push(message.text()) })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("action-sheet", "action-sheet-customise", true))
+  const button = page.locator('button[data-slot="action-sheet-trigger"]')
+  const popup = page.getByRole("dialog", { name: "Available Actions" })
+  await expect(button).toHaveAttribute("aria-haspopup", "dialog")
+  await expect(button).toHaveAttribute("aria-expanded", "true")
+  await expect(button).toHaveAttribute("aria-controls", (await popup.getAttribute("id"))!)
+  for (const key of ["role", "id", "tabIndex", "aria-hidden", "aria-haspopup", "aria-controls", "aria-expanded"]) {
+    expect(warnings).toContain(`ActionSheet.trigger: ignored ownership prop ${key}`)
+  }
+  await expect(button).not.toHaveAttribute("tabindex")
+  await expect(button).not.toHaveAttribute("aria-hidden")
+  await expect(popup.getByRole("button", { name: "Open file Item 1 of 4" })).toHaveAttribute("tabindex", "0")
 })
 
 test("repaired semantic custom hosts warn when hostile ownership props are ignored", async ({ page }) => {

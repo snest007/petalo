@@ -1,4 +1,17 @@
 {
+  "action-sheet": {
+    "owner": "H12",
+    "gapCount": 0,
+    "okKeys": [
+      "BUTTON_ARIA_TYPE_REJECT",
+      "DIALOG_CONTENT_ARIA_LABEL",
+      "DIALOG_FOOTER_ARIA_LABEL",
+      "DIALOG_HEADER_ARIA_LABEL",
+      "wcr:AVAILABLE_ACTIONS",
+      "wcr:CANCEL",
+      "wcr:X_OF_Y"
+    ]
+  },
   "adapt-filters-dialog": {
     "owner": "P4",
     "gapCount": 129,

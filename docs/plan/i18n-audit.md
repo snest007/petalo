@@ -8,13 +8,18 @@ Pinned-source drift: StepInput delegates to NumericInput in 2.28.1 and uses `NUM
 
 ## action-sheet
 
-Owner: H10
+Owner: H12
 
 | SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| wcr:AVAILABLE_ACTIONS | Available Actions | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
-| wcr:CANCEL | Cancel | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
-| wcr:X_OF_Y | Item {0} of {1} | Port pending | reference only |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
+| BUTTON_ARIA_TYPE_REJECT | Negative Action | action-sheet: texts/labels.cancelDescription | ok |  |  | node_modules/@ui5/webcomponents/dist/Button.js:371 (typeTextMappings) | ui5 |
+| DIALOG_CONTENT_ARIA_LABEL | Content | action-sheet: texts/labels.content | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:335 (_contentAriaLabel) | ui5 |
+| DIALOG_FOOTER_ARIA_LABEL | Footer | action-sheet: texts/labels.footer | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:338 (_footerAriaLabel) | ui5 |
+| DIALOG_HEADER_ARIA_LABEL | Header | action-sheet: texts/labels.header | ok |  |  | node_modules/@ui5/webcomponents/dist/Dialog.js:332 (_headerAriaLabel) | ui5 |
+| RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON | Decline | ActionSheet/index.js hides the ResponsivePopover header close button on phones. | not rendered |  |  | node_modules/@ui5/webcomponents/dist/ResponsivePopover.js:127 (_closeDialogAriaLabel) | ui5 |
+| wcr:AVAILABLE_ACTIONS | Available Actions | action-sheet: texts/labels.availableActions | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
+| wcr:CANCEL | Cancel | action-sheet: texts/labels.cancel | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
+| wcr:X_OF_Y | Item {0} of {1} | action-sheet: texts/labels.itemPosition | ok |  |  | node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js:9 (WCR key import) | wcr |
 
 ## adapt-filters-dialog
 

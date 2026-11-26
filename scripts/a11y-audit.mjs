@@ -197,6 +197,11 @@ verifiedTexts["navigation-menu.NAVIGATION_MENU_SELECTABLE_ITEM_HIDDEN_TEXT"] = {
   proof: "NavigationMenuItem.js _accInfo requires associatedItem.isSelectable, only set by SideNavigationPopoverTemplate.js.",
 }
 
+const h12Proof = "tests/action-sheet.spec.ts: compares WCR phone labels and action positions"
+for (const [key, equivalent] of [
+  ["AVAILABLE_ACTIONS", "availableActions"], ["CANCEL", "cancel"], ["X_OF_Y", "itemPosition"],
+]) verifiedTexts[`action-sheet.${key}`] = { equivalent: `ActionSheet.texts.${equivalent}`, status: "ok", proof: h12Proof }
+
 const h11Proof = "tests/analytical-card-header.spec.ts: localizes KPI values and preserves overridable SAP phrases"
 for (const [key, equivalent] of [
   ["ARIA_DESC_CARD_HEADER", "header"], ["NUMERICCONTENT_DEVIATION_UP", "up"], ["NUMERICCONTENT_DEVIATION_DOWN", "down"],
@@ -234,6 +239,7 @@ for (const [file, owner] of [
   ["node_modules/@ui5/webcomponents/dist/ListItemBase.js", "list"],
   ["node_modules/@ui5/webcomponents-react/dist/components/SelectDialog/index.js", "select-dialog"],
   ["node_modules/@ui5/webcomponents-react/dist/components/AnalyticalCardHeader/index.js", "analytical-card-header"],
+  ["node_modules/@ui5/webcomponents-react/dist/components/ActionSheet/index.js", "action-sheet"],
   ["node_modules/@ui5/webcomponents-react/dist/components/Splitter/index.js", "splitter-layout"],
   ["node_modules/@ui5/webcomponents/dist/features/InputSuggestions.js", "input"],
 ]) sourceFiles.set(file, owner)

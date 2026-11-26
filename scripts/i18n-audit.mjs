@@ -272,7 +272,7 @@ ownerByComponent.icon = 'P5'
 // Audit WCR's package-owned text imports from each component and its internal
 // hooks/renderers. Shared Web Component keys continue to use their own domain.
 const wcrComponents = {
-  'action-sheet': ['ActionSheet', 'H10'],
+  'action-sheet': ['ActionSheet', 'H12'],
   'analytical-card-header': ['AnalyticalCardHeader', 'H11'],
   'analytical-table': ['AnalyticalTable', 'H1'],
   'message-box': ['MessageBox', 'H7'],
@@ -311,7 +311,26 @@ function wcrRows(component, name) {
       property: property ?? reason ?? (status === 'gap' ? 'No implemented provider/override text owner' : 'Port pending'),
     }
   })
-  if (component !== 'message-box') return rows
+  if (component !== 'message-box' && component !== 'action-sheet') return rows
+  if (component === 'action-sheet') {
+    // ResponsivePopoverTemplate delegates the phone regions to Dialog. The
+    // default Decline is suppressed by WCR's phone CSS; Cancel is a Reject button.
+    for (const [key, native, hidden] of [
+      ['DIALOG_HEADER_ARIA_LABEL', 'Dialog'],
+      ['DIALOG_CONTENT_ARIA_LABEL', 'Dialog'],
+      ['DIALOG_FOOTER_ARIA_LABEL', 'Dialog'],
+      ['BUTTON_ARIA_TYPE_REJECT', 'Button'],
+      ['RESPONSIVE_POPOVER_CLOSE_DIALOG_BUTTON', 'ResponsivePopover', true],
+    ]) {
+      const source = `node_modules/@ui5/webcomponents/dist/${native}.js`
+      const nativeReferences = [...(keyReferences(source)[key] ?? [])]
+      const property = resolveKey(component, key)
+      rows.push({ key, ...englishDefinition(component, key, nativeReferences, property ?? ''), nativeReferences,
+        status: hidden ? 'not rendered' : property ? 'ok' : 'gap',
+        property: hidden ? 'ActionSheet/index.js hides the ResponsivePopover header close button on phones.' : property ?? 'No implemented text owner' })
+    }
+    return rows.sort((a, b) => a.key.localeCompare(b.key))
+  }
   // MessageBox delegates the region labels and the emphasized action description
   // to the UI5 Dialog and Button it composes. Retain their Web Component domain.
   for (const [key, native] of [
