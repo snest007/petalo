@@ -70,6 +70,44 @@ for (const dir of ["ltr", "rtl"]) test(`drills into a setting and returns focus 
   await expect(opener(page)).toBeFocused()
 })
 
+for (const dir of ["ltr", "rtl"]) {
+  for (const native of [true, false]) test(`${native ? "UI5" : "Petalo"} keeps an edited appearance choice across categories in ${dir}`, async ({ page }) => {
+    const caseName = "user-settings-dialog-appearance"
+    const route = native ? "/ui5.html?" : "/?fixtures&"
+    await page.goto(`${route}only=${caseName}&dir=${dir}`)
+    await page.waitForSelector("html[data-ready=true]")
+    const cell = page.locator(`[data-fixture="${caseName}"]`)
+    const evening = cell.getByRole("listitem", { name: /^Evening Horizon/ })
+    const general = cell.getByRole("listitem", { name: /^General/ })
+    const appearance = cell.getByRole("listitem", { name: /^Appearance/ })
+    await expect(evening).toHaveAccessibleDescription("Not Selected")
+    await evening.click()
+    await expect(evening).toHaveAccessibleDescription("Selected")
+    await general.click()
+    await expect(cell.getByRole("heading", { name: "General preferences" })).toBeVisible()
+    await expect(evening).toHaveCount(0)
+    await appearance.click()
+    await expect(cell.getByRole("heading", { name: "Appearance" })).toBeVisible()
+    await expect(evening).toHaveAccessibleDescription("Selected")
+  })
+
+  test(`retains the edited appearance choice and category focus on narrow Back in ${dir}`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto(`/?dir=${dir}#/user-settings-dialog`)
+    await opener(page).click()
+    const appearance = item(page, "Appearance")
+    await appearance.click()
+    const evening = item(page, "Evening Horizon")
+    await evening.click()
+    await expect(evening).toHaveAccessibleDescription("Selected")
+    await dialog(page).getByRole("button", { name: "Navigate Back" }).click()
+    await expect(appearance).toBeFocused()
+    await expect(evening).toHaveCount(0)
+    await appearance.press("Enter")
+    await expect(evening).toHaveAccessibleDescription("Selected")
+  })
+}
+
 test("UserMenu hands off Settings and the settings dialog returns focus to the profile", async ({ page }) => {
   await page.goto("/#/user-menu")
   const profile = page.locator("#user-menu-demo-open")

@@ -36,6 +36,7 @@
 .fiori-user-settings__side, .fiori-user-settings__pane { flex: 1; min-width: 0; overflow: hidden; }
 .fiori-user-settings__side:not([hidden]),
 .fiori-user-settings__pane:not([hidden]) { display: flex; flex-direction: column; }
+.fiori-user-settings__pane[hidden] { display: none; }
 .fiori-user-settings__pane { background: var(--sapGroup_ContentBackground); }
 .fiori-user-settings__side-header,
 .fiori-user-settings__pane-header {

@@ -142,6 +142,7 @@ function UserSettingsDialog({
   const [internalOpen, setInternalOpen] = React.useState(defaultOpen)
   const [internalValue, setInternalValue] = React.useState(defaultValue)
   const [views, setViews] = React.useState<Record<string, string | null>>({})
+  const [visitedViews, setVisitedViews] = React.useState(() => new Map<string, string | null | undefined>())
   const [internalQuery, setInternalQuery] = React.useState(defaultQuery)
   const [drilledIn, setDrilledIn] = React.useState(false)
   const [announceSearch, setAnnounceSearch] = React.useState(false)
@@ -157,13 +158,26 @@ function UserSettingsDialog({
   const itemView = active ? views[active.id] : undefined
   const selectedView = view !== undefined ? view : itemView === undefined ? defaultView : itemView
   const page = active?.pages?.find(tab => tab.id === selectedView)
-  const tabs = !page ? active?.tabs : undefined
-  const heading = page ? page.text : active?.headerText
   const query = queryProp ?? internalQuery
   const matches = (item: UserSettingsItem) => collatorIncludes(item.text, query, resolved.locale)
   const filtered = items.filter(matches)
   const fixed = fixedItems.filter(matches)
   const count = filtered.length + fixed.length
+
+  // UserSettingsDialogTemplate.js switches its selected slot while the
+  // supplied category views remain connected. Keep each visited React tree.
+  React.useLayoutEffect(() => {
+    const next = new Map<string, string | null | undefined>()
+    if (open) {
+      for (const item of all) {
+        if (item === active) next.set(item.id, selectedView)
+        else if (visitedViews.has(item.id)) next.set(item.id, visitedViews.get(item.id))
+      }
+    }
+    const activeChanged = open && activeValue !== undefined
+      && (!visitedViews.has(activeValue) || visitedViews.get(activeValue) !== selectedView)
+    if (next.size !== visitedViews.size || activeChanged) setVisitedViews(next)
+  })
 
   const changeOpen = (next: boolean) => {
     if (openProp === undefined) setInternalOpen(next)
@@ -218,6 +232,34 @@ function UserSettingsDialog({
       setDrilledIn(false)
     }
   }
+  const renderPane = (item?: UserSettingsItem) => {
+    const selected = item === active
+    const paneView = selected ? selectedView : item && visitedViews.get(item.id)
+    const panePage = item?.pages?.find(view => view.id === paneView)
+    const tabs = panePage ? undefined : item?.tabs
+    const heading = panePage ? panePage.text : item?.headerText
+    const hidden = !selected || (narrow && !drilledIn)
+    return (
+      <div key={item?.id} data-slot="user-settings-pane" data-sap-ui-fastnavgroup={selected ? "true" : undefined}
+        className={cn("fiori-user-settings__pane", classNames?.pane)} hidden={hidden} inert={hidden || undefined}>
+        {item && <>
+          <div data-slot="user-settings-pane-header" className={cn("fiori-user-settings__pane-header", classNames?.paneHeader)}>
+            {(narrow || panePage?.secondary) && <Button data-slot="user-settings-back" className={classNames?.back}
+              variant="transparent" size="icon" aria-label={texts.back} onClick={goBack}><Icon icon={navBack} /></Button>}
+            {heading && <h2>{heading}</h2>}
+          </div>
+          <div data-slot="user-settings-body" className={cn("fiori-user-settings__body", classNames?.body)} ref={selected ? body : undefined}>
+            {item.loading ? <BusyIndicator active delay={0} aria-description={item.loadingReason} className="fiori-user-settings__busy" />
+              : tabs?.length ? <Tabs value={tabs.find(tab => tab.id === paneView)?.id ?? tabs[0].id}
+                onValueChange={selectView} contentBackground="transparent">
+                <TabsList>{tabs.map(tab => <TabsTrigger key={tab.id} value={tab.id}>{tab.text}</TabsTrigger>)}</TabsList>
+                {tabs.map(tab => <TabsContent value={tab.id} key={tab.id}>{tab.content}</TabsContent>)}
+              </Tabs> : panePage?.content ?? item.pages?.[0]?.content ?? item.content}
+          </div>
+        </>}
+      </div>
+    )
+  }
   const list = (entries: readonly UserSettingsItem[], fixedList = false) => !!entries.length && (
     <List selectionMode="single" value={activeValue ? [activeValue] : []} separators="none"
       className={cn(fixedList ? "fiori-user-settings__fixed" : "fiori-user-settings__items", fixedList ? classNames?.fixedList : classNames?.list)}
@@ -269,24 +311,7 @@ function UserSettingsDialog({
             </div>
             {count === 0 ? <div className="fiori-user-settings__empty">{texts.noResults}</div> : <>{list(filtered)}{list(fixed, true)}</>}
           </div>
-          <div data-slot="user-settings-pane" data-sap-ui-fastnavgroup="true" className={cn("fiori-user-settings__pane", classNames?.pane)}
-            hidden={narrow && !drilledIn}>
-            {active && <>
-              <div data-slot="user-settings-pane-header" className={cn("fiori-user-settings__pane-header", classNames?.paneHeader)}>
-                {(narrow || page?.secondary) && <Button data-slot="user-settings-back" className={classNames?.back}
-                  variant="transparent" size="icon" aria-label={texts.back} onClick={goBack}><Icon icon={navBack} /></Button>}
-                {heading && <h2>{heading}</h2>}
-              </div>
-              <div data-slot="user-settings-body" className={cn("fiori-user-settings__body", classNames?.body)} ref={body}>
-                {active.loading ? <BusyIndicator active delay={0} aria-description={active.loadingReason} className="fiori-user-settings__busy" />
-                  : tabs?.length ? <Tabs value={tabs.find(tab => tab.id === selectedView)?.id ?? tabs[0].id}
-                    onValueChange={selectView} contentBackground="transparent">
-                    <TabsList>{tabs.map(tab => <TabsTrigger key={tab.id} value={tab.id}>{tab.text}</TabsTrigger>)}</TabsList>
-                    {tabs.map(tab => <TabsContent value={tab.id} key={tab.id}>{tab.content}</TabsContent>)}
-                  </Tabs> : page?.content ?? active.pages?.[0]?.content ?? active.content}
-              </div>
-            </>}
-          </div>
+          {active ? all.filter(item => item === active || visitedViews.has(item.id)).map(renderPane) : renderPane()}
         </div>
         {showSearchField && <div data-slot="user-settings-announcement" className="sr-only" aria-live="polite">{announceSearch && <span key={announcementSequence}>{announce}</span>}</div>}
       </DialogBody>
