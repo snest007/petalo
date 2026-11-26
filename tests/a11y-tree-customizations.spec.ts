@@ -8,6 +8,13 @@ import ts from "typescript"
 // that its assigned public points still execute; the inventory test rejects a
 // new functional declaration without a real consumer proof.
 const customizationProofs = {
+  "UserSettingsDialog.className": "user-settings-dialog",
+  "UserSettingsView.className": "user-settings-dialog",
+  "UserSettingsView.children": "user-settings-dialog",
+  "UserSettingsAccountView.className": "user-settings-dialog",
+  "UserSettingsAccountView.children": "user-settings-dialog",
+  "UserSettingsAppearanceView.className": "user-settings-dialog",
+  "UserSettingsAppearanceView.additionalContent": "user-settings-dialog",
   "ActionSheet.className": "action-sheet",
   "ActionSheet.trigger": "action-sheet",
   "AnalyticalCardHeader.className": "analytical-card-header",
@@ -759,6 +766,13 @@ test.beforeAll(async () => {
         if(fill)for(const key of descriptor.content){const point=name+'.'+key;if(Object.hasOwn(optional,point))props[key]=optional[point]}
         if(!custom){if(props.children!==undefined)props.children=customize(props.children,false,fill);return React.cloneElement(node,props)}
         const record=key=>descriptor.names.forEach(alias=>seen.add(alias+'.'+key));
+        if(name==='UserSettingsDialog'){
+          const view=entry=>({...entry,content:customize(entry.content,true,fill)});
+          const item=entry=>({...view(entry),tabs:entry.tabs?.map(view),pages:entry.pages?.map(view)});
+          props.items=props.items.map(item);
+          props.fixedItems=props.fixedItems?.map(item);
+        }
+        if(name==='UserSettingsView')Object.assign(props,{role:'button',id:'e4-foreign-settings-view',tabIndex:13,'aria-hidden':true});
         if(name==='DataTable')props.columns=props.columns.map(column=>({...column,...Object.fromEntries(['header','cell'].filter(key=>typeof column[key]==='function').map(key=>[key,(...args)=>{seen.add('DataTable.columns.'+key);return content(column[key](...args),'DataTable.columns.'+key,fill)}]))}));
         if(name==='AdaptFiltersDialog')props.filters=props.filters.map(filter=>({...filter,render:(...args)=>{seen.add('FilterDefinition.render');return content(filter.render(...args),'FilterDefinition.render',fill)}}));
         for(const key of descriptor.props){props[key]=[props[key],'e4-custom-'+name+'-'+key].filter(Boolean).join(' ');record(key)}
@@ -860,6 +874,22 @@ for (const name of [...names, ...supplementalNames]) test(`functional customizat
   expect(coverage.size, `${name}: custom props reached an actual public component`).toBeGreaterThan(0)
   for (const [point, consumer] of Object.entries(customizationProofs)) if (consumer === name) expect(coverage.has(point), `${name}: actual runtime proof for ${point}`).toBe(true)
   await info.attach("functional-customization-coverage", { body: JSON.stringify({ name, cases: ids, points: [...coverage].sort() }, null, 2), contentType: "application/json" })
+})
+
+test("UserSettingsDialog customization keeps the owned view host and controls", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", message => {
+    if (message.type() === "warning" && message.text().startsWith("UserSettingsView:")) warnings.push(message.text())
+  })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("user-settings-dialog", "user-settings-dialog-general", true))
+  const dialog = page.getByRole("dialog", { name: "User Settings", exact: true })
+  const view = dialog.locator('[data-slot="user-settings-view"]').first()
+  await expect(view).toBeVisible()
+  await expect(view).toHaveClass(/e4-custom-UserSettingsView-className/)
+  for (const attribute of ["role", "id", "tabindex", "aria-hidden"]) expect(await view.getAttribute(attribute)).toBeNull()
+  await expect(view.getByRole("button", { name: "Change language", exact: true })).toBeVisible()
+  expect(warnings).toEqual(expect.arrayContaining(["role", "id", "tabIndex", "aria-hidden"].map(key => `UserSettingsView: ignored ownership prop ${key}`)))
 })
 
 test("every current functional public customization has an explicit consumer proof", () => {

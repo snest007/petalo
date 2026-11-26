@@ -109,6 +109,9 @@ const nativeKeys = name => {
   if (name === 'input') for (const file of ['features/InputSuggestions', 'SuggestionItem', 'SuggestionItemGroup']) {
     sources.push(`node_modules/@ui5/webcomponents/dist/${file}.js`)
   }
+  if (name === 'user-settings-dialog') {
+    sources.push('node_modules/@ui5/webcomponents-fiori/dist/UserSettingsAccountView.js')
+  }
   const seen = new Set()
   // NavigationMenu's direct inherited text owners are listed above. Their
   // unrelated popup, selection and end-content implementations have separate inventories.

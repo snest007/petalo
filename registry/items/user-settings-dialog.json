@@ -1,0 +1,17 @@
+{
+  "title": "UserSettingsDialog",
+  "description": "Fiori user settings with responsive category navigation and composable settings views.",
+  "registryDependencies": ["@petalo/dialog", "@petalo/list", "@petalo/tabs", "@petalo/toolbar", "@petalo/avatar", "@petalo/button", "@petalo/icons", "@petalo/input", "@petalo/busy-indicator", "@petalo/locale"],
+  "usage": {
+    "summary": "Let users inspect their account and review or change settings in categories.",
+    "useWhen": [
+      "Group several user preferences by category and keep their settings in the same dialog.",
+      "Open the preferences from a Settings action in UserMenu."
+    ],
+    "avoidWhen": [
+      { "when": "Show account information alongside sign-out and other short actions.", "use": ["user-menu"] },
+      { "when": "Ask the user to confirm one independent operation.", "use": ["dialog"] }
+    ],
+    "source": "ui5-apidoc"
+  }
+}

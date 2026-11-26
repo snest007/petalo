@@ -298,7 +298,7 @@ export function correctCalendarHeaderBugs(ours: any, reference: any, declaration
 }
 
 type SplitButtonMenu = { item: string; opener: string; dialog: string; activeHint: string }
-type Allowed = { navigationMenu?: true; dynamicDateRangeEditor?: true; analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; analyticalTableBusyRow?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
+type Allowed = { navigationMenu?: true; dynamicDateRangeEditor?: true; analyticalTableDetailRows?: number[]; analyticalTableDisabledSelection?: true; analyticalTableHeaderText?: number; analyticalTableBusyRow?: true; selectDialogShape?: SelectDialogFixtureShape; pinnedPopupShell?: { kind: "dialog" | "popover" | "settings-dialog"; name: string }; numericInputMessage?: { state: string; message: string }; ui5FormHosts?: string[]; ui5FocusScaffolding?: string[]; messageBoxNameRef?: true; inputPhoneAlerts?: true; inputSuggestionBanner?: { ax: string; snapshot: string }; splitButtonMenu?: SplitButtonMenu; ignore: string[]; reason: string; tableLoadingOverlay?: TableLoadingOverlayRelocation; calendarHeaderBug?: CalendarHeaderBug }
 /** As with the in-place SplitButton/Menu fixture, the closed reference is
  * painted inside its cell without opening a modal surface. Verify PopupTemplate's
  * owning host, closed block layer and both exact focus guards, then compare all
@@ -310,13 +310,19 @@ export function reconcilePinnedPopupShell(ours: any, ui5: any, { kind, name }: N
   expect(ours.ax).toHaveLength(1)
   expect(ui5.ax).toHaveLength(1)
   const [react] = ours.ax
-  const [host] = ui5.ax
+  let [host] = ui5.ax
+  if (kind === "settings-dialog") {
+    // UserSettingsDialogTemplate.js renders an inner Dialog in its own shadow root.
+    const [inner] = host.children
+    expect(host).toEqual({ ...node("generic"), children: [inner] })
+    host = inner
+  }
   const expectedHost = node(kind === "dialog" ? "group" : "generic", { focusable: true })
   const { children: nativeHostChildren, ...nativeHostProperties } = host
   const { children: _children, ...expectedHostProperties } = expectedHost
   expect(nativeHostProperties).toEqual(expectedHostProperties)
-  expect(nativeHostChildren).toHaveLength(kind === "dialog" ? 2 : 1)
-  if (kind === "dialog") expect(nativeHostChildren[0]).toEqual(node("generic"))
+  expect(nativeHostChildren).toHaveLength(kind === "popover" ? 1 : 2)
+  if (kind !== "popover") expect(nativeHostChildren[0]).toEqual(node("generic"))
   const native = nativeHostChildren.at(-1)
   for (const dialog of [react, native]) {
     expect(dialog.role).toBe("dialog")
@@ -666,7 +672,9 @@ export async function compareCase(ours: Page, reference: Page, id: string, key: 
     let native = allowed?.tableLoadingOverlay ? relocateTableLoadingOverlay(adjusted.ui5, allowed.tableLoadingOverlay) : adjusted.ui5
     if (allowed?.calendarHeaderBug) native = correctCalendarHeaderBugs(adjusted.ours, native, allowed.calendarHeaderBug)
     if (allowed?.pinnedPopupShell) {
-      if (!/^(select-dialog|dynamic-date-range)-/.test(id)) throw new Error("Pinned popup shell applies only to H9 paired fixtures")
+      if (allowed.pinnedPopupShell.kind === "settings-dialog") {
+        if (!/^user-settings-dialog-(general|account|appearance|search|empty|loading)$/.test(id)) throw new Error("Nested Dialog shell applies only to the H13 paired fixtures")
+      } else if (!/^(select-dialog|dynamic-date-range)-/.test(id)) throw new Error("Pinned popup shell applies only to H9 paired fixtures")
       reconcilePinnedPopupShell(adjusted.ours, native, allowed.pinnedPopupShell)
     }
     if (allowed?.selectDialogShape) {

@@ -3306,6 +3306,29 @@ Owner: P4
 | USER_MENU_POPOVER_ACCESSIBLE_NAME | User menu for | user-menu: texts/labels.accessibleName | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserMenu.js:280 (accessibleNameText) | ui5-fiori |
 | USER_MENU_SIGN_OUT_BUTTON_TXT | Sign Out | user-menu: texts/labels.signOut | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserMenu.js:265 (_signOutButtonText) | ui5-fiori |
 
+## user-settings-dialog
+
+Owner: P4
+
+| SAP key | English text | React property / owner | Status | Triage | Triage note | Native source / channel | Source |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| BUTTON_ARIA_TYPE_EMPHASIZED | Default Action | user-settings-dialog: texts/labels.saveDescription | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/generated/i18n/i18n-defaults.js:33 (English definition) | ui5 |
+| DIALOG_CONTENT_ARIA_LABEL | Content | user-settings-dialog: texts/labels.content | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/generated/i18n/i18n-defaults.js:307 (English definition) | ui5 |
+| DIALOG_FOOTER_ARIA_LABEL | Footer | user-settings-dialog: texts/labels.footer | fixed in E5 |  |  | node_modules/@ui5/webcomponents/dist/generated/i18n/i18n-defaults.js:308 (English definition) | ui5 |
+| ICON_NAV_BACK | Navigate Back | user-settings-dialog: texts/labels.back | fixed in E5 |  |  | node_modules/@ui5/webcomponents-icons/dist/generated/i18n/i18n-defaults.js:38 (English definition) | ui5 |
+| ICON_SEARCH | Search | user-settings-dialog: texts/labels.searchIcon | fixed in E5 |  |  | node_modules/@ui5/webcomponents-icons/dist/generated/i18n/i18n-defaults.js:47 (English definition) | ui5 |
+| USER_SETTINGS_ACCOUNT_EDIT_AVATAR_TXT | Edit Avatar | user-settings-dialog: texts/labels.edit | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsAccountView.js:60 (_editAvatarTooltip) | ui5-fiori |
+| USER_SETTINGS_ACCOUNT_MANAGE_ACCOUNT_BUTTON_TXT | Manage Account | user-settings-dialog: texts/labels.manage | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsAccountView.js:57 (_manageAccountButtonText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_ACCESSIBLE_NAME | User Settings | user-settings-dialog: texts/labels.name | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:215 (accessibleNameText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_CANCEL_BUTTON_TEXT | Cancel | user-settings-dialog: texts/labels.cancel | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:227 (cancelButtonText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_CLOSE_BUTTON_TEXT | Close | user-settings-dialog: texts/labels.close | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:221 (closeButtonText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_NO_SEARCH_RESULTS_TEXT | No search results | user-settings-dialog: texts/labels.noResults | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:230 (noSearchResultsText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_SAVE_BUTTON_TEXT | Save | user-settings-dialog: texts/labels.save | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:224 (saveButtonText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_SEARCH_MORE_RESULTS | {0} results are available | user-settings-dialog: texts/labels.manyResults | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:240 (_searchResultsText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS | No search results | user-settings-dialog: texts/labels.noResultsAnnouncement | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:236 (_searchResultsText) | ui5-fiori |
+| USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT | 1 result available | user-settings-dialog: texts/labels.oneResult | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:238 (_searchResultsText) | ui5-fiori |
+| USER_SETTINGS_LIST_ARIA_ROLE_DESC | User Settings Item | user-settings-dialog: texts/labels.itemRole | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:218 (ariaRoleDescList) | ui5-fiori |
+
 ## value-help-dialog
 
 Owner: P4

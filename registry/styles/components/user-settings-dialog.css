@@ -1,0 +1,84 @@
+/* UI5 Fiori 2.28 UserSettingsDialog.css.js and UserSettingsItem.css.js. */
+.fiori-dialog.fiori-user-settings {
+  --fiori-user-settings-width: 100%;
+  --fiori-user-settings-max-width: calc(100% - 2px);
+  --fiori-user-settings-max-height: calc(100% - 2px);
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (width < 37.5rem) {
+  .fiori-dialog.fiori-user-settings { border-radius: 0; }
+}
+@media (37.5rem <= width < 64rem) {
+  .fiori-dialog.fiori-user-settings {
+    --fiori-user-settings-max-width: min(40rem, 80%);
+    --fiori-user-settings-max-height: min(42.5rem, 88%);
+  }
+}
+@media (width >= 64rem) {
+  .fiori-dialog.fiori-user-settings {
+    --fiori-user-settings-width: 60rem;
+    --fiori-user-settings-max-height: min(42.5rem, 88%);
+  }
+  .fiori-user-settings__side {
+    max-width: 20rem;
+    border-inline-end: var(--sapList_BorderWidth) solid var(--sapList_BorderColor);
+  }
+}
+
+.fiori-user-settings.fiori-dialog .fiori-user-settings__content {
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
+.fiori-user-settings__root { display: flex; height: 100%; }
+.fiori-user-settings__side, .fiori-user-settings__pane { flex: 1; min-width: 0; overflow: hidden; }
+.fiori-user-settings__side:not([hidden]),
+.fiori-user-settings__pane:not([hidden]) { display: flex; flex-direction: column; }
+.fiori-user-settings__pane { background: var(--sapGroup_ContentBackground); }
+.fiori-user-settings__side-header,
+.fiori-user-settings__pane-header {
+  padding: 1rem;
+  border-block-end: var(--sapList_BorderWidth) solid var(--sapList_BorderColor);
+}
+.fiori-user-settings__side-header { display: flex; flex-direction: column; gap: .5rem; }
+.fiori-user-settings__pane-header { display: flex; align-items: center; position: relative; }
+.fiori-user-settings__pane-header [data-slot="user-settings-back"] { position: absolute; inset-inline-start: 1rem; }
+.fiori-user-settings__pane-header:has([data-slot="user-settings-back"]) h2 {
+  padding-inline-start: calc(var(--fiori-button-base-min-width) + .5rem);
+}
+.fiori-user-settings__side-header h1, .fiori-user-settings__pane-header h2 {
+  margin: 0;
+  color: var(--sapGroup_TitleTextColor);
+  font: normal var(--sapFontHeader5Size)/normal var(--sapFontHeaderFamily);
+}
+.fiori-user-settings__items { flex: 1; min-height: 0; overflow: auto; }
+.fiori-user-settings__fixed { border-block-start: var(--sapList_BorderWidth) solid var(--sapList_BorderColor); }
+.fiori-user-settings__no-icon [data-slot="list-item-title"] { padding-inline-start: 1.875rem; }
+.fiori-user-settings__body { flex: 1; min-height: 0; overflow: auto; outline: none; }
+.fiori-user-settings__body [data-slot="tabs-content"] { padding: 0; border-block-end: 0; }
+.fiori-user-settings__busy { height: 100%; display: grid; place-items: center; }
+.fiori-dialog.fiori-user-settings .fiori-user-settings__footer { padding: 0; }
+.fiori-user-settings__footer > [data-slot="toolbar"] { height: 100%; width: 100%; border: 0; }
+.fiori-user-settings__view { padding: 1rem; font-size: var(--sapFontLargeSize); }
+.fiori-user-settings__account {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-block-start: 2.5rem;
+  text-align: center;
+}
+.fiori-user-settings__account-title { margin-block: .25rem; font-size: var(--sapFontLargeSize); }
+.fiori-user-settings__account-description { margin-block-end: .25rem; color: var(--sapContent_LabelColor); font-size: var(--sapFontSize); }
+.fiori-user-settings__account-button { padding-inline: .375rem; }
+.fiori-user-settings__appearance-item { display: flex; align-items: center; gap: .75rem; padding-block: .625rem; }
+.fiori-user-settings__appearance-title { margin: .5rem; color: var(--sapList_TextColor); font-size: var(--sapFontLargeSize); }
+
+.fiori-user-settings__search-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--fiori-input-icon-width);
+  color: var(--sapContent_IconColor);
+}

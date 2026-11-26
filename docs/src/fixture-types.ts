@@ -54,7 +54,7 @@ type FixtureA11yDiff = {
   /** PopoverTemplate's nested banner appears as a group in the desktop Input. */
   inputSuggestionBanner?: { ax: string; snapshot: string }
   /** Only exact, closed PopupTemplate shells painted in place by the fixture. */
-  pinnedPopupShell?: { kind: "dialog" | "popover"; name: string }
+  pinnedPopupShell?: { kind: "dialog" | "popover" | "settings-dialog"; name: string }
   /** Fixed SelectDialog capture topology, after verifying the pinned Dialog shell. */
   selectDialogShape?: "single" | "multiple" | "selected" | "empty"
   /** Exact native popup and focus row semantics for the H10 in-place pair. */
