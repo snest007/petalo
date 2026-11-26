@@ -7,7 +7,7 @@ Read [AGENTS.md](../../AGENTS.md) before starting a card.
 
 | Wave | Open or planned | Scheduling |
 |---|---|---|
-| H (new components) | H6, H6b, H6c, H13–H14 | **Next: [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md)** is ready to start. H14 meets its listed dependencies and awaits scheduling. |
+| H (new components) | H6, H6b, H6c, H13–H14 | **Next: [H13b preserve settings view state](tasks/H13b-user-settings-view-state.md)** before H13 integration. H14 meets its listed dependencies and awaits scheduling. |
 | P (accessibility and localization parity) | P1–P6, P2a | [P2a](tasks/P2a-parity-calendar-date-pickers.md) runs just before H6 → H6b → H6c. The other P cards follow new component work. |
 | X (extension rollout) | X1–X40 candidates | Plan each group after its P card. |
 | S (Storybook) | S5 | Schedule after new component work. |
@@ -40,7 +40,8 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [x] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5), [acceptance](returns/H13.md)
+- [ ] [H13 UserSettingsDialog](tasks/H13-user-settings-dialog.md) — L (after H0, E4, E5), [return](returns/H13.md)
+- [ ] [H13b Preserve settings view state across categories](tasks/H13b-user-settings-view-state.md) — S (continue on `codex/H13`)
 - [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
 
 <details>
