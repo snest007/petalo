@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Nincs találat",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 találat",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Felhasználói beállítások eleme",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Értesítéslista típusai",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Értesítéslista beállításai",
   "VALUE_STATE_ERROR": "Érvénytelen bejegyzés",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ezt az értéket már kiválasztották.",
   "VALUE_STATE_INFORMATION": "Informatív bejegyzés",

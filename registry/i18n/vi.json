@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Không có kết quả tìm kiếm",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Có sẵn 1 kết quả",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Mục thiết lập người dùng",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Danh sách loại thông báo",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Danh sách tùy chọn thông báo",
   "VALUE_STATE_ERROR": "Mục nhập không hợp lệ",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Giá trị này đã được chọn.",
   "VALUE_STATE_INFORMATION": "Mục nhập thông tin",

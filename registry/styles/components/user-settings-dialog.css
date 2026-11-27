@@ -76,6 +76,105 @@
 .fiori-user-settings__appearance-item { display: flex; align-items: center; gap: .75rem; padding-block: .625rem; }
 .fiori-user-settings__appearance-title { margin: .5rem; color: var(--sapList_TextColor); font-size: var(--sapFontLargeSize); }
 
+.fiori-user-settings__page:not([hidden]) { display: contents; }
+.fiori-user-settings__page[hidden] { display: none; }
+
+/* UI5 Fiori UserSettingsNotificationsView{,Item,Group}.css.js. */
+.fiori-user-settings__notifications {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  --fiori-user-settings-notification-gap: .75rem;
+  --fiori-user-settings-notification-title-size: var(--sapFontLargeSize);
+  --fiori-user-settings-notification-byline-height: 5rem;
+}
+[data-density="compact"] .fiori-user-settings__notifications {
+  --fiori-user-settings-notification-gap: 1rem;
+  --fiori-user-settings-notification-title-size: var(--sapFontSize);
+  --fiori-user-settings-notification-byline-height: 4rem;
+}
+.fiori-user-settings__notification-list .fiori-li-group,
+.fiori-user-settings__notification-list .fiori-li-group-header {
+  background: var(--sapList_Background);
+}
+.fiori-user-settings__notification-list .fiori-li-group-header { border-bottom: 0; }
+.fiori-user-settings__notification-form {
+  background: var(--sapGroup_ContentBackground);
+  border-block-end: var(--sapList_BorderWidth) solid var(--sapList_BorderColor);
+}
+.fiori-user-settings__notification-form .fiori-user-settings__notification-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  min-height: var(--sapElement_LineHeight);
+  padding: var(--fiori-list-item-base-padding);
+  background: var(--sapList_Background);
+  outline: none;
+}
+.fiori-user-settings__notification-form [data-navigable]:not([aria-disabled]) { cursor: pointer; }
+@media (hover: hover) {
+  .fiori-user-settings__notification-form .fiori-user-settings__notification-row:hover {
+    background: var(--sapList_Hover_Background);
+  }
+}
+.fiori-user-settings__notification-form .fiori-user-settings__notification-row:focus-visible::after {
+  content: "";
+  position: absolute;
+  inset: .125rem;
+  border: var(--sapContent_FocusWidth) var(--sapContent_FocusStyle) var(--sapContent_FocusColor);
+  pointer-events: none;
+}
+.fiori-user-settings__notification-row .fiori-li__content { overflow: visible; }
+.fiori-user-settings__notification-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  width: 100%;
+}
+.fiori-user-settings__notification-body[data-byline] {
+  align-items: stretch;
+  min-height: var(--fiori-user-settings-notification-byline-height);
+}
+.fiori-user-settings__notification-label {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  overflow: hidden;
+}
+.fiori-user-settings__notification-title, .fiori-user-settings__notification-byline {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--sapFontFamily);
+}
+.fiori-user-settings__notification-title {
+  font-size: var(--fiori-user-settings-notification-title-size);
+  color: var(--sapList_TextColor);
+}
+[data-byline] > .fiori-user-settings__notification-label > .fiori-user-settings__notification-title { padding-block-start: .125rem; }
+.fiori-user-settings__notification-byline {
+  font-size: var(--sapFontSize);
+  color: var(--sapContent_LabelColor);
+  padding-block: .5rem .125rem;
+}
+.fiori-user-settings__notification-end {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-inline-start: var(--fiori-user-settings-notification-gap);
+  padding-inline-end: .25rem;
+}
+.fiori-user-settings__notification-row:not([data-navigable]) .fiori-user-settings__notification-end {
+  padding-inline-end: calc(var(--fiori-list-item-icon-size) + .25rem);
+}
+.fiori-user-settings__notification-form .fiori-user-settings__notification-row:not([data-navigable]) .fiori-user-settings__notification-end {
+  padding-inline-end: var(--fiori-list-item-icon-size);
+}
+.fiori-user-settings__notification-arrow { flex-shrink: 0; }
+
 .fiori-user-settings__search-icon {
   display: flex;
   align-items: center;

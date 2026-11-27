@@ -264,7 +264,7 @@ Let users inspect their account and review or change settings in categories.
 - Show account information alongside sign-out and other short actions. → [user-menu](overlays.md#user-menu)
 - Ask the user to confirm one independent operation. → [dialog](overlays.md#dialog)
 
-Main exports: `UserSettingsAccountView`, `UserSettingsAppearanceView`, `UserSettingsDialog`, `UserSettingsView`.
+Main exports: `UserSettingsAccountView`, `UserSettingsAppearanceView`, `UserSettingsDialog`, `UserSettingsNotificationsView`, `UserSettingsView`.
 
 ```bash
 npx shadcn add @petalo/user-settings-dialog

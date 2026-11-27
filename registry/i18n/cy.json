@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Dim canlyniadau chwilio",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 canlyniad ar gael",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Eitem Gosodiadau Defnyddiwr",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Rhestr o Fathau o Hysbysiadau",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Rhestr o Ddewisiadau Hysbysiadau",
   "VALUE_STATE_ERROR": "Cofnod annilys",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Mae''r gwerth hwn wedi''i ddewis yn barod.",
   "VALUE_STATE_INFORMATION": "Cofnod gwybodaeth",

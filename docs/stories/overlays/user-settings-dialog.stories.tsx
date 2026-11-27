@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { useArgs } from "storybook/preview-api"
 import { Button } from "@/components/ui/button"
 import { UserSettingsDialog, type UserSettingsDialogProps } from "@/components/ui/user-settings-dialog"
-import { fixedSettings, settingsItems } from "../../src/fixtures/user-settings-dialog"
+import { fixedSettings, notificationSettings, settingsItems } from "../../src/fixtures/user-settings-dialog"
 import { settingsHeader } from "../../src/fixtures/user-settings-dialog.cases"
 import { fioriMeta } from "../_lib/meta"
 
@@ -28,6 +28,14 @@ export const Search: Story = { args: { open: true, showSearchField: true }, para
 export const EmptySearch: Story = { ...Search, args: { ...Search.args, defaultQuery: "absent" } }
 export const Loading: Story = {
   args: { open: true, items: settingsItems.map(item => item.id === "general" ? { ...item, loading: true } : item) },
+  parameters: inlineDocs,
+}
+export const Notifications: Story = {
+  args: { open: true, defaultValue: "notifications", items: [...settingsItems, notificationSettings("demo")] },
+  parameters: inlineDocs,
+}
+export const NotificationPreferences: Story = {
+  args: { ...Notifications.args, defaultView: "email" },
   parameters: inlineDocs,
 }
 export const RTL: Story = { ...Search, globals: { dir: "rtl" } }

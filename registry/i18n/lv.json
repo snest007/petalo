@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Nav meklēšanas rezultātu",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Pieejams 1 rezultāts",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Lietotāja iestatījumu elements",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Paziņojumu tipu saraksts",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Paziņojumu preferenču saraksts",
   "VALUE_STATE_ERROR": "Nederīgs ieraksts",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Šī vērtība ir jau atlasīta.",
   "VALUE_STATE_INFORMATION": "Informatīvs ieraksts",

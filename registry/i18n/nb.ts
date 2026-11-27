@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Ingen søkeresultater",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 resultat tilgjengelig",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Element for brukerinnstillinger",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Liste over meldingstyper",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Liste over meldingspreferanser",
   "VALUE_STATE_ERROR": "Ugyldige inndata",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Denne verdien er allerede valgt.",
   "VALUE_STATE_INFORMATION": "Informativ post",

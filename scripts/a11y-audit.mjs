@@ -209,6 +209,13 @@ for (const [key, equivalent] of [
   ["USER_SETTINGS_ACCOUNT_EDIT_AVATAR_TXT", "UserSettingsAccountView.texts.edit"],
   ["USER_SETTINGS_ACCOUNT_MANAGE_ACCOUNT_BUTTON_TXT", "UserSettingsAccountView.texts.manage"],
 ]) verifiedTexts[`user-settings-dialog.${key}`] = { equivalent: equivalent.includes(".") ? equivalent : `UserSettingsDialog.texts.${equivalent}`, status: "ok", proof: h13Proof }
+for (const [key, equivalent] of [
+  ["USER_SETTINGS_NOTIFICATIONS_LIST_LABEL", "list"],
+  ["USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL", "preferences"],
+]) verifiedTexts[`user-settings-dialog.${key}`] = {
+  equivalent: `UserSettingsNotificationsView.texts.${equivalent}`, status: "ok",
+  proof: "tests/user-settings-dialog.spec.ts: matches native notification list names",
+}
 
 const h12Proof = "tests/action-sheet.spec.ts: compares WCR phone labels and action positions"
 for (const [key, equivalent] of [

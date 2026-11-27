@@ -110,7 +110,8 @@ const nativeKeys = name => {
     sources.push(`node_modules/@ui5/webcomponents/dist/${file}.js`)
   }
   if (name === 'user-settings-dialog') {
-    sources.push('node_modules/@ui5/webcomponents-fiori/dist/UserSettingsAccountView.js')
+    sources.push(...['UserSettingsAccountView', 'UserSettingsNotificationsView', 'UserSettingsNotificationsViewItem', 'UserSettingsNotificationsViewGroup']
+      .map(component => `node_modules/@ui5/webcomponents-fiori/dist/${component}.js`))
   }
   const seen = new Set()
   // NavigationMenu's direct inherited text owners are listed above. Their

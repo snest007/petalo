@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Sin resultados de búsqueda",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 resultado disponible",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Elemento de configuración de usuario",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista de tipos de notificación",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista de preferencias de notificación",
   "VALUE_STATE_ERROR": "Entrada no válida",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Este valor ya está seleccionado.",
   "VALUE_STATE_INFORMATION": "Entrada informativa",

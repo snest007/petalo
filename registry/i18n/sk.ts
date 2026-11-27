@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Žiadne výsledky vyhľadávania",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "K dispozícii 1 výsledok",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Položka nastavení používateľa",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Zoznam druhov oznámení",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Zoznam preferencií oznámení",
   "VALUE_STATE_ERROR": "Neplatné zadanie",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Táto hodnota je už vybratá.",
   "VALUE_STATE_INFORMATION": "Informatívne zadanie",

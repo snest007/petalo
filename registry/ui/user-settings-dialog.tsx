@@ -11,9 +11,10 @@ import { Dialog, DialogBody, DialogContent, DialogFooter } from "@/components/ui
 import { Icon } from "@/components/ui/icon"
 import { Input } from "@/components/ui/input"
 import { List, ListItemCustom, ListItemGroup, ListItemStandard } from "@/components/ui/list"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Toolbar, ToolbarButton } from "@/components/ui/toolbar"
-import { edit, globe, navBack, personPlaceholder, product, search, userSettings, type FioriIconData } from "@/lib/fiori-icons"
+import { edit, globe, navBack, personPlaceholder, product, search, slimArrowRight, userSettings, type FioriIconData } from "@/lib/fiori-icons"
 import { collatorIncludes, useFioriLocale, useFioriTexts, type FioriDirection } from "@/lib/fiori-locale"
 import { cn } from "@/lib/utils"
 
@@ -28,6 +29,14 @@ const serverNarrow = () => false
 
 type UserSettingsTab = { id: string; text: string; content: React.ReactNode }
 type UserSettingsPage = UserSettingsTab & { secondary?: boolean }
+type NotificationRoute = {
+  pages: ReadonlyMap<string, string>
+  origin: { page: string | null; destination: string; row: HTMLElement }
+}
+const NotificationPageContext = React.createContext<{
+  secondary: boolean
+  navigate: (item: UserSettingsNotificationItem, row: HTMLElement) => void
+} | null>(null)
 type UserSettingsItem = {
   id: string
   text: string
@@ -143,6 +152,7 @@ function UserSettingsDialog({
   const [internalValue, setInternalValue] = React.useState(defaultValue)
   const [views, setViews] = React.useState<Record<string, string | null>>({})
   const [visitedViews, setVisitedViews] = React.useState(() => new Map<string, string | null | undefined>())
+  const [notificationRoutes, setNotificationRoutes] = React.useState(() => new Map<string, NotificationRoute>())
   const [internalQuery, setInternalQuery] = React.useState(defaultQuery)
   const [drilledIn, setDrilledIn] = React.useState(false)
   const [announceSearch, setAnnounceSearch] = React.useState(false)
@@ -151,6 +161,7 @@ function UserSettingsDialog({
   const body = React.useRef<HTMLDivElement>(null)
   const returnTo = React.useRef<HTMLElement | null>(null)
   const pendingFocus = React.useRef<"content" | "list" | null>(null)
+  const notificationFocus = React.useRef<{ category: string; page: string | null; row?: HTMLElement } | null>(null)
   const open = openProp ?? internalOpen
   const all = [...items, ...fixedItems]
   const active = all.find(item => item.id === (value ?? internalValue)) ?? all[0]
@@ -191,15 +202,30 @@ function UserSettingsDialog({
     return !!target
   }
   React.useLayoutEffect(() => {
-    if (!open) pendingFocus.current = null
+    const target = notificationFocus.current
+    if (!open) {
+      pendingFocus.current = null
+      notificationFocus.current = null
+      if (notificationRoutes.size) setNotificationRoutes(new Map())
+    } else if (target && target.category !== activeValue) {
+      notificationFocus.current = null
+    } else if (target && (selectedView ?? null) === target.page && !active?.loading) {
+      notificationFocus.current = null
+      if (target.row && body.current?.contains(target.row) && target.row.getClientRects().length) {
+        target.row.focus()
+        return
+      }
+      pendingFocus.current = "content"
+    }
     if (!pendingFocus.current) return
     if (pendingFocus.current === "list") {
       pendingFocus.current = null
       focusSetting()
     } else if (!active?.loading) {
       pendingFocus.current = null
-      const candidates = body.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')
-      const first = [...(candidates ?? [])].find(target => target.getClientRects().length && !target.closest("[inert]"))
+      const candidates = body.current?.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), a[href], select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]), [data-notification-row]:not([aria-disabled="true"])')
+      const first = [...(candidates ?? [])].find(target => target.getClientRects().length
+        && !target.matches(".fiori-list__focusarea") && !target.closest("[inert]"))
       if (first) first.focus()
       else if (body.current) {
         body.current.tabIndex = -1
@@ -226,18 +252,42 @@ function UserSettingsDialog({
   }
   const goBack = () => {
     if (page?.secondary) {
-      if (selectView(null)) pendingFocus.current = "content"
+      const origin = active && notificationRoutes.get(active.id)?.origin
+      if (active && origin?.destination === page.id) {
+        if (selectView(origin.page)) notificationFocus.current = { category: active.id, page: origin.page, row: origin.row }
+      } else if (selectView(null)) pendingFocus.current = "content"
     } else {
       pendingFocus.current = "list"
       setDrilledIn(false)
     }
+  }
+  const navigateNotification = (notification: UserSettingsNotificationItem, row: HTMLElement) => {
+    if (!active) return
+    // UserSettingsNotificationsView.js:_navigateToSecondaryView uses the
+    // matching sibling ID, then the first secondary view with the row's title.
+    const secondary = active.pages?.filter(candidate => candidate.secondary && candidate !== page) ?? []
+    const matched = secondary.find(candidate => candidate.id === notification.itemKey)
+    const destination = matched ?? secondary[0]
+    if (!destination || !selectView(destination.id)) return
+    const from = page ?? active.pages?.[0]
+    setNotificationRoutes(current => {
+      const pages = new Map(current.get(active.id)?.pages)
+      if (from && !pages.has(from.id)) pages.set(from.id, from.text)
+      pages.set(destination.id, matched?.text || notification.text)
+      return new Map(current).set(active.id, {
+        pages, origin: { page: page?.id ?? null, destination: destination.id, row },
+      })
+    })
+    notificationFocus.current = { category: active.id, page: destination.id }
   }
   const renderPane = (item?: UserSettingsItem) => {
     const selected = item === active
     const paneView = selected ? selectedView : item && visitedViews.get(item.id)
     const panePage = item?.pages?.find(view => view.id === paneView)
     const tabs = panePage ? undefined : item?.tabs
-    const heading = panePage ? panePage.text : item?.headerText
+    const visitedPages = item && notificationRoutes.get(item.id)?.pages
+    const shownPage = panePage ?? (!tabs?.length ? item?.pages?.[0] : undefined)
+    const heading = panePage ? visitedPages?.get(panePage.id) ?? panePage.text : item?.headerText
     const hidden = !selected || (narrow && !drilledIn)
     return (
       <div key={item?.id} data-slot="user-settings-pane" data-sap-ui-fastnavgroup={selected ? "true" : undefined}
@@ -249,12 +299,22 @@ function UserSettingsDialog({
             {heading && <h2>{heading}</h2>}
           </div>
           <div data-slot="user-settings-body" className={cn("fiori-user-settings__body", classNames?.body)} ref={selected ? body : undefined}>
-            {item.loading ? <BusyIndicator active delay={0} aria-description={item.loadingReason} className="fiori-user-settings__busy" />
-              : tabs?.length ? <Tabs value={tabs.find(tab => tab.id === paneView)?.id ?? tabs[0].id}
+            {item.loading ? <BusyIndicator active delay={0} aria-description={item.loadingReason} className="fiori-user-settings__busy" /> : null}
+            {!item.loading && tabs?.length ? <Tabs value={tabs.find(tab => tab.id === paneView)?.id ?? tabs[0].id}
                 onValueChange={selectView} contentBackground="transparent">
                 <TabsList>{tabs.map(tab => <TabsTrigger key={tab.id} value={tab.id}>{tab.text}</TabsTrigger>)}</TabsList>
                 {tabs.map(tab => <TabsContent value={tab.id} key={tab.id}>{tab.content}</TabsContent>)}
-              </Tabs> : panePage?.content ?? item.pages?.[0]?.content ?? item.content}
+              </Tabs> : null}
+            {item.pages?.filter(candidate => candidate === shownPage || visitedPages?.has(candidate.id)).map(candidate => {
+              const visible = candidate === shownPage && !item.loading
+              return <div key={candidate.id} className="fiori-user-settings__page" hidden={!visible} inert={!visible || undefined}>
+                <NotificationPageContext.Provider value={{
+                  secondary: !!candidate.secondary,
+                  navigate: (notification, row) => { if (selected && visible) navigateNotification(notification, row) },
+                }}>{candidate.content ?? item.pages?.[0]?.content ?? item.content}</NotificationPageContext.Provider>
+              </div>
+            })}
+            {!item.loading && !tabs?.length && !shownPage ? item.content : null}
           </div>
         </>}
       </div>
@@ -398,9 +458,158 @@ function UserSettingsAppearanceView({ items, additionalContent, headerText, valu
   </UserSettingsView>
 }
 
+type UserSettingsNotificationItem = {
+  itemKey: string
+  text: string
+  bylineText?: string
+  checked?: boolean
+  defaultChecked?: boolean
+  disabled?: boolean
+  navigable?: boolean
+  /** Maps UI5 ListItemCustom.accessibleName to the owned list row. The switch uses title and byline. */
+  accessibleName?: string
+  endContent?: React.ReactNode
+}
+type UserSettingsNotificationGroup = {
+  id: string
+  headerText: string
+  items: readonly UserSettingsNotificationItem[]
+}
+type UserSettingsNotificationsTexts = { list: string; preferences: string }
+const notificationDefaults: UserSettingsNotificationsTexts = {
+  list: "List of Notification Types", // UI5 USER_SETTINGS_NOTIFICATIONS_LIST_LABEL
+  preferences: "List of Notification Preferences", // UI5 USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL
+}
+const notificationKeys = {
+  list: "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL",
+  preferences: "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL",
+} as const
+/** Experimental part styling. Rows and switches retain their owned semantics. */
+type UserSettingsNotificationsSlot = "additionalContent" | "list" | "group" | "form" | "row" | "title" | "byline" | "end" | "switch" | "arrow"
+type UserSettingsNotificationsViewProps = Omit<UserSettingsViewProps, "children"> & {
+  items: readonly (UserSettingsNotificationItem | UserSettingsNotificationGroup)[]
+  headerItems?: readonly UserSettingsNotificationItem[]
+  additionalContent?: React.ReactNode
+  /** Defaults to the enclosing dialog page's secondary state. */
+  secondary?: boolean
+  /** Return false to veto automatic navigation to the item's secondary page. */
+  onItemClick?: (item: UserSettingsNotificationItem) => boolean | void
+  onCheckedChange?: (itemKey: string, checked: boolean) => void
+  locale?: string
+  texts?: Partial<UserSettingsNotificationsTexts>
+  classNames?: Partial<Record<UserSettingsNotificationsSlot, string>>
+}
+
+function NotificationRow({ item, header, classNames, onCheckedChange, onNavigate }: {
+  item: UserSettingsNotificationItem
+  header?: boolean
+  classNames: UserSettingsNotificationsViewProps["classNames"]
+  onCheckedChange: UserSettingsNotificationsViewProps["onCheckedChange"]
+  onNavigate: (item: UserSettingsNotificationItem, row: HTMLElement) => void
+}) {
+  const [localChecked, setLocalChecked] = React.useState(item.defaultChecked ?? false)
+  if (process.env.NODE_ENV !== "production") for (const key of Object.keys(item)) {
+    if (key === "role" || key === "id" || key === "tabIndex" || key.startsWith("aria-")) console.warn(`UserSettingsNotificationsView: ignored ownership prop ${key}`)
+  }
+  const checked = item.checked ?? localChecked
+  const hasEnd = React.Children.toArray(item.endContent).length > 0
+  const name = [item.text, item.bylineText].filter(Boolean).join(" ")
+  const change = (next: boolean) => {
+    if (item.disabled) return
+    if (item.checked === undefined) setLocalChecked(next)
+    onCheckedChange?.(item.itemKey, next)
+  }
+  const navigate = (row: HTMLElement) => {
+    if (item.navigable && !item.disabled) onNavigate(item, row)
+  }
+  const modified = (event: React.KeyboardEvent) => event.altKey || event.ctrlKey || event.metaKey || event.shiftKey
+  const keyDown = (event: React.KeyboardEvent<HTMLElement>) => {
+    if (event.target !== event.currentTarget || item.disabled || modified(event)) return
+    if (event.key === " ") event.preventDefault()
+    if (event.key === "Enter" && item.navigable) {
+      event.preventDefault()
+      navigate(event.currentTarget)
+    }
+  }
+  const keyUp = (event: React.KeyboardEvent<HTMLElement>) => {
+    // UserSettingsNotificationsViewItem.js:_onkeyup keeps row Space separate
+    // from the nested switch and only delegates when there is custom end content.
+    if (event.target !== event.currentTarget || event.key !== " " || item.disabled || modified(event)) return
+    if (hasEnd) navigate(event.currentTarget)
+    else change(!checked)
+  }
+  const content = <div className="fiori-user-settings__notification-body" data-byline={item.text && item.bylineText ? "" : undefined}>
+    <div className="fiori-user-settings__notification-label">
+      {item.text && <span data-slot="user-settings-notification-title" className={cn("fiori-user-settings__notification-title", classNames?.title)}>{item.text}</span>}
+      {item.bylineText && <span data-slot="user-settings-notification-byline" className={cn("fiori-user-settings__notification-byline", classNames?.byline)}>{item.bylineText}</span>}
+    </div>
+    {/* UserSettingsNotificationsViewItemTemplate.js isolates end-content clicks. */}
+    <div data-slot="user-settings-notification-end" className={cn("fiori-user-settings__notification-end", classNames?.end)} onClick={event => event.stopPropagation()}>
+      {hasEnd ? item.endContent : <Switch className={classNames?.switch} aria-label={name} checked={checked}
+        disabled={item.disabled} onCheckedChange={change} onKeyDown={event => {
+          if (modified(event) && (event.key === " " || event.key === "Enter")) event.preventDefault()
+        }} />}
+    </div>
+  </div>
+  const arrow = item.navigable && <Icon icon={slimArrowRight} className={cn("fiori-user-settings__notification-arrow", !header && "fiori-li__nav-icon", classNames?.arrow)} />
+  if (header) return (
+    <div role="form" data-slot="user-settings-notification-form" className={cn("fiori-user-settings__notification-form", classNames?.form)}>
+      <div role="group" aria-label={name} aria-disabled={item.disabled || undefined} tabIndex={item.disabled ? -1 : 0}
+        data-notification-row="" data-navigable={item.navigable ? "" : undefined}
+        data-slot="user-settings-notification-row" className={cn("fiori-user-settings__notification-row", classNames?.row)}
+        onClick={event => navigate(event.currentTarget)}
+        onKeyDown={event => {
+          if (event.key === "F2" && !modified(event)) {
+            event.preventDefault()
+            if (event.target === event.currentTarget) {
+              event.currentTarget.querySelector<HTMLElement>("button:not([disabled]), input:not([disabled]), a[href], [tabindex='0']")?.focus()
+            } else event.currentTarget.focus()
+          }
+          keyDown(event)
+        }}
+        onKeyUp={keyUp}>
+        {content}{arrow}
+      </div>
+    </div>
+  )
+  return <ListItemCustom value={item.itemKey} aria-label={item.accessibleName ?? name} disabled={item.disabled}
+    type="active" data-notification-row=""
+    data-navigable={item.navigable ? "" : undefined}
+    className={cn("fiori-user-settings__notification-row", classNames?.row)}
+    onKeyDown={keyDown} onKeyUp={keyUp}
+    onClick={event => navigate(event.currentTarget)}>
+    {/* The native item keeps ListItemCustom's Active type and overrides typeNavigation. */}
+    {content}{arrow}
+  </ListItemCustom>
+}
+
+function UserSettingsNotificationsView({ items, headerItems, additionalContent, secondary, onItemClick, onCheckedChange, locale,
+  texts: overrides, classNames, className, ...props }: UserSettingsNotificationsViewProps) {
+  const page = React.useContext(NotificationPageContext)
+  const texts = useFioriTexts(notificationDefaults, notificationKeys, overrides, locale)
+  const navigate = (item: UserSettingsNotificationItem, row: HTMLElement) => {
+    if (onItemClick?.(item) !== false) page?.navigate(item, row)
+  }
+  const row = (item: UserSettingsNotificationItem, header = false) =>
+    <NotificationRow key={item.itemKey} item={item} header={header} classNames={classNames}
+      onCheckedChange={onCheckedChange} onNavigate={navigate} />
+  return <UserSettingsView {...props} className={cn("fiori-user-settings__notifications", className)}>
+    {additionalContent != null && <div data-slot="user-settings-notification-additional" className={classNames?.additionalContent}>{additionalContent}</div>}
+    {headerItems?.map(item => row(item, true))}
+    <List aria-label={(secondary ?? page?.secondary) ? texts.preferences : texts.list} locale={locale}
+      className={cn("fiori-user-settings__notification-list", classNames?.list)} data-sap-ui-fastnavgroup="false">
+      {items.map(item => "items" in item
+        ? <ListItemGroup key={item.id} headerText={item.headerText} className={classNames?.group}>{item.items.map(choice => row(choice))}</ListItemGroup>
+        : row(item))}
+    </List>
+  </UserSettingsView>
+}
+
 export {
-  UserSettingsDialog, UserSettingsView, UserSettingsAccountView, UserSettingsAppearanceView,
+  UserSettingsDialog, UserSettingsView, UserSettingsAccountView, UserSettingsAppearanceView, UserSettingsNotificationsView,
   type UserSettingsDialogProps, type UserSettingsDialogTexts, type UserSettingsDialogSlot,
   type UserSettingsCloseReason, type UserSettingsItem, type UserSettingsPage, type UserSettingsTab, type UserSettingsViewProps,
   type UserSettingsAccountViewProps, type UserSettingsAppearanceViewProps,
+  type UserSettingsNotificationsViewProps, type UserSettingsNotificationItem, type UserSettingsNotificationGroup, type UserSettingsNotificationsSlot,
+  type UserSettingsNotificationsTexts,
 }

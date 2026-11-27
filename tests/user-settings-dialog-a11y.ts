@@ -20,8 +20,9 @@ function at<Node extends { children: Node[] }>(roots: Node[], path: number[]) {
 }
 
 export function reconcileUserSettingsDialog(ours: Capture, ui5: Capture, id: string) {
-  const fixture = /^user-settings-dialog-(general|account|appearance|search|empty|loading)$/.exec(id)?.[1]
+  const fixture = /^user-settings-dialog-(general|account|appearance|search|empty|loading|notifications-(?:primary|grouped|custom|secondary))$/.exec(id)?.[1]
   if (!fixture) throw new Error("Pinned settings shell requires an H13 fixture")
+  const notifications = fixture.startsWith("notifications-")
   const [actual] = ours.ax
   const [native] = ui5.ax
   const [content] = actual.children
@@ -63,7 +64,7 @@ export function reconcileUserSettingsDialog(ours: Capture, ui5: Capture, id: str
 
   // The pinned Dialog never opens, so Popup.js has no native announcement
   // outlets. Assert the empty React outlets. The open-dialog tests exercise them.
-  const outlets = fixture === "empty" ? 0 : fixture === "appearance" ? 3 : 2
+  const outlets = fixture === "empty" ? 0 : fixture === "appearance" || notifications ? 3 : 2
   expect(actual.children).toHaveLength(2 + outlets)
   expect(ours.snapshot[0].children).toHaveLength(2 + outlets)
   for (let index = 0; index < outlets; index++) {
@@ -78,6 +79,8 @@ export function reconcileUserSettingsDialog(ours: Capture, ui5: Capture, id: str
     : [["Close", [0, 1, 0, 0, 0]]]
   if (fixture === "account") buttons.push(["Manage Account", [0, 0, 1, 1, 4]])
   if (["general", "search", "empty"].includes(fixture)) buttons.push(["Change language", [0, 0, 1, 2, 0, 0, 0, 0]])
+  if (fixture === "notifications-custom") buttons.push(["Preview delivery", [0, 0, 1, 1, 0, 1, 1, 0]])
+  if (fixture === "notifications-secondary") buttons.push(["Navigate Back", [0, 0, 1, 0, 0]])
   for (const [name, path] of buttons) {
     const { node: host, siblings, index } = at(ui5.ax, path)
     const [button] = host.children
@@ -156,4 +159,132 @@ export function reconcileUserSettingsDialog(ours: Capture, ui5: Capture, id: str
     expect(nativeProgress).toMatchObject({ role: "progressbar", name: "Please wait" })
     siblings.pop()
   }
+  if (notifications) reconcileNotificationTree(ours, ui5, fixture)
+}
+
+function reconcileNotificationTree(ours: Capture, native: Capture, fixture: string) {
+  const grouped = fixture === "notifications-grouped"
+  const custom = fixture === "notifications-custom"
+  const secondary = fixture === "notifications-secondary"
+  const switches: [string, number[], number[]][] = secondary
+    ? [["Mentions", [0, 0, 2, 0, 1, 0, 0, 1, 0], [0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 1]]]
+    : grouped
+      ? [
+        ["Email Account updates", [0, 0, 3, 0, 1, 0, 1, 0, 0, 0, 2, 0], [0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 2]],
+        ["Push", [0, 0, 3, 0, 1, 0, 1, 0, 1, 0, 1, 0], [0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1]],
+      ]
+      : [["Email Account updates", [0, 0, custom ? 4 : 3, 0, 1, 0, 0, 2, 0], [0, 0, 1, 1, 0, custom ? 2 : 1, 0, 0, 0, 1, 0, 2]]]
+  for (const [name, actualPath, nativePath] of switches) {
+    const actual = at(ours.ax, actualPath).node
+    const { node: host, siblings, index } = at(native.ax, nativePath)
+    const [control] = host.children
+    // Switch.js is form-associated. Chromium places its default invalid=false
+    // on the host, while React's native button carries it on the switch.
+    expect(host).toEqual(generic({ invalid: "false" }, [control]))
+    expect(control).toMatchObject({ role: "switch", name })
+    expect(actual).toMatchObject({ role: "switch", name, properties: { invalid: "false" } })
+    delete actual.properties.invalid
+    siblings[index] = control
+  }
+  if (custom) {
+    // The native header row has no forcedTabIndex outside List. The React
+    // group supplies a keyboard stop for Enter and for return focus.
+    const actual = at(ours.ax, [0, 0, 3]).node
+    const reference = at(native.ax, [0, 0, 1, 1, 0, 1]).node
+    expect(actual).toMatchObject({ role: "group", name: "Delivery options" })
+    expect(actual.properties).toEqual({ focusable: true })
+    expect(reference).toMatchObject({ role: "group", name: "Delivery options" })
+    expect(reference.properties).toEqual({})
+    delete actual.properties.focusable
+  }
+  if (grouped) {
+    // Chromium resolves ListItemGroupTemplate.js's aria-owns through the
+    // shadow boundary in AX. The native Playwright snapshot reports the rows
+    // as siblings, so move the exact rows to their verified AX owner's list.
+    const list = at(native.snapshot, [0, 0, 7]).node
+    const [group, email, push] = list.children
+    expect(list).toMatchObject({ role: "list", name: "List of Notification Types" })
+    expect(list.children).toHaveLength(3)
+    const owner = group.children[1]
+    expect(owner).toEqual({ role: "list", name: "Channels", states: [], children: [] })
+    const axOwner = at(native.ax, [0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1]).node
+    expect(axOwner).toMatchObject({ role: "list", name: "Channels", properties: { owns: [{ role: "generic", name: "", ignored: false, valid: true }] } })
+    const [owned] = axOwner.children
+    expect(owned.children.map(node => [node.role, node.name])).toEqual([[email.role, email.name], [push.role, push.name]])
+    expect(email.role).toBe("listitem")
+    expect(push.role).toBe("listitem")
+    owner.children.push(...list.children.splice(1))
+  }
+  const wrappers = notificationWrappers[fixture]
+  ours.ax = unwrapNotificationLayout(ours.ax, [...notificationCommon.ours, ...wrappers.ours])
+  native.ax = unwrapNotificationLayout(native.ax, [...notificationCommon.ui5, ...wrappers.ui5])
+}
+
+function unwrapNotificationLayout(roots: AX[], paths: readonly string[]) {
+  const remaining = new Set(paths)
+  const visit = (nodes: AX[], ancestor: number[]): AX[] => nodes.flatMap((node, index) => {
+    const path = [...ancestor, index]
+    const children = visit(node.children, path)
+    if (!remaining.delete(path.join("."))) return [{ ...node, children }]
+    expect(node, `Inert notification wrapper at ${path.join(".")}`).toEqual(generic({}, node.children))
+    return children
+  })
+  const result = visit(roots, [])
+  expect([...remaining], "Every exact notification wrapper path was used").toEqual([])
+  return result
+}
+
+// Exact AX paths of the anonymous layout wrappers after the H13c shell checks.
+const notificationCommon = {
+  ours: [
+    "0.0.0", "0.0.0.1", "0.0.0.1.0", "0.0.0.1.0.1", "0.0.0.1.0.2.0.0", "0.0.0.1.0.2.0.1",
+    "0.0.0.1.0.2.0.2", "0.0.0.1.0.2.1.0", "0.0.0.1.0.2.1.1", "0.0.0.1.0.2.1.2", "0.0.0.1.0.2.2.0", "0.0.0.1.0.2.2.1",
+    "0.0.0.1.0.2.2.2", "0.0.0.1.0.2.3.0", "0.0.0.1.0.2.3.1", "0.0.0.1.0.2.3.2", "0.0.0.2", "0.0.0.2.0",
+    "0.0.0.2.0.1", "0.0.0.2.0.2.0.0", "0.0.0.2.0.2.0.1", "0.0.0.2.0.2.0.2", "0.0.1", "0.0.2",
+    "0.1.0",
+  ],
+  ui5: [
+    "0.0.0", "0.0.0.0", "0.0.0.1", "0.0.0.1.0", "0.0.0.2", "0.0.0.2.0",
+    "0.0.1", "0.0.1.0", "0.0.1.1", "0.0.1.1.0", "0.1.0", "0.1.0.0",
+    "0.1.0.0.0.0",
+  ],
+}
+const notificationWrappers: Record<string, { ours: string[]; ui5: string[] }> = {
+  "notifications-custom": {
+    ours: [
+      "0.0.3.1", "0.0.4", "0.0.4.0", "0.0.4.0.1.0.0", "0.0.4.0.1.0.0.2", "0.0.4.0.1.0.1",
+      "0.0.4.0.1.0.2",
+    ],
+    ui5: [
+      "0.0.1.0.0", "0.0.1.1.0.1.1", "0.0.1.1.0.1.1.0.0", "0.0.1.1.0.2", "0.0.1.1.0.2.0", "0.0.1.1.0.2.0.0",
+      "0.0.1.1.0.2.0.0.0", "0.0.1.1.0.2.0.0.0.1.0.2.0", "0.0.1.1.0.2.0.0.0.1.0.2.0.0",
+    ],
+  },
+  "notifications-grouped": {
+    ours: [
+      "0.0.3", "0.0.3.0", "0.0.3.0.1.0.1.0", "0.0.3.0.1.0.1.0.0.0", "0.0.3.0.1.0.1.0.0.0.2", "0.0.3.0.1.0.1.0.0.1",
+      "0.0.3.0.1.0.1.0.0.2", "0.0.3.0.1.0.1.0.1.0", "0.0.3.0.1.0.1.0.1.0.1", "0.0.3.0.1.0.1.0.1.1", "0.0.3.0.1.0.1.0.1.2",
+    ],
+    ui5: [
+      "0.0.1.0.0", "0.0.1.1.0.1", "0.0.1.1.0.1.0", "0.0.1.1.0.1.0.0", "0.0.1.1.0.1.0.0.0", "0.0.1.1.0.1.0.0.0.1.0.1.0",
+      "0.0.1.1.0.1.0.0.0.1.0.1.0.0.2.0", "0.0.1.1.0.1.0.0.0.1.0.1.0.0.2.0.0", "0.0.1.1.0.1.0.0.0.1.0.1.0.1.1.0",
+    ],
+  },
+  "notifications-primary": {
+    ours: [
+      "0.0.3", "0.0.3.0", "0.0.3.0.1.0.0", "0.0.3.0.1.0.0.2", "0.0.3.0.1.0.1", "0.0.3.0.1.0.2",
+    ],
+    ui5: [
+      "0.0.1.0.0", "0.0.1.1.0.1", "0.0.1.1.0.1.0", "0.0.1.1.0.1.0.0", "0.0.1.1.0.1.0.0.0", "0.0.1.1.0.1.0.0.0.1.0.2.0",
+      "0.0.1.1.0.1.0.0.0.1.0.2.0.0",
+    ],
+  },
+  "notifications-secondary": {
+    ours: [
+      "0.0.2.0", "0.0.2.0.1.0.0", "0.0.2.0.1.0.0.1", "0.0.2.0.1.0.1", "0.0.2.0.1.0.2",
+    ],
+    ui5: [
+      "0.0.1.0.1", "0.0.1.1.0.0", "0.0.1.1.0.0.0", "0.0.1.1.0.0.0.0", "0.0.1.1.0.0.0.0.0", "0.0.1.1.0.0.0.0.0.1.0.1.0",
+    ],
+  },
 }

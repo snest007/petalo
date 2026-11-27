@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Geen zoekresultaten",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 resultaat beschikbaar",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Element gebruikersinstellingen",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lijst met meldingstypen",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lijst met meldingsvoorkeuren",
   "VALUE_STATE_ERROR": "Ongeldige invoer",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Deze waarde is al geselecteerd.",
   "VALUE_STATE_INFORMATION": "Informatief gegeven",

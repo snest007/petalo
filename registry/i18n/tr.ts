@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Arama sonucu yok",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 sonuç mevcut",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Kullanıcı ayarları öğesi",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Bildirim türleri listesi",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Bildirim tercihleri listesi",
   "VALUE_STATE_ERROR": "Geçersiz giriş",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Bu değer zaten seçildi.",
   "VALUE_STATE_INFORMATION": "Bilgilendirici giriş",

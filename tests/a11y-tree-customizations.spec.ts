@@ -15,6 +15,8 @@ const customizationProofs = {
   "UserSettingsAccountView.children": "user-settings-dialog",
   "UserSettingsAppearanceView.className": "user-settings-dialog",
   "UserSettingsAppearanceView.additionalContent": "user-settings-dialog",
+  "UserSettingsNotificationsView.className": "user-settings-dialog",
+  "UserSettingsNotificationsView.additionalContent": "user-settings-dialog",
   "ActionSheet.className": "action-sheet",
   "ActionSheet.trigger": "action-sheet",
   "AnalyticalCardHeader.className": "analytical-card-header",
@@ -785,6 +787,9 @@ test.beforeAll(async () => {
           props.fixedItems=props.fixedItems?.map(item);
         }
         if(name==='UserSettingsView')Object.assign(props,{role:'button',id:'e4-foreign-settings-view',tabIndex:13,'aria-hidden':true});
+        if(name==='UserSettingsNotificationsView' && props.headerItems){
+          props.headerItems=props.headerItems.map(item=>({...item,role:'button',id:'e4-foreign-notification-row',tabIndex:13,'aria-hidden':true}));
+        }
         if(name==='DataTable')props.columns=props.columns.map(column=>({...column,...Object.fromEntries(['header','cell'].filter(key=>typeof column[key]==='function').map(key=>[key,(...args)=>{seen.add('DataTable.columns.'+key);return content(column[key](...args),'DataTable.columns.'+key,fill)}]))}));
         if(name==='AdaptFiltersDialog')props.filters=props.filters.map(filter=>({...filter,render:(...args)=>{seen.add('FilterDefinition.render');return content(filter.render(...args),'FilterDefinition.render',fill)}}));
         for(const key of descriptor.props){props[key]=[props[key],'e4-custom-'+name+'-'+key].filter(Boolean).join(' ');record(key)}
@@ -923,6 +928,22 @@ test("UserSettingsDialog announces only accepted category changes", async ({ pag
   await appearance.press("Enter")
   await expect(dialog.getByRole("heading", { name: "Appearance preferences" })).toBeVisible()
   await expect(outlet).toHaveText("Selected")
+})
+
+test("UserSettingsDialog custom notification content retains the owned form and row", async ({ page }) => {
+  const warnings: string[] = []
+  page.on("console", message => {
+    if (message.type() === "warning" && message.text().startsWith("UserSettingsNotificationsView:")) warnings.push(message.text())
+  })
+  await mountHarness(page)
+  await page.evaluate(() => (window as any).e4Customization.mount("user-settings-dialog", "user-settings-dialog-notifications-custom", true))
+  const row = page.getByRole("group", { name: "Delivery options", exact: true })
+  await expect(row).toHaveAttribute("tabindex", "0")
+  expect(await row.getAttribute("id")).toBeNull()
+  expect(await row.getAttribute("aria-hidden")).toBeNull()
+  await expect(row.getByRole("button", { name: "Preview delivery", exact: true })).toBeVisible()
+  expect(warnings).toEqual(expect.arrayContaining(["role", "id", "tabIndex", "aria-hidden"]
+    .map(key => `UserSettingsNotificationsView: ignored ownership prop ${key}`)))
 })
 
 test("every current functional public customization has an explicit consumer proof", () => {

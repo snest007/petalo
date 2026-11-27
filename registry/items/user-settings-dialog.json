@@ -1,7 +1,7 @@
 {
   "title": "UserSettingsDialog",
   "description": "Fiori user settings with responsive category navigation and composable settings views.",
-  "registryDependencies": ["@petalo/dialog", "@petalo/list", "@petalo/tabs", "@petalo/toolbar", "@petalo/avatar", "@petalo/button", "@petalo/icons", "@petalo/input", "@petalo/busy-indicator", "@petalo/locale"],
+  "registryDependencies": ["@petalo/dialog", "@petalo/list", "@petalo/tabs", "@petalo/toolbar", "@petalo/avatar", "@petalo/button", "@petalo/icons", "@petalo/input", "@petalo/busy-indicator", "@petalo/locale", "@petalo/switch"],
   "usage": {
     "summary": "Let users inspect their account and review or change settings in categories.",
     "useWhen": [
