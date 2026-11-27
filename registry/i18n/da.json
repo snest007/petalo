@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Afkrydsningsfeltet Vælg alle",
   "TABLE_COLUMN_HEADER_ROW": "Kolonneoverskriftsrække",
   "TABLE_DESELECT_ALL_ROWS": "Fravælg alle rækker",
+  "TABLE_GENERATED_BY_AI": "Genereret af AI",
   "TABLE_GROUP_ROW": "Grupperække",
   "TABLE_MORE": "Mere",
   "TABLE_MORE_DESCRIPTION": "Indlæs flere rækker ved at trykke på Enter eller mellemrumstasten",

@@ -1,10 +1,15 @@
 import * as React from "react"
 import { FioriDropIndicator } from "@/lib/fiori-drag-and-drop"
+import { FioriLocaleProvider } from "@/lib/fiori-locale"
+import ar from "../../../registry/i18n/ar.json"
+import de from "../../../registry/i18n/de.json"
+import zh from "../../../registry/i18n/zh-CN.json"
 import {
   Table,
   TableCell,
   TableGroupRow,
   TableHeaderCell,
+  TableHeaderCellActionAI,
   TableHeaderRow,
   TableRow,
   TableRowAction,
@@ -13,7 +18,7 @@ import {
 } from "@/components/ui/table"
 import { deleteIcon, edit } from "@/lib/fiori-icons"
 
-import { defineFixtures } from "../fixture-types"
+import { defineFixtures, readPageOptions } from "../fixture-types"
 
 export type TableFixtureProps = {
   loading?: boolean
@@ -29,6 +34,7 @@ export type TableFixtureProps = {
   growing?: boolean
   sort?: boolean
   alternate?: boolean
+  aiAction?: boolean
   dropPlacement?: "Before" | "After" | "On"
 }
 
@@ -48,6 +54,9 @@ export const TABLE_HIGHLIGHTS: TableRowHighlight[] = ["negative", "critical", "p
 export const TABLE_WIDTH = "32rem"
 export const TABLE_POPIN_WIDTH = "16rem"
 
+const unownedAIActionProps = { id: "unowned-ai-button", role: "switch", tabIndex: -1, "aria-label": "Unowned AI action" }
+const packs = { "de-DE": de, "zh-CN": zh, "ar-EG": ar }
+
 function StaticTableDrop({ children, placement }: { children: React.ReactNode; placement?: "Before" | "After" | "On" }) {
   const ref = React.useRef<HTMLDivElement>(null)
   const [elements, setElements] = React.useState<{ owner: HTMLElement; target: HTMLElement } | null>(null)
@@ -62,6 +71,38 @@ function StaticTableDrop({ children, placement }: { children: React.ReactNode; p
 export default defineFixtures<TableFixtureProps>({
   name: "table",
   a11yDiff: {
+    "table-ai-header": {
+      "ignore": [
+        "/ours/ax/0",
+        "/ours/ax/0/children/0",
+        "/ui5/ax/0",
+        "/ui5/ax/0/children/1/children/0/children/1/children/0"
+      ],
+      "ui5FormHosts": [
+        "/ui5/ax/0/children/1/children/0/children/1/children/0/children/0"
+      ],
+      "reason": "TableHeaderCellActionBaseTemplate.js nests a form-associated UI5 Button inside the AI action host. Unwrap the exact anonymous wrappers and the host that repeats the inner button's default validity. Compare the actual button and all of its semantics."
+    },
+    "table-ai-popin": {
+      "ignore": [
+        "/ours/ax/0",
+        "/ours/ax/0/children/0",
+        "/ui5/ax/0",
+        "/ours/ax/0/children/0/children/1/children/0/children/2/children/0",
+        "/ui5/ax/0/children/1/children/0/children/2/children/0",
+        "/ui5/ax/0/children/1/children/1/children/2/children/1",
+        "/ui5/ax/0/children/1/children/2/children/2/children/1",
+        "/ui5/ax/0/children/1/children/3/children/2/children/1",
+        "/ui5/ax/0/children/1/children/4/children/2/children/1"
+      ],
+      "ui5FormHosts": [
+        "/ui5/ax/0/children/1/children/1/children/2/children/1/children/0",
+        "/ui5/ax/0/children/1/children/2/children/2/children/1/children/0",
+        "/ui5/ax/0/children/1/children/3/children/2/children/1/children/0",
+        "/ui5/ax/0/children/1/children/4/children/2/children/1/children/0"
+      ],
+      "reason": "TableCell.js:_popinHeaderNodes clones the header action into each row. Unwrap each anonymous action wrapper and the form-associated UI5 Button hosts that repeat their inner button's default validity. Keep the row pop-in labels and all button semantics."
+    },
     "table": {
       "ignore": [
         "/ours/ax/0",
@@ -258,13 +299,15 @@ export default defineFixtures<TableFixtureProps>({
     { id: "table-alternate", props: { alternate: true } },
     { id: "table-no-data", props: { noData: true } },
     { id: "table-popin", props: { popin: true } },
+    { id: "table-ai-header", props: { aiAction: true, sort: true } },
+    { id: "table-ai-popin", props: { aiAction: true, popin: true } },
     { id: "table-growing", props: { growing: true } },
     { id: "table-highlight", props: { highlight: true } },
   ],
   // ui5-table 2.28 has no row highlight (sap.m.Table's status bar); our highlight follows ui5-li's,
   // so there's nothing to compare it with. Checked by screenshot only.
   skipCompare: ["table-highlight"],
-  react: ({ selection, selected, highlight, actions, navigated, group, noData, popin, growing, sort, alternate, dropPlacement, interactive, loading }) => {
+  react: ({ selection, selected, highlight, actions, navigated, group, noData, popin, growing, sort, alternate, dropPlacement, interactive, loading, aiAction }) => {
     const rows = noData ? [] : TABLE_ROWS
     const renderRow = (r: (typeof TABLE_ROWS)[number], i: number) => (
       <TableRow
@@ -288,7 +331,7 @@ export default defineFixtures<TableFixtureProps>({
         ))}
       </TableRow>
     )
-    return (
+    const table = (
       <StaticTableDrop placement={dropPlacement}>
       <Table
         aria-label="Products"
@@ -310,6 +353,8 @@ export default defineFixtures<TableFixtureProps>({
               minWidth={popin ? "7rem" : undefined}
               horizontalAlign={c.align}
               sortIndicator={sort && c.id === "product" ? "ascending" : sort && c.id === "price" ? "descending" : undefined}
+              action={aiAction && c.id === "supplier" ? <TableHeaderCellActionAI {...unownedAIActionProps}
+                className="fixture-ai-action" classNames={{ icon: "fixture-ai-action-icon" }} /> : undefined}
             >
               {c.label}
             </TableHeaderCell>
@@ -328,5 +373,9 @@ export default defineFixtures<TableFixtureProps>({
       </Table>
       </StaticTableDrop>
     )
+    const { locale, dir } = readPageOptions()
+    return aiAction && locale && Object.hasOwn(packs, locale)
+      ? <FioriLocaleProvider locale={locale} dir={dir} texts={packs[locale as keyof typeof packs]}>{table}</FioriLocaleProvider>
+      : table
   },
 })

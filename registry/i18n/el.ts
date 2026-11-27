@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Πλαίσιο Ελέγχου Επιλογή Όλων",
   "TABLE_COLUMN_HEADER_ROW": "Σειρά Κεφαλίδας Στήλης",
   "TABLE_DESELECT_ALL_ROWS": "Αποεπιλέξτε Όλες τις Σειρές",
+  "TABLE_GENERATED_BY_AI": "Παραγόμενο από ΑΙ",
   "TABLE_GROUP_ROW": "Σειρά Ομάδας",
   "TABLE_MORE": "Περισσότερα",
   "TABLE_MORE_DESCRIPTION": "Για να φορτώσετε περισσότερες σειρές, πατήστε Enter ή Space",

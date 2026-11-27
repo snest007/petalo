@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "เช็คบ็อกซ์ ''เลือกทั้งหมด''",
   "TABLE_COLUMN_HEADER_ROW": "แถวส่วนหัวคอลัมน์",
   "TABLE_DESELECT_ALL_ROWS": "ยกเลิกการเลือกแถวทั้งหมด",
+  "TABLE_GENERATED_BY_AI": "สร้างขึ้นโดย AI",
   "TABLE_GROUP_ROW": "แถวของกลุ่ม",
   "TABLE_MORE": "เพิ่มเติม",
   "TABLE_MORE_DESCRIPTION": "เมื่อต้องการโหลดแถวเพิ่มเติม ให้กด Enter หรือ Spacebar",

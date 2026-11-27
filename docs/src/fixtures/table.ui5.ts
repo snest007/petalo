@@ -2,6 +2,7 @@ import { renderFinished } from "@ui5/webcomponents-base/dist/Render.js"
 import "@ui5/webcomponents/dist/Table.js"
 import "@ui5/webcomponents/dist/TableHeaderRow.js"
 import "@ui5/webcomponents/dist/TableHeaderCell.js"
+import "@ui5/webcomponents/dist/TableHeaderCellActionAI.js"
 import "@ui5/webcomponents/dist/TableRow.js"
 import "@ui5/webcomponents/dist/TableCell.js"
 import "@ui5/webcomponents/dist/TableGroupRow.js"
@@ -11,6 +12,7 @@ import "@ui5/webcomponents/dist/TableGrowing.js"
 import "@ui5/webcomponents/dist/TableRowAction.js"
 import "@ui5/webcomponents/dist/TableRowActionNavigation.js"
 import "@ui5/webcomponents-icons/dist/edit.js"
+import "@ui5/webcomponents-icons/dist/ai.js"
 import "@ui5/webcomponents-icons/dist/delete.js"
 import "@ui5/webcomponents-icons/dist/navigation-right-arrow.js"
 import "@ui5/webcomponents-icons/dist/sort-ascending.js"
@@ -19,7 +21,7 @@ import "@ui5/webcomponents-icons/dist/sort-descending.js"
 import { defineUi5, h, type Ui5FixtureElement } from "../fixture-types"
 import set, { TABLE_COLUMNS, TABLE_POPIN_WIDTH, TABLE_ROWS, TABLE_WIDTH } from "./table"
 
-export default defineUi5(set, ({ selection, selected, actions, navigated, group, noData, popin, growing, sort, alternate, dropPlacement, interactive, loading }) => {
+export default defineUi5(set, ({ selection, selected, actions, navigated, group, noData, popin, growing, sort, alternate, dropPlacement, interactive, loading, aiAction }) => {
   const rows = noData ? [] : TABLE_ROWS
   const row = (r: (typeof TABLE_ROWS)[number], i: number) =>
     h(
@@ -69,7 +71,8 @@ export default defineUi5(set, ({ selection, selected, actions, navigated, group,
             "horizontal-align": c.align,
             "sort-indicator": sort && c.id === "product" ? "Ascending" : sort && c.id === "price" ? "Descending" : undefined,
           },
-          c.label
+          c.label,
+          ...(aiAction && c.id === "supplier" ? [h("ui5-table-header-cell-action-ai", { slot: "action" })] : [])
         )
       )
     ),

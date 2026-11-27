@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Žymės langelis „Pasirinkti viską“",
   "TABLE_COLUMN_HEADER_ROW": "Stulpelio antraštės eilutė",
   "TABLE_DESELECT_ALL_ROWS": "Atžymėti visas eilutes",
+  "TABLE_GENERATED_BY_AI": "Sugeneruota naudojant DI",
   "TABLE_GROUP_ROW": "Grupės eilutė",
   "TABLE_MORE": "Daugiau",
   "TABLE_MORE_DESCRIPTION": "Norėdami įkelti daugiau eilučių, paspauskite ENTER arba tarpo klavišą",

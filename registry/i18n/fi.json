@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Valitse kaikki -valintaruutu",
   "TABLE_COLUMN_HEADER_ROW": "Sarakeotsikkorivi",
   "TABLE_DESELECT_ALL_ROWS": "Poista kaikkien rivien valinta",
+  "TABLE_GENERATED_BY_AI": "Tekoälyn generoima",
   "TABLE_GROUP_ROW": "Ryhmärivi",
   "TABLE_MORE": "Lisää",
   "TABLE_MORE_DESCRIPTION": "Lataa lisää rivejä painamalla Enter-näppäintä tai välilyöntiä",

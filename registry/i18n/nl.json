@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Aankruisvakje Alles selecteren",
   "TABLE_COLUMN_HEADER_ROW": "Rij met kolomkoppen",
   "TABLE_DESELECT_ALL_ROWS": "Alle rijen deselecteren",
+  "TABLE_GENERATED_BY_AI": "Gegenereerd door AI",
   "TABLE_GROUP_ROW": "Groepsrij",
   "TABLE_MORE": "Meer",
   "TABLE_MORE_DESCRIPTION": "Druk op Enter of Spatiebalk om meer rijen te laden",

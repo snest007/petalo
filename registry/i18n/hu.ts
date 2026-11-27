@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Összes bejelölése jelölőmező",
   "TABLE_COLUMN_HEADER_ROW": "Oszlopfejlécsor",
   "TABLE_DESELECT_ALL_ROWS": "Összes sor kijelölésének megszüntetése",
+  "TABLE_GENERATED_BY_AI": "AI által generálva",
   "TABLE_GROUP_ROW": "Csoportsor",
   "TABLE_MORE": "Több",
   "TABLE_MORE_DESCRIPTION": "További sorok betöltéséhez nyomja le az Enter vagy a Szóköz billentyűt",

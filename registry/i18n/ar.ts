@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "خانات الاختيار تحديد الكل",
   "TABLE_COLUMN_HEADER_ROW": "صف مقدمة العمود",
   "TABLE_DESELECT_ALL_ROWS": "إلغاء تحديد كل الصفوف",
+  "TABLE_GENERATED_BY_AI": "مُنشأ بواسطة الذكاء الاصطناعي",
   "TABLE_GROUP_ROW": "صف المجموعة",
   "TABLE_MORE": "المزيد",
   "TABLE_MORE_DESCRIPTION": "لتحميل المزيد من الصفوف، اضغط على Enter أو Space",

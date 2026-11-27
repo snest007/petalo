@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Case à cocher Sélectionner tout",
   "TABLE_COLUMN_HEADER_ROW": "Ligne d''en-tête de colonne",
   "TABLE_DESELECT_ALL_ROWS": "Désélectionner toutes les lignes",
+  "TABLE_GENERATED_BY_AI": "Généré par l''IA",
   "TABLE_GROUP_ROW": "Ligne de groupe",
   "TABLE_MORE": "Plus",
   "TABLE_MORE_DESCRIPTION": "Pour charger davantage de lignes, appuyez sur Entrée ou la barre d''espace",

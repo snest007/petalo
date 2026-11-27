@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Tümünü seç onay kutusu",
   "TABLE_COLUMN_HEADER_ROW": "Sütun başlığı satırı",
   "TABLE_DESELECT_ALL_ROWS": "Tüm satırların seçimini kaldır",
+  "TABLE_GENERATED_BY_AI": "Yapay zeka tarafından oluşturuldu",
   "TABLE_GROUP_ROW": "Grup satırı",
   "TABLE_MORE": "Daha fazla",
   "TABLE_MORE_DESCRIPTION": "Enter veya boşluk tuşuna basarak daha fazla satır yükleyin",

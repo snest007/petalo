@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "すべてのチェックボックスを選択",
   "TABLE_COLUMN_HEADER_ROW": "列ヘッダ行",
   "TABLE_DESELECT_ALL_ROWS": "すべての行の選択を解除",
+  "TABLE_GENERATED_BY_AI": "AI により生成",
   "TABLE_GROUP_ROW": "グループ行",
   "TABLE_MORE": "さらに表示",
   "TABLE_MORE_DESCRIPTION": "行をさらにロードするには、Enter またはスペースキーを押します",

@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Marcar todos os campos de seleção",
   "TABLE_COLUMN_HEADER_ROW": "Linha de cabeçalho de coluna",
   "TABLE_DESELECT_ALL_ROWS": "Desmarcar todas as linhas",
+  "TABLE_GENERATED_BY_AI": "Gerado por IA",
   "TABLE_GROUP_ROW": "Linha de grupo",
   "TABLE_MORE": "Mais",
   "TABLE_MORE_DESCRIPTION": "Para carregar mais linhas, pressione Enter ou espaço",

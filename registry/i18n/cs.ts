@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Zaškrtněte všechna políčka",
   "TABLE_COLUMN_HEADER_ROW": "Řádka hlavičky sloupců",
   "TABLE_DESELECT_ALL_ROWS": "Zrušit výběr všech řádek",
+  "TABLE_GENERATED_BY_AI": "Generováno umělou inteligencí",
   "TABLE_GROUP_ROW": "Skupinová řádka",
   "TABLE_MORE": "Více",
   "TABLE_MORE_DESCRIPTION": "Další řádky načtete stisknutím Enter nebo mezerníku",

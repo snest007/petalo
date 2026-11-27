@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Casilla de selección \"Seleccionar todo\"",
   "TABLE_COLUMN_HEADER_ROW": "Línea de cabecera de columna",
   "TABLE_DESELECT_ALL_ROWS": "Anular la selección de todas las filas",
+  "TABLE_GENERATED_BY_AI": "Generado por IA",
   "TABLE_GROUP_ROW": "Línea de grupo",
   "TABLE_MORE": "Más",
   "TABLE_MORE_DESCRIPTION": "Para cargar más filas, pulse Intro o Espacio",

@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Прапорець \"Вибрати все\"",
   "TABLE_COLUMN_HEADER_ROW": "Рядок заголовка стовпчика",
   "TABLE_DESELECT_ALL_ROWS": "Скасувати вибір усіх рядків",
+  "TABLE_GENERATED_BY_AI": "Згенеровано ШІ",
   "TABLE_GROUP_ROW": "Рядок групи",
   "TABLE_MORE": "Більше",
   "TABLE_MORE_DESCRIPTION": "Щоб завантажити більше рядків, натисніть Enter або клавішу пробілу",

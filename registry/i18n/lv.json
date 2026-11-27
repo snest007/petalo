@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Izvēles rūtiņa “Atlasīt visus”",
   "TABLE_COLUMN_HEADER_ROW": "Kolonnu galveņu rinda",
   "TABLE_DESELECT_ALL_ROWS": "Noņemt atlasi visām rindām",
+  "TABLE_GENERATED_BY_AI": "Ģenerēts, izmantojot AI",
   "TABLE_GROUP_ROW": "Grupas rinda",
   "TABLE_MORE": "Vairāk",
   "TABLE_MORE_DESCRIPTION": "Lai ielādētu vairāk rindu, nospiediet taustiņu Enter vai Atstarpe",

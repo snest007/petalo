@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Velg alle markeringsfelt",
   "TABLE_COLUMN_HEADER_ROW": "Kolonneoverskrift",
   "TABLE_DESELECT_ALL_ROWS": "Opphev merkingen av alle rader",
+  "TABLE_GENERATED_BY_AI": "Generert av KI",
   "TABLE_GROUP_ROW": "Grupperad",
   "TABLE_MORE": "Mer",
   "TABLE_MORE_DESCRIPTION": "Trykk på Enter eller mellomromstasten for å laste flere rader",

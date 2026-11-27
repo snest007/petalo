@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Potrditveno polje Izberi vse",
   "TABLE_COLUMN_HEADER_ROW": "Vrstica glave stolpca",
   "TABLE_DESELECT_ALL_ROWS": "Preklic izbire vseh vrstic",
+  "TABLE_GENERATED_BY_AI": "Generirala UI",
   "TABLE_GROUP_ROW": "Uskupinjanje vrstice",
   "TABLE_MORE": "Več",
   "TABLE_MORE_DESCRIPTION": "Pritisnite tipko Enter ali preslednico, da naložite več vrstic",

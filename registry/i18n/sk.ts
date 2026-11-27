@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Začiarknuť všetky polia",
   "TABLE_COLUMN_HEADER_ROW": "Riadok hlavičky stĺpca",
   "TABLE_DESELECT_ALL_ROWS": "Zrušiť výber všetkých riadkov",
+  "TABLE_GENERATED_BY_AI": "Vygenerované AI",
   "TABLE_GROUP_ROW": "Skupinový riadok",
   "TABLE_MORE": "Ďalšie",
   "TABLE_MORE_DESCRIPTION": "Ak chcete načítať ďalšie riadky, stlačte Enter alebo medzerník",

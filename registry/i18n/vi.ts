@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Ô đánh dấu Chọn tất cả",
   "TABLE_COLUMN_HEADER_ROW": "Hàng tiêu đề cột",
   "TABLE_DESELECT_ALL_ROWS": "Bỏ chọn tất cả hàng",
+  "TABLE_GENERATED_BY_AI": "Được tạo bởi AI",
   "TABLE_GROUP_ROW": "Hàng nhóm",
   "TABLE_MORE": "Thêm",
   "TABLE_MORE_DESCRIPTION": "Để tải thêm hàng, hãy nhấn Enter hoặc Phím cách",
