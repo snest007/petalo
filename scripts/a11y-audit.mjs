@@ -103,6 +103,7 @@ const h1Texts = [
 ]
 const inputSuggestionsProof = "tests/input.spec.ts: Input suggestions preview, selection, announcements and phone editor"
 const verifiedTexts = {
+  "table.TABLE_GENERATED_BY_AI": { equivalent: "Table.texts.generatedByAI names the AI action and supplies the focused header and pop-in description", proof: "tests/table.spec.ts: AI header action owns activation and focus in LTR/RTL and uses the native tooltip and name", status: "ok" },
   "segmented-button.LIST_ITEM_SELECTED": { equivalent: "SegmentedButton.texts.selected", proof: "tests/segmented-button.spec.ts: selection announces assertively and deselection does not announce", status: "fixed in E4" },
   "segmented-button.SEGMENTEDBUTTON_ARIA_DESCRIBEDBY": { equivalent: "SegmentedButton.texts.itemDescription / SegmentedButtonItem.texts.itemDescription", proof: "tests/segmented-button.spec.ts: item description and description-ref reach the UI5 owning element", status: "fixed in E4" },
 }

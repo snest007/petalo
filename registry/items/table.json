@@ -8,7 +8,7 @@
     "@petalo/busy-indicator",
     "@petalo/locale"
   ],
-  "description": "Fiori responsive table (ui5-table): selection, popin, growing, row actions, group rows and grid keyboard navigation.",
+  "description": "Fiori responsive table (ui5-table): selection, popin, growing, row actions, AI column header actions, group rows and grid keyboard navigation.",
   "files": [
     {
       "path": "registry/lib/fiori-drag-and-drop.ts",

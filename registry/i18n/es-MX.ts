@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Casilla de selección \"Seleccionar todo\"",
   "TABLE_COLUMN_HEADER_ROW": "Fila de encabezado de columna",
   "TABLE_DESELECT_ALL_ROWS": "Cancelar la selección de todas las filas",
+  "TABLE_GENERATED_BY_AI": "Generado con IA",
   "TABLE_GROUP_ROW": "Fila de grupo",
   "TABLE_MORE": "Más",
   "TABLE_MORE_DESCRIPTION": "Para cargar más filas, presione Entrar o la barra espaciadora",

@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Casella de selecció \"Seleccionar-ho tot\"",
   "TABLE_COLUMN_HEADER_ROW": "Línia de capçalera de columna",
   "TABLE_DESELECT_ALL_ROWS": "Anul·lar la selecció de totes les files",
+  "TABLE_GENERATED_BY_AI": "Generat per IA",
   "TABLE_GROUP_ROW": "Línia de grup",
   "TABLE_MORE": "Més",
   "TABLE_MORE_DESCRIPTION": "Per carregar més files, premeu Retorn o Espai",

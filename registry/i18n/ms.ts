@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Pilih Semua Kotak Semak",
   "TABLE_COLUMN_HEADER_ROW": "Baris Pengepala Lajur",
   "TABLE_DESELECT_ALL_ROWS": "Nyahpilih Semua Baris",
+  "TABLE_GENERATED_BY_AI": "Dijanakan oleh AI",
   "TABLE_GROUP_ROW": "Baris Kumpulan",
   "TABLE_MORE": "Selanjutnya",
   "TABLE_MORE_DESCRIPTION": "Bagi memuatkan lebih banyak baris, tekan Enter atau Space",

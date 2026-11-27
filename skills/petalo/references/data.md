@@ -169,7 +169,7 @@ Compose responsive rows and cells when users compare and act on business items.
 - Pick one of 2–12 predefined field values without inspecting row attributes; sort alphabetically above 8. → [select](forms.md#select)
 - Inspect or edit fields of one object rather than compare independent rows. → [form](forms.md#form)
 
-Main exports: `Table`, `TableCell`, `TableGroupRow`, `TableHeaderCell`, `TableHeaderRow`, `TableRow`, `TableRowAction`, `TableRowActionNavigation`, `defaultTableTexts`.
+Main exports: `Table`, `TableCell`, `TableGroupRow`, `TableHeaderCell`, `TableHeaderCellActionAI`, `TableHeaderRow`, `TableRow`, `TableRowAction`, `TableRowActionNavigation`, `defaultTableTexts`.
 
 ```bash
 npx shadcn add @petalo/table

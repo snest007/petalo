@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Поле за отметка „Избор на всички“",
   "TABLE_COLUMN_HEADER_ROW": "Ред на заглавна част на колона",
   "TABLE_DESELECT_ALL_ROWS": "Отмяна на избора на всички редове",
+  "TABLE_GENERATED_BY_AI": "Генерирано от AI",
   "TABLE_GROUP_ROW": "Ред за група",
   "TABLE_MORE": "Още",
   "TABLE_MORE_DESCRIPTION": "За да се заредят още редове, натиснете Enter или интервал",

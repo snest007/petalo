@@ -332,6 +332,15 @@
 .fiori-table-header-cell__action {
   flex-shrink: 0;
 }
+/* TableHeaderCellActionBase.css.js sizes the transparent button and its icon. */
+.fiori-table-header-cell-action-ai {
+  --fiori-x-table-header-action-size: 1.625rem;
+  --fiori-x-table-header-action-icon-size: 1rem;
+}
+.fiori-table-cell__popin-header .fiori-table-header-cell-action-ai {
+  --fiori-x-table-header-action-icon-size: 0.75rem;
+  margin-inline-start: 0.0625rem;
+}
 
 /* Row actions (TableRowActionBase) */
 .fiori-table-row-action[data-invisible] {

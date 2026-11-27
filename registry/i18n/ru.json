@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Флажок ''Выбрать все''",
   "TABLE_COLUMN_HEADER_ROW": "Строка заголовка столбца",
   "TABLE_DESELECT_ALL_ROWS": "Отменить выбор всех строк",
+  "TABLE_GENERATED_BY_AI": "Сгенерировано с помощью ИИ",
   "TABLE_GROUP_ROW": "Групповая строка",
   "TABLE_MORE": "Больше",
   "TABLE_MORE_DESCRIPTION": "Нажмите Enter или пробел, чтобы загрузить еще строки",

@@ -7,6 +7,7 @@ import {
   TableCell,
   TableGroupRow,
   TableHeaderCell,
+  TableHeaderCellActionAI,
   TableHeaderRow,
   TableRow,
   TableRowAction,
@@ -208,11 +209,37 @@ function MovableTables() {
   </div>
 }
 
+function AIHeaderTable() {
+  const [narrow, setNarrow] = React.useState(false)
+  const [showSource, setShowSource] = React.useState(false)
+  return (
+    <section className="grid gap-2" aria-label="AI column header example">
+      <div>
+        <Button aria-pressed={narrow} onClick={() => setNarrow(!narrow)}>Narrow table</Button>
+      </div>
+      <Table id="table-ai-action" aria-label="Supplier data" overflowMode="popin"
+        style={{ width: narrow ? "10rem" : "22rem" }}>
+        <TableHeaderRow>
+          <TableHeaderCell minWidth="8rem" importance={2} sortIndicator="ascending">Product</TableHeaderCell>
+          <TableHeaderCell minWidth="8rem" action={<TableHeaderCellActionAI onClick={() => setShowSource(true)} />}>Supplier</TableHeaderCell>
+        </TableHeaderRow>
+        <TableRow rowKey="notebook" interactive onClick={() => setShowSource(false)}>
+          <TableCell>Notebook</TableCell>
+          <TableCell>Best Screens</TableCell>
+        </TableRow>
+      </Table>
+      {showSource && <p role="status">Supplier suggested from vendor records.</p>}
+      <p>Customise the AI action with <code>className</code> or <code>classNames.icon</code>, and set <code>texts.generatedByAI</code> on the table to override its label.</p>
+    </section>
+  )
+}
+
 function TableDemo() {
   return (
     <div id="table-demo" className="grid gap-6">
       <SelectionTable />
       <PopinTable />
+      <AIHeaderTable />
       <Table id="table-empty" aria-label="Empty" noDataText="No products found">
         <TableHeaderRow>
           <TableHeaderCell>Product</TableHeaderCell>
@@ -238,6 +265,7 @@ export default defineDemo({
         { name: "Table.overflowMode", type: "scroll | popin", description: "Horizontal overflow behavior.", defaultValue: "scroll" },
         { name: "Table.growing", type: "button | scroll", description: "Offer explicit or scroll-triggered loading." },
         { name: "Table.onLoadMore", type: "() => void", description: "Request additional rows." },
+        { name: "TableHeaderCellActionAI", type: "TableHeaderCell.action", description: "Identify an AI-generated column and open its source details from the header or a pop-in." },
       ],
     },
     {

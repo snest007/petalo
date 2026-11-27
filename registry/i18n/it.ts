@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Seleziona tutte le caselle di spunta",
   "TABLE_COLUMN_HEADER_ROW": "Riga testata per colonne",
   "TABLE_DESELECT_ALL_ROWS": "Deseleziona tutte le righe",
+  "TABLE_GENERATED_BY_AI": "Generato dall''AI",
   "TABLE_GROUP_ROW": "Riga gruppo",
   "TABLE_MORE": "Mostra di più",
   "TABLE_MORE_DESCRIPTION": "Per caricare più righe premere Invio o Spazio",

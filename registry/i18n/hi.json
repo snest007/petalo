@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "सभी चेकबॉक्स चयनित करें",
   "TABLE_COLUMN_HEADER_ROW": "स्तंभ शीर्षक पंक्ति",
   "TABLE_DESELECT_ALL_ROWS": "सभी पंक्तियों को अचयनित करें",
+  "TABLE_GENERATED_BY_AI": "AI द्वारा जनरेट किया गया",
   "TABLE_GROUP_ROW": "समूह पंक्ति",
   "TABLE_MORE": "अधिक",
   "TABLE_MORE_DESCRIPTION": "अधिक पंक्तियाँ लोड करने के लिए, Enter या Space दबाएँ",

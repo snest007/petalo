@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Поле за означување Избери ги сите",
   "TABLE_COLUMN_HEADER_ROW": "Ред за заглавие на колоната",
   "TABLE_DESELECT_ALL_ROWS": "Поништи го изборот на сите редови",
+  "TABLE_GENERATED_BY_AI": "Генерирано со помош на вештачка интелигенција",
   "TABLE_GROUP_ROW": "Ред на групата",
   "TABLE_MORE": "Повеќе",
   "TABLE_MORE_DESCRIPTION": "За да вчитате повеќе редови, притиснете Enter или копчето за празно место",

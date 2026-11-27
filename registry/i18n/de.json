@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Ankreuzfeld \"Alle markieren\"",
   "TABLE_COLUMN_HEADER_ROW": "Spaltenüberschriftzeile",
   "TABLE_DESELECT_ALL_ROWS": "Markierungen aller Zeilen löschen",
+  "TABLE_GENERATED_BY_AI": "KI-generiert",
   "TABLE_GROUP_ROW": "Gruppenzeile",
   "TABLE_MORE": "Weitere",
   "TABLE_MORE_DESCRIPTION": "Um weitere Zeilen zu laden, drücken Sie Enter oder die Leertaste.",

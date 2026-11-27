@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Kryssrutan Markera alla",
   "TABLE_COLUMN_HEADER_ROW": "Kolumnrubrikrad",
   "TABLE_DESELECT_ALL_ROWS": "Avmarkera alla rader",
+  "TABLE_GENERATED_BY_AI": "Genererad av AI",
   "TABLE_GROUP_ROW": "Grupprad",
   "TABLE_MORE": "Mer",
   "TABLE_MORE_DESCRIPTION": "Läs in fler rader genom att trycka på Enter eller Blanksteg",

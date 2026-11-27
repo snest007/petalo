@@ -7,8 +7,8 @@ Read [AGENTS.md](../../AGENTS.md) before starting a card.
 
 | Wave | Open or planned | Scheduling |
 |---|---|---|
-| H (new components) | H6, H6b, H6c, H14 | **Next: [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md)**. The Calendar chain follows P2a. |
-| P (accessibility and localization parity) | P1–P6, P2a | [P2a](tasks/P2a-parity-calendar-date-pickers.md) runs just before H6 → H6b → H6c. The other P cards follow new component work. |
+| H (new components) | H6, H6b, H6c | The Calendar chain follows P2a. |
+| P (accessibility and localization parity) | P1–P6, P2a | **Next: [P2a Calendar and date pickers](tasks/P2a-parity-calendar-date-pickers.md)**, then H6 → H6b → H6c. The other P cards follow new component work. |
 | X (extension rollout) | X1–X40 candidates | Plan each group after its P card. |
 | S (Storybook) | S5 | Schedule after new component work. |
 | A–G | — | Complete. E9 was cancelled. |
@@ -40,7 +40,6 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [ ] [H6 Calendar extension points (+ date pickers)](tasks/H6-calendar-extension-points.md) — M (after E4, E5, P2a; X0-approved design)
 - [ ] [H6b Calendar: activated day in selection events, custom week numbers](tasks/H6b-calendar-selection-detail-week-numbers.md) — S (after H6; same file, never in parallel with it)
 - [ ] [H6c Calendar week numbers: match UI5 2.28 + `calendarWeekNumbering`](tasks/H6c-calendar-week-numbering.md) — M (after E5, P2a, H6, H6b; same files, never in parallel with them)
-- [ ] [H14 TableHeaderCellActionAI](tasks/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5)
 
 <details>
 <summary>Completed Wave H cards</summary>
@@ -74,6 +73,7 @@ See [AGENTS.md](../../AGENTS.md#hard-rules) for accessibility and localization a
 - [x] [H13 UserSettingsDialog](tasks/done/H13-user-settings-dialog.md) — L (after H0, E4, E5), [acceptance](returns/done/H13.md)
 - [x] [H13b Preserve settings view state across categories](tasks/done/H13b-user-settings-view-state.md) — S (continue on `codex/H13`)
 - [x] [H13c Notification settings views](tasks/done/H13c-user-settings-notifications.md) — M (after H13/H13b), [acceptance](returns/done/H13c.md)
+- [x] [H14 TableHeaderCellActionAI](tasks/done/H14-table-header-cell-action-ai.md) — S (after H0, E4, E5), [acceptance](returns/done/H14.md)
 
 </details>
 

@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "勾選所有核取方塊",
   "TABLE_COLUMN_HEADER_ROW": "欄頁首列",
   "TABLE_DESELECT_ALL_ROWS": "取消選擇所有列",
+  "TABLE_GENERATED_BY_AI": "由 AI 產生",
   "TABLE_GROUP_ROW": "群組列",
   "TABLE_MORE": "更多",
   "TABLE_MORE_DESCRIPTION": "若要載入更多列，請按下 Enter 鍵或空白鍵",

@@ -404,6 +404,7 @@
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "모든 체크박스를 선택하십시오.",
   "TABLE_COLUMN_HEADER_ROW": "열 헤더 행",
   "TABLE_DESELECT_ALL_ROWS": "모든 행 선택 해제",
+  "TABLE_GENERATED_BY_AI": "AI에 의해 생성됨",
   "TABLE_GROUP_ROW": "그룹 행",
   "TABLE_MORE": "더 보기",
   "TABLE_MORE_DESCRIPTION": "행을 더 로드하려면 Enter 또는 스페이스바를 누르십시오.",

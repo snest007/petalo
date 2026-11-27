@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Барлығын таңдау құсбелгі ұяшығы",
   "TABLE_COLUMN_HEADER_ROW": "Баған тақырыбының жолы",
   "TABLE_DESELECT_ALL_ROWS": "Барлық жолдарды таңдаудан алу",
+  "TABLE_GENERATED_BY_AI": "ЖИ арқылы құрылған",
   "TABLE_GROUP_ROW": "Топтау жолы",
   "TABLE_MORE": "Көбірек",
   "TABLE_MORE_DESCRIPTION": "Көбірек жол жүктеу үшін Enter немесе бос орын пернесін басыңыз",

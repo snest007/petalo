@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Potvrdni okvir Odaberi sve",
   "TABLE_COLUMN_HEADER_ROW": "Redak zaglavlja stupca",
   "TABLE_DESELECT_ALL_ROWS": "Poništi odabir svih redova",
+  "TABLE_GENERATED_BY_AI": "Generirano umjetnom inteligencijom",
   "TABLE_GROUP_ROW": "Redak grupe",
   "TABLE_MORE": "Više",
   "TABLE_MORE_DESCRIPTION": "Za učitavanje više redova pritisnite Enter ili razmaknicu",

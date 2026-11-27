@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Märkeruut „Vali kõik“",
   "TABLE_COLUMN_HEADER_ROW": "Veerupäiserida",
   "TABLE_DESELECT_ALL_ROWS": "Tühista kõigi ridade valik",
+  "TABLE_GENERATED_BY_AI": "Tehisintellekti genereeritud",
   "TABLE_GROUP_ROW": "Grupirida",
   "TABLE_MORE": "Rohkem",
   "TABLE_MORE_DESCRIPTION": "Kui soovite laadida rohkem ridu, vajutage sisestusklahvi Enter või tühikuklahvi",

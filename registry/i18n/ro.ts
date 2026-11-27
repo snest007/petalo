@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Caseta de marcaj Selectare tot",
   "TABLE_COLUMN_HEADER_ROW": "Rând antet coloană",
   "TABLE_DESELECT_ALL_ROWS": "Deselectați toate liniile",
+  "TABLE_GENERATED_BY_AI": "Generat de AI",
   "TABLE_GROUP_ROW": "Linie de grup",
   "TABLE_MORE": "Mai mult",
   "TABLE_MORE_DESCRIPTION": "Pentru a încărca mai multe linii, apăsați pe Enter sau Space",

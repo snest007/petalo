@@ -407,6 +407,7 @@ const texts = {
   "TABLE_COLUMNHEADER_SELECTALL_DESCRIPTION": "Dewis Pob Blwch Ticio",
   "TABLE_COLUMN_HEADER_ROW": "Rhes Pennyn Colofn",
   "TABLE_DESELECT_ALL_ROWS": "Dad-ddewis Pob Rhes",
+  "TABLE_GENERATED_BY_AI": "Cynhyrchwyd gan AI",
   "TABLE_GROUP_ROW": "Rhes Grŵp",
   "TABLE_MORE": "Mwy",
   "TABLE_MORE_DESCRIPTION": "Llwytho mwy o resi drwy bwyso''r botwm ''Enter'' neu ''Space''",
