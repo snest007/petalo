@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Nessun risultato della ricerca",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 risultato disponibile",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Voce impostazioni utente",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista di tipi di notifiche",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista di preferenze di notifica",
   "VALUE_STATE_ERROR": "Inserimento non valido",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Questo valore è già selezionato.",
   "VALUE_STATE_INFORMATION": "Inserimento informativo",

@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Ingen søgeresultater",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 resultat tilgængeligt",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Brugerindstillingselement",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Liste over meddelelsestyper",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Liste over meddelelsespræferencer",
   "VALUE_STATE_ERROR": "Ugyldig entry",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Denne værdi er allerede valgt.",
   "VALUE_STATE_INFORMATION": "Informativ entry",

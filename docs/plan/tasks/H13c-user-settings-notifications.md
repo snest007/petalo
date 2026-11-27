@@ -34,3 +34,15 @@ styles. Follow the existing UserSettingsDialog content and page APIs.
   German, Simplified Chinese and Arabic.
 - Rebuild the registry, pass Tier 2, and prove the composition in a fresh
   consumer that installs only `@petalo/user-settings-dialog` and its dependencies.
+
+## File scope
+
+`user-settings-dialog` owns the component, styles, registry item, fixtures, demo
+and behavior tests. The shared neutral case data, Storybook and AX comparison
+live in `docs/src/fixtures/user-settings-dialog.cases.ts`,
+`docs/stories/overlays/user-settings-dialog.stories.tsx`,
+`tests/user-settings-dialog-a11y.ts` and `tests/a11y-tree-customizations.spec.ts`.
+The two list-name keys touch `scripts/a11y-audit.mjs`, `scripts/i18n-audit.mjs`,
+`tests/i18n-audit-baseline.json`, `docs/plan/i18n-audit.md` and the generated
+locale packs. The installed Switch dependency refreshes
+`skills/petalo/references/overlays.md`. Evidence is in `docs/plan/returns/H13c.md`.

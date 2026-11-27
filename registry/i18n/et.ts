@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Otsingutulemusi pole",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Saadaval on üks tulemus",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Kasutajasätete üksus",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Teavitustüüpide loend",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Teavituseelistuste loend",
   "VALUE_STATE_ERROR": "Sobimatu kirje",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "See väärtus on juba valitud.",
   "VALUE_STATE_INFORMATION": "Teavitav kirje",

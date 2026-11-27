@@ -5,9 +5,13 @@ import "@ui5/webcomponents-fiori/dist/UserSettingsView.js"
 import "@ui5/webcomponents-fiori/dist/UserSettingsAccountView.js"
 import "@ui5/webcomponents-fiori/dist/UserSettingsAppearanceView.js"
 import "@ui5/webcomponents-fiori/dist/UserSettingsAppearanceViewItem.js"
+import "@ui5/webcomponents-fiori/dist/UserSettingsNotificationsView.js"
+import "@ui5/webcomponents-fiori/dist/UserSettingsNotificationsViewGroup.js"
+import "@ui5/webcomponents-fiori/dist/UserSettingsNotificationsViewItem.js"
 import "@ui5/webcomponents-fiori/dist/UserMenuAccount.js"
 import "@ui5/webcomponents/dist/Button.js"
 import "@ui5/webcomponents-icons/dist/employee.js"
+import "@ui5/webcomponents-icons/dist/bell.js"
 import "@ui5/webcomponents-icons/dist/globe.js"
 import "@ui5/webcomponents-icons/dist/palette.js"
 import "@ui5/webcomponents-icons/dist/sys-help.js"
@@ -17,12 +21,13 @@ import type UI5Element from "@ui5/webcomponents-base/dist/UI5Element.js"
 import { defineUi5, h, type Ui5FixtureElement } from "../fixture-types"
 import { placeInPlace } from "./ui5-popup-in-place"
 import set from "./user-settings-dialog"
-import { appearanceItems, categories, panelHeight, panelWidth, settingsAccount, settingsHeader } from "./user-settings-dialog.cases"
+import { appearanceItems, categories, notificationAdditional, notificationCustomLabel, notificationDetail, notificationEmail, notificationGroupTitle,
+  notificationHeader, notificationPush, panelHeight, panelWidth, settingsAccount, settingsHeader } from "./user-settings-dialog.cases"
 
-export default defineUi5(set, ({ active = "general", search, empty, save, loading }) => {
+export default defineUi5(set, ({ active = "general", search, empty, save, loading, notifications }) => {
   const item = (id: keyof typeof categories, title: string, children: HTMLElement[]) =>
     h("ui5-user-settings-item", {
-      text: categories[id].text, icon: categories[id].icon, selected: id === active,
+      text: categories[id].text, icon: categories[id].icon, selected: id === (notifications ? "notifications" : active),
       "header-text": title, loading: id === "general" && loading, slot: id === "help" ? "fixedItems" : undefined,
     }, ...children)
   const account = h("ui5-user-settings-account-view", { "show-manage-account": true },
@@ -34,6 +39,22 @@ export default defineUi5(set, ({ active = "general", search, empty, save, loadin
     ...appearanceItems.map(entry => h("ui5-user-settings-appearance-view-item", {
       text: entry.text, "accessible-name": entry.text, icon: entry.icon, selected: entry.id === "light",
     })))
+  const notificationRow = (entry: { itemKey: string; text: string; bylineText?: string; defaultChecked?: boolean; navigable?: boolean },
+    ...children: HTMLElement[]) => h("ui5-user-settings-notifications-view-item", {
+    "item-key": entry.itemKey, text: entry.text, "byline-text": entry.bylineText, checked: entry.defaultChecked,
+    navigable: entry.navigable, "accessible-name": [entry.text, entry.bylineText].filter(Boolean).join(" "),
+    slot: entry === notificationHeader ? "headerItems" : undefined,
+  }, ...children)
+  const notificationPages = notifications ? [item("notifications", "Notifications", [
+    h("ui5-user-settings-notifications-view", { id: "primary", text: "Notifications" },
+      h("span", { slot: "additionalContent" }, notificationAdditional),
+      ...(notifications === "custom" ? [notificationRow(notificationHeader, h("ui5-button", { slot: "endContent", design: "Transparent" }, notificationCustomLabel))] : []),
+      notifications === "grouped"
+        ? h("ui5-user-settings-notifications-view-group", { "header-text": notificationGroupTitle }, notificationRow(notificationEmail), notificationRow(notificationPush))
+        : notificationRow(notificationEmail)),
+    h("ui5-user-settings-notifications-view", { id: "email", text: "Email preferences", secondary: true, selected: notifications === "secondary" },
+      notificationRow(notificationDetail)),
+  ])] : []
   const host = h("ui5-user-settings-dialog", { "header-text": settingsHeader, "show-search-field": search, "save-mode": save },
     item("general", "General preferences", [
       h("ui5-user-settings-view", { slot: "tabs", text: "Language", selected: true }, h("ui5-button", {}, "Change language")),
@@ -41,6 +62,7 @@ export default defineUi5(set, ({ active = "general", search, empty, save, loadin
     ]),
     item("account", "Account", [account]),
     item("appearance", "Appearance", [appearance]),
+    ...notificationPages,
     item("help", "Help", [h("ui5-user-settings-view", {}, h("ui5-button", {}, "Open help"))]))
   if (empty) (host as HTMLElement & { _searchValue: string })._searchValue = "absent"
   const frame = h("div", {}, host) as Ui5FixtureElement

@@ -45,12 +45,108 @@ for (const dir of ["ltr", "rtl"]) test(`names, navigates and announces the user 
   await expect(dialog(page).getByText("No search results", { exact: true }).first()).toBeVisible()
   await expect(announcement(page)).toHaveText("No search results")
   await search.fill("")
-  await expect(announcement(page)).toHaveText("4 results are available")
+  await expect(announcement(page)).toHaveText("5 results are available")
   const audit = await new AxeBuilder({ page }).include('[data-slot="user-settings-dialog"]').analyze()
   expect(audit.violations.map(violation => violation.id)).toEqual([])
   await search.press("Escape")
   await expect(dialog(page)).toHaveCount(0)
   await expect(opener(page)).toBeFocused()
+})
+
+for (const dir of ["ltr", "rtl"]) test(`notification switches and secondary navigation keep ownership in ${dir}`, async ({ page }) => {
+  await page.goto(`/?dir=${dir}#/user-settings-dialog`)
+  await opener(page).click()
+  await item(page, "Notifications").click()
+  const sheet = dialog(page)
+  const root = sheet.getByRole("list", { name: "List of Notification Types", exact: true })
+  const email = root.getByRole("listitem", { name: /^Email Account updates/ })
+  const emailSwitch = email.getByRole("switch", { name: "Email Account updates", exact: true })
+  const heading = sheet.getByRole("heading", { name: "Notifications", exact: true })
+  const back = sheet.getByRole("button", { name: "Navigate Back" })
+  await expect(emailSwitch).toBeChecked()
+  await email.focus()
+  await expect(email).toBeFocused()
+  await email.press("Control+Space")
+  await expect(emailSwitch).toBeChecked()
+  await email.press("Space")
+  await expect(emailSwitch).not.toBeChecked()
+  await expect(heading).toBeVisible()
+  await email.press("F2")
+  await expect(emailSwitch).toBeFocused()
+  await emailSwitch.press("Shift+Enter")
+  await expect(emailSwitch).not.toBeChecked()
+  await emailSwitch.press("Space")
+  await expect(emailSwitch).toBeChecked()
+  await emailSwitch.click()
+  await expect(emailSwitch).not.toBeChecked()
+  await expect(heading).toBeVisible()
+
+  const custom = sheet.getByRole("button", { name: "Preview delivery" })
+  const header = sheet.getByRole("group", { name: "Delivery options" })
+  await custom.click()
+  await expect(heading).toBeVisible()
+  await expect(header.getByRole("switch")).toHaveCount(0)
+  const push = root.getByRole("listitem", { name: /^Push/ })
+  await push.focus()
+  await expect(push).toBeFocused()
+  await push.press("Enter")
+  await expect(heading).toBeVisible()
+
+  await email.focus()
+  await expect(email).toBeFocused()
+  await email.press("Enter")
+  await expect(sheet.getByRole("heading", { name: "Email preferences" })).toBeVisible()
+  const preferences = sheet.getByRole("list", { name: "List of Notification Preferences", exact: true })
+  const mentions = preferences.getByRole("listitem", { name: /^Mentions/ })
+  await expect(mentions).toBeFocused()
+  await mentions.press("Space")
+  await expect(mentions.getByRole("switch", { name: "Mentions" })).toBeChecked()
+  await back.click()
+  await expect(email).toBeFocused()
+  await expect(emailSwitch).not.toBeChecked()
+
+  const digest = root.getByRole("listitem", { name: /^Digest/ })
+  await digest.click()
+  await expect(sheet.getByRole("heading", { name: "Digest", exact: true })).toBeVisible()
+  await expect(mentions.getByRole("switch", { name: "Mentions" })).toBeChecked()
+  await back.click()
+  await expect(digest).toBeFocused()
+  await header.focus()
+  await expect(header).toBeFocused()
+  await header.press("F2")
+  await expect(custom).toBeFocused()
+  await custom.press("Enter")
+  await expect(heading).toBeVisible()
+  await custom.press("F2")
+  await expect(header).toBeFocused()
+  await header.press("Enter")
+  await expect(sheet.getByRole("heading", { name: "Delivery options", exact: true })).toBeVisible()
+  await back.click()
+  await expect(header).toBeFocused()
+  const audit = await new AxeBuilder({ page }).include('[data-slot="user-settings-dialog"]').analyze()
+  expect(audit.violations.map(violation => violation.id)).toEqual([])
+})
+
+for (const [locale, primary, secondary] of [
+  ["de-DE", "Liste der Benachrichtigungstypen", "Liste der Benachrichtigungseinstellungen"],
+  ["zh-CN", "通知类型列表", "通知首选项列表"],
+  ["ar-EG", "قائمة أنواع الإشعارات", "قائمة تفضيلات الإشعارات"],
+]) test(`matches native notification list names in ${locale}`, async ({ browser }) => {
+  const dir = locale === "ar-EG" ? "rtl" : "ltr"
+  const ours = await browser.newPage(), reference = await browser.newPage()
+  try {
+    for (const [view, name] of [["primary", primary], ["secondary", secondary]]) {
+      const id = `user-settings-dialog-notifications-${view}`
+      const query = `locale=${locale}&dir=${dir}&only=${id}`
+      await Promise.all([ours.goto(`/?fixtures&${query}`), reference.goto(`/ui5.html?${query}`)])
+      await Promise.all([ours, reference].map(async page => {
+        await page.waitForSelector("html[data-ready=true]")
+        await expect(page.locator(`[data-fixture="${id}"]`).getByRole("list", { name, exact: true })).toBeVisible()
+      }))
+    }
+  } finally {
+    await Promise.all([ours.close(), reference.close()])
+  }
 })
 
 for (const dir of ["ltr", "rtl"]) test(`drills into a setting and returns focus in ${dir}`, async ({ page }) => {

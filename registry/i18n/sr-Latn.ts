@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Nema rezultata traženja",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 rezultat dostupan",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Stavka korisničkih podešavanja",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista tipova obaveštenja",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista preferenci obaveštenja",
   "VALUE_STATE_ERROR": "Nevažeći unos",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ova vrednost je već odabrana.",
   "VALUE_STATE_INFORMATION": "Informativni unos",

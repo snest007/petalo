@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Ei hakutuloksia",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 tulos käytettävissä",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Käyttäjäasetusten rivi",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Ilmoituslajiluettelo",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Ilmoitusasetusluettelo",
   "VALUE_STATE_ERROR": "Virheellinen syöttö",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Tämä arvo on jo valittu.",
   "VALUE_STATE_INFORMATION": "Informatiivinen merkintä",

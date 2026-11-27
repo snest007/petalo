@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Δεν υπάρχουν αποτελέσματα αναζήτησης",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 αποτέλεσμα διαθέσιμο",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Στοιχείο Ρυθμίσεων Χρήστη",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Λίστα Τύπων Ειδοποίησης",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Λίστα Προτιμήσεων Ειδοποίησης",
   "VALUE_STATE_ERROR": "Ακυρη καταχώριση",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Αυτή η τιμή επιλέχθηκε ήδη.",
   "VALUE_STATE_INFORMATION": "Πληροφοριακή καταχώριση",

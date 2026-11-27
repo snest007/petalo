@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "ไม่มีผลลัพธ์การค้นหา",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "มีผลลัพธ์ 1 รายการ",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "รายการในการกำหนดค่าผู้ใช้",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "รายการประเภทการแจ้ง",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "รายการการกำหนดลักษณะการแจ้ง",
   "VALUE_STATE_ERROR": "การป้อนข้อมูลไม่ถูกต้อง",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "ค่านี้ถูกเลือกแล้ว",
   "VALUE_STATE_INFORMATION": "รายการที่ให้ข้อมูล",

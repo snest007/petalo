@@ -3328,6 +3328,8 @@ Owner: P4
 | USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS | No search results | user-settings-dialog: texts/labels.noResultsAnnouncement | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:236 (_searchResultsText) | ui5-fiori |
 | USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT | 1 result available | user-settings-dialog: texts/labels.oneResult | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:238 (_searchResultsText) | ui5-fiori |
 | USER_SETTINGS_LIST_ARIA_ROLE_DESC | User Settings Item | user-settings-dialog: texts/labels.itemRole | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsDialog.js:218 (ariaRoleDescList) | ui5-fiori |
+| USER_SETTINGS_NOTIFICATIONS_LIST_LABEL | List of Notification Types | user-settings-dialog: texts/labels.list | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsNotificationsView.js:87 (_listAccessibleName) | ui5-fiori |
+| USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL | List of Notification Preferences | user-settings-dialog: texts/labels.preferences | fixed in E5 |  |  | node_modules/@ui5/webcomponents-fiori/dist/UserSettingsNotificationsView.js:86 (_listAccessibleName) | ui5-fiori |
 
 ## value-help-dialog
 

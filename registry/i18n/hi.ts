@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "खोजने पर कोई परिणाम नहीं मिला",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 परिणाम उपलब्ध है",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "उपयोगकर्ता सेटिंग आइटम",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "अधिसूचना प्रकारों की सूची",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "अधिसूचना वरीयताओं की सूची",
   "VALUE_STATE_ERROR": "अमान्य प्रविष्टि",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "यह मान पहले से ही चयनित है.",
   "VALUE_STATE_INFORMATION": "सूचनात्मक प्रविष्टि",

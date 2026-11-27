@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Нема резултата тражења",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 резултат доступан",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Ставка корисничких подешавања",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Листа типова обавештења",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Листа преференци обавештења",
   "VALUE_STATE_ERROR": "Неважећи унос",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ова вредност је већ одабрана.",
   "VALUE_STATE_INFORMATION": "Информативни унос",

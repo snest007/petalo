@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Іздеу нәтижелері жоқ",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 нәтиже бар",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Пайдаланушы параметрлерінің элементі",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Хабарландыру түрлерінің тізімі",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Хабарландыру параметрлерінің тізімі",
   "VALUE_STATE_ERROR": "Жарамсыз жазба",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Осы мән әлдеқашан таңдалды.",
   "VALUE_STATE_INFORMATION": "Ақпараттық енгізілім",

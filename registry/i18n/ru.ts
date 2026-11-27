@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Нет результатов поиска",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Доступно результатов: 1",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Позиция пользовательских настроек",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Список типов уведомлений",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Список настроек уведомлений",
   "VALUE_STATE_ERROR": "Недействительный ввод",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Это значение уже выбрано.",
   "VALUE_STATE_INFORMATION": "Информативная запись",

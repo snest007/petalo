@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Nema rezultata traženja",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 rezultat raspoloživ",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Stavka korisničkih postava",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista tipova obavijesti",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista preferenci obavijesti",
   "VALUE_STATE_ERROR": "Nevažeći unos",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ova vrijednost već je odabrana.",
   "VALUE_STATE_INFORMATION": "Informativni unos",

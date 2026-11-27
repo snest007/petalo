@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Paieškos rezultatų nėra",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Pateiktas 1 rezultatas",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Vartotojo parametrų elementas",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Pranešimų tipų sąrašas",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Pranešimų nuostatų sąrašas",
   "VALUE_STATE_ERROR": "Netinkamas įrašas",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ši reikšmė jau pasirinkta.",
   "VALUE_STATE_INFORMATION": "Informacinis įrašas",

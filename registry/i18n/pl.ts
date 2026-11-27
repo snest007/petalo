@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Brak wyników wyszukiwania",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 wynik dostępny",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Pozycja ustawień użytkownika",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista typów powiadomień",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista preferencji powiadomień",
   "VALUE_STATE_ERROR": "Nieprawidłowy wpis",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Ta wartość jest już wybrana.",
   "VALUE_STATE_INFORMATION": "Wpis informacyjny",

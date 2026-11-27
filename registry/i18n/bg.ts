@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Няма резултати от търсенето",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "Налични резултати: 1",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Позиция от потребителските настройки",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Списък с видовете известия",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Списък с предпочитанията за известия",
   "VALUE_STATE_ERROR": "Невалиден запис",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Тази стойност вече е избрана.",
   "VALUE_STATE_INFORMATION": "Информативен запис",

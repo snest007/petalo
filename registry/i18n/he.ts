@@ -495,6 +495,8 @@ const texts = {
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "אין תוצאות חיפוש",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 תוצאה זמינה",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "פריט הגדרות משתמש",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "רשימת סוגי הודעות",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "רשימת העדפות של הודעות",
   "VALUE_STATE_ERROR": "הזנה לא חוקית",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "ערך זה כבר נבחר.",
   "VALUE_STATE_INFORMATION": "הזנה אינפורמטיבית",

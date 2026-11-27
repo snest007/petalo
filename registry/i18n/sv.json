@@ -492,6 +492,8 @@
   "USER_SETTINGS_DIALOG_SEARCH_NO_RESULTS": "Inga sökresultat",
   "USER_SETTINGS_DIALOG_SEARCH_ONE_RESULT": "1 resultat tillgängligt",
   "USER_SETTINGS_LIST_ARIA_ROLE_DESC": "Element för användarinställningar",
+  "USER_SETTINGS_NOTIFICATIONS_LIST_LABEL": "Lista över meddelandetyper",
+  "USER_SETTINGS_NOTIFICATIONS_PREFERENCES_LIST_LABEL": "Lista över meddelandepreferenser",
   "VALUE_STATE_ERROR": "Ogiltig inmatning",
   "VALUE_STATE_ERROR_ALREADY_SELECTED": "Detta värde har redan valts.",
   "VALUE_STATE_INFORMATION": "Informativ uppgift",
